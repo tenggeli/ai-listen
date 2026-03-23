@@ -1,0 +1,24 @@
+app:
+  name: ai-listen
+  env: dev
+
+server:
+  api_port: 8080
+  admin_port: 8081
+
+database:
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: root
+  name: ai_listen
+  charset: utf8mb4
+
+redis:
+  addr: 127.0.0.1:6379
+  password: ""
+  db: 0
+
+auth:
+  code_ttl_minutes: 5
+  token_ttl_days: 7
