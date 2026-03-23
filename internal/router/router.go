@@ -12,6 +12,8 @@ func RegisterAPIRoutes(
 	authHandler *handler.AuthHandler,
 	userHandler *handler.UserHandler,
 	providerCenterHandler *handler.ProviderCenterHandler,
+	homeHandler *handler.HomeHandler,
+	providerHandler *handler.ProviderHandler,
 	authMiddleware gin.HandlerFunc,
 ) {
 	engine.GET("/health", func(c *gin.Context) {
@@ -42,6 +44,18 @@ func RegisterAPIRoutes(
 			providerCenter.POST("/apply", providerCenterHandler.Apply)
 			providerCenter.GET("/audit-status", providerCenterHandler.AuditStatus)
 			providerCenter.PUT("/profile", providerCenterHandler.UpdateProfile)
+		}
+
+		home := api.Group("/home")
+		home.Use(authMiddleware)
+		{
+			home.POST("/ai-match", homeHandler.AIMatch)
+		}
+
+		provider := api.Group("/provider")
+		{
+			provider.GET("/list", providerHandler.List)
+			provider.GET("/detail/:id", providerHandler.Detail)
 		}
 	}
 }

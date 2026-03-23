@@ -19,6 +19,11 @@
   - `POST /api/provider-center/apply`
   - `GET /api/provider-center/audit-status`
   - `PUT /api/provider-center/profile`
+- 首页：
+  - `POST /api/home/ai-match`
+- 服务方：
+  - `GET /api/provider/list`
+  - `GET /api/provider/detail/{id}`
 
 统一返回结构：
 ```json
@@ -58,6 +63,7 @@ go run ./cmd/api -config config.yaml
 ## SQL 初始化
 - `scripts/mysql/init/001_init.sql`：创建数据库
 - `scripts/mysql/init/002_mvp_auth_provider.sql`：`users`、`provider_applications`、`providers` 三张 MVP 核心表
+- `scripts/mysql/init/003_mvp_service_items.sql`：`service_items` 表
 
 通过 `deploy/docker-compose.yml` 启动 MySQL 时会自动执行以上脚本。
 
@@ -132,8 +138,35 @@ curl -X POST http://localhost:8080/api/auth/logout \
   -H "Authorization: Bearer <token>"
 ```
 
+### 8) 首页 AI 匹配（需登录）
+```bash
+curl -X POST http://localhost:8080/api/home/ai-match \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "inputType":"voice",
+    "content":"帮我找个今晚7点一起吃饭的电影搭子",
+    "cityId":1,
+    "lng":120.1,
+    "lat":30.2
+  }'
+```
+
+### 9) 服务方列表（免登录）
+```bash
+curl "http://localhost:8080/api/provider/list?cityId=1&page=1&pageSize=10"
+```
+
+### 10) 服务方详情（免登录）
+```bash
+curl http://localhost:8080/api/provider/detail/1
+```
+
 ## 文档歧义下的 MVP 假设
 - `send-code` 在 `dev` 环境会回传 `debugCode` 便于联调；`prod` 不回传。
 - `mobile-login` 验证码通过 Redis 校验，成功后清除验证码。
 - token 为随机字符串，Redis 存储 7 天过期（Bearer 方案）。
 - `provider-center/profile` 仅允许审核通过（`audit_status=1`）后更新；若审核通过但 `providers` 尚未创建，会自动创建一条基础 `providers` 记录。
+- `home/ai-match` 为规则版 MVP：当前仅使用 `cityId` + `providers.service_status=1` + `providers.online_status=1` 过滤，按评分和总单量排序，最多返回 3 个推荐；`lng/lat` 暂不参与计算。
+- `provider/list` 与 `provider/detail/{id}` 当前允许免登录访问，`page/pageSize` 默认 `1/10`，`pageSize` 最大 `50`。
+- `provider/list` 与 `provider/detail/{id}` 返回的 `serviceItems` 当前仅包含上架项目（`status=1`）。

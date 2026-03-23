@@ -38,7 +38,7 @@ func main() {
 		log.Fatalf("connect mysql failed: %v", err)
 	}
 
-	if err := db.AutoMigrate(&model.User{}, &model.ProviderApplication{}, &model.Provider{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.ProviderApplication{}, &model.Provider{}, &model.ServiceItem{}); err != nil {
 		log.Fatalf("migrate database failed: %v", err)
 	}
 
@@ -54,6 +54,7 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	providerApplicationRepo := repository.NewProviderApplicationRepository(db)
 	providerRepo := repository.NewProviderRepository(db)
+	serviceItemRepo := repository.NewServiceItemRepository(db)
 
 	authService := service.NewAuthService(
 		userRepo,
@@ -64,10 +65,14 @@ func main() {
 	)
 	userService := service.NewUserService(userRepo)
 	providerCenterService := service.NewProviderCenterService(userRepo, providerApplicationRepo, providerRepo)
+	homeService := service.NewHomeService(providerRepo, userRepo)
+	providerService := service.NewProviderService(providerRepo, userRepo, serviceItemRepo)
 
 	authHandler := handler.NewAuthHandler(authService)
 	userHandler := handler.NewUserHandler(userService)
 	providerCenterHandler := handler.NewProviderCenterHandler(providerCenterService)
+	homeHandler := handler.NewHomeHandler(homeService)
+	providerHandler := handler.NewProviderHandler(providerService)
 
 	engine := gin.New()
 	engine.Use(gin.Logger(), middleware.ErrorHandler(), middleware.Recovery())
@@ -77,6 +82,8 @@ func main() {
 		authHandler,
 		userHandler,
 		providerCenterHandler,
+		homeHandler,
+		providerHandler,
 		middleware.AuthRequired(rdb),
 	)
 
