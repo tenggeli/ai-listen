@@ -1,6 +1,9 @@
 package provider
 
 import (
+	"strconv"
+
+	"ai-listen/backend/internal/store"
 	"ai-listen/backend/pkg/httpx"
 	"ai-listen/backend/pkg/response"
 	"github.com/gin-gonic/gin"
@@ -35,11 +38,18 @@ func (h *Handler) List(c *gin.Context) {
 			"sortType":      c.Query("sortType"),
 			"pagination":    httpx.PaginationQuery(c),
 		},
+		"list": store.Default().Providers(),
 	})
 }
 
 func (h *Handler) Detail(c *gin.Context) {
-	response.Success(c, gin.H{"module": "provider", "action": "detail", "providerId": c.Param("providerId")})
+	providerID, _ := strconv.ParseUint(c.Param("providerId"), 10, 64)
+	provider, err := store.Default().ProviderByID(providerID)
+	if err != nil {
+		response.Success(c, gin.H{"module": "provider", "action": "detail", "provider": nil})
+		return
+	}
+	response.Success(c, gin.H{"module": "provider", "action": "detail", "provider": provider})
 }
 
 func (h *Handler) Posts(c *gin.Context) {

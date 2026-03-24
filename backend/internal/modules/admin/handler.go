@@ -1,6 +1,9 @@
 package admin
 
 import (
+	"strconv"
+
+	"ai-listen/backend/internal/store"
 	"ai-listen/backend/pkg/httpx"
 	"ai-listen/backend/pkg/response"
 	"github.com/gin-gonic/gin"
@@ -79,16 +82,30 @@ func (h *Handler) UpdateUserStatus(c *gin.Context) {
 	response.Success(c, gin.H{"module": "admin", "action": "update_user_status", "userId": c.Param("userId")})
 }
 func (h *Handler) ListProviders(c *gin.Context) {
-	response.Success(c, gin.H{"module": "admin", "action": "list_providers", "query": httpx.PaginationQuery(c)})
+	response.Success(c, gin.H{"module": "admin", "action": "list_providers", "query": httpx.PaginationQuery(c), "list": store.Default().Providers()})
 }
 func (h *Handler) ProviderDetail(c *gin.Context) {
-	response.Success(c, gin.H{"module": "admin", "action": "provider_detail", "providerId": c.Param("providerId")})
+	providerID, _ := strconv.ParseUint(c.Param("providerId"), 10, 64)
+	provider, _ := store.Default().ProviderByID(providerID)
+	response.Success(c, gin.H{"module": "admin", "action": "provider_detail", "provider": provider})
 }
 func (h *Handler) ApproveProvider(c *gin.Context) {
-	response.Success(c, gin.H{"module": "admin", "action": "approve_provider", "providerId": c.Param("providerId")})
+	providerID, _ := strconv.ParseUint(c.Param("providerId"), 10, 64)
+	provider, err := store.Default().ApproveProvider(providerID, "approved by admin")
+	if err != nil {
+		httpx.NotImplemented(c, "admin.approve_provider")
+		return
+	}
+	response.Success(c, gin.H{"module": "admin", "action": "approve_provider", "provider": provider})
 }
 func (h *Handler) RejectProvider(c *gin.Context) {
-	response.Success(c, gin.H{"module": "admin", "action": "reject_provider", "providerId": c.Param("providerId")})
+	providerID, _ := strconv.ParseUint(c.Param("providerId"), 10, 64)
+	provider, err := store.Default().RejectProvider(providerID, "rejected by admin")
+	if err != nil {
+		httpx.NotImplemented(c, "admin.reject_provider")
+		return
+	}
+	response.Success(c, gin.H{"module": "admin", "action": "reject_provider", "provider": provider})
 }
 func (h *Handler) UpdateProviderStatus(c *gin.Context) {
 	response.Success(c, gin.H{"module": "admin", "action": "update_provider_status", "providerId": c.Param("providerId")})

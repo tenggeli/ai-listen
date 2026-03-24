@@ -1,6 +1,8 @@
 package user
 
 import (
+	"ai-listen/backend/internal/store"
+	"ai-listen/backend/internal/support/authctx"
 	"ai-listen/backend/pkg/httpx"
 	"ai-listen/backend/pkg/response"
 	"github.com/gin-gonic/gin"
@@ -24,29 +26,74 @@ func RegisterRoutes(group *gin.RouterGroup, logger *zap.Logger) {
 }
 
 func (h *Handler) GetMe(c *gin.Context) {
-	response.Success(c, gin.H{"module": "user", "action": "get_me"})
+	user, ok := authctx.CurrentUser(c)
+	if !ok {
+		return
+	}
+	response.Success(c, gin.H{"module": "user", "action": "get_me", "user": user})
 }
 
 func (h *Handler) UpdateMe(c *gin.Context) {
+	user, ok := authctx.CurrentUser(c)
+	if !ok {
+		return
+	}
 	var req UpdateMeRequest
 	_ = c.ShouldBindJSON(&req)
-	response.Success(c, gin.H{"module": "user", "action": "update_me", "request": req})
+	updated, err := store.Default().UpdateUser(user.ID, func(u *store.User) {
+		if req.Nickname != "" {
+			u.Nickname = req.Nickname
+		}
+		if req.Avatar != "" {
+			u.Avatar = req.Avatar
+		}
+		if req.Gender != 0 {
+			u.Gender = req.Gender
+		}
+		if req.Birthday != "" {
+			u.Birthday = req.Birthday
+		}
+		if req.CityCode != "" {
+			u.CityCode = req.CityCode
+		}
+	})
+	if err != nil {
+		response.Success(c, gin.H{"module": "user", "action": "update_me", "error": err.Error()})
+		return
+	}
+	response.Success(c, gin.H{"module": "user", "action": "update_me", "user": updated})
 }
 
 func (h *Handler) GetProfile(c *gin.Context) {
-	response.Success(c, gin.H{"module": "user", "action": "get_profile"})
+	user, ok := authctx.CurrentUser(c)
+	if !ok {
+		return
+	}
+	response.Success(c, gin.H{"module": "user", "action": "get_profile", "userId": user.ID})
 }
 
 func (h *Handler) UpdateProfile(c *gin.Context) {
+	_, ok := authctx.CurrentUser(c)
+	if !ok {
+		return
+	}
 	var req UpdateProfileRequest
 	_ = c.ShouldBindJSON(&req)
 	response.Success(c, gin.H{"module": "user", "action": "update_profile", "request": req})
 }
 
 func (h *Handler) GetOrders(c *gin.Context) {
-	response.Success(c, gin.H{"module": "user", "action": "get_orders", "query": httpx.PaginationQuery(c)})
+	user, ok := authctx.CurrentUser(c)
+	if !ok {
+		return
+	}
+	response.Success(c, gin.H{"module": "user", "action": "get_orders", "query": httpx.PaginationQuery(c), "list": store.Default().OrdersByUser(user.ID)})
 }
 
 func (h *Handler) GetFavorites(c *gin.Context) {
+	_, ok := authctx.CurrentUser(c)
+	if !ok {
+		return
+	}
 	response.Success(c, gin.H{"module": "user", "action": "get_favorites", "query": httpx.PaginationQuery(c)})
 }

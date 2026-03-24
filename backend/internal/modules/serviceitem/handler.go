@@ -1,6 +1,7 @@
 package serviceitem
 
 import (
+	"ai-listen/backend/internal/store"
 	"ai-listen/backend/pkg/response"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -21,5 +22,6 @@ func (h *Handler) List(c *gin.Context) {
 		"action":   "list",
 		"category": c.Query("category"),
 		"status":   c.Query("status"),
+		"list":     store.Default().ServiceItems(),
 	})
 }

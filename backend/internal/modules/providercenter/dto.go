@@ -4,6 +4,27 @@ type WorkStatusRequest struct {
 	WorkStatus int `json:"workStatus"`
 }
 
+type ApplyRequest struct {
+	RealName string `json:"realName"`
+	IDCardNo string `json:"idCardNo"`
+}
+
+type UpdateProfileRequest struct {
+	DisplayName string   `json:"displayName"`
+	Intro       string   `json:"intro"`
+	Tags        []string `json:"tags"`
+}
+
+type ProviderServiceItemRequest struct {
+	ServiceItemID uint64 `json:"serviceItemId"`
+	PriceAmount   int64  `json:"priceAmount"`
+	PriceUnit     string `json:"priceUnit"`
+}
+
+type UpdateServiceItemsRequest struct {
+	Items []ProviderServiceItemRequest `json:"items"`
+}
+
 type AccountRequest struct {
 	AccountType int    `json:"accountType"`
 	AccountName string `json:"accountName"`
