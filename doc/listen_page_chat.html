@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>listen 陪伴 · AI对话</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0d1f2d;
+    min-height: 100vh;
+    font-family: -apple-system, 'PingFang SC', sans-serif;
+    display: flex; flex-direction: column;
+  }
+
+  .bg-glow {
+    position: fixed; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 30%, rgba(74,168,196,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 30% 40% at 50% 80%, rgba(74,120,160,0.04) 0%, transparent 60%);
+  }
+  .stars { position: fixed; inset: 0; pointer-events: none; }
+  .star { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.5); }
+
+  .status-bar {
+    position: fixed; top: 0; left: 0; right: 0; height: 44px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; font-size: 12px; color: rgba(255,255,255,0.3); z-index: 10;
+  }
+
+  .companion-bar {
+    position: fixed; top: 44px; left: 0; right: 0;
+    padding: 12px 24px; display: flex; align-items: center; gap: 12px;
+    background: linear-gradient(rgba(13,31,45,0.95), rgba(13,31,45,0.6));
+    backdrop-filter: blur(10px); z-index: 9;
+  }
+  .companion-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(74,168,196,0.15);
+    border: 1.5px solid rgba(74,168,196,0.3);
+    display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
+  }
+  .companion-avatar svg { width: 22px; height: 22px; }
+  .companion-info { flex: 1; }
+  .companion-name { font-size: 14px; color: rgba(255,255,255,0.85); letter-spacing: 1px; }
+  .companion-status { font-size: 11px; color: rgba(74,168,196,0.6); letter-spacing: 1px; margin-top: 2px; }
+  .status-dot {
+    display: inline-block; width: 6px; height: 6px;
+    background: #4aa8c4; border-radius: 50%; margin-right: 4px;
+    animation: dotPulse 2s ease-in-out infinite;
+  }
+  @keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .chat-area {
+    flex: 1; overflow-y: auto;
+    padding: 110px 20px 120px;
+    max-width: 390px; margin: 0 auto; width: 100%;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .chat-area::-webkit-scrollbar { width: 0; }
+
+  .date-divider {
+    text-align: center; font-size: 11px;
+    color: rgba(255,255,255,0.15); letter-spacing: 2px; padding: 8px 0;
+  }
+
+  .msg-ai { display: flex; gap: 10px; align-items: flex-end; }
+  .msg-ai-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(74,168,196,0.15);
+    border: 1px solid rgba(74,168,196,0.25);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .msg-ai-avatar svg { width: 16px; height: 16px; }
+  .msg-ai-bubble {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px 18px 18px 18px;
+    padding: 12px 16px; max-width: 75%;
+    font-size: 14px; line-height: 1.8;
+    color: rgba(255,255,255,0.8);
+    animation: bubbleIn 0.3s ease-out;
+  }
+  @keyframes bubbleIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .msg-user { display: flex; justify-content: flex-end; }
+  .msg-user-bubble {
+    background: rgba(74,168,196,0.2);
+    border: 1px solid rgba(74,168,196,0.3);
+    border-radius: 18px 4px 18px 18px;
+    padding: 12px 16px; max-width: 75%;
+    font-size: 14px; line-height: 1.8; color: rgba(255,255,255,0.9);
+  }
+  .msg-time { font-size: 10px; color: rgba(255,255,255,0.15); padding: 0 4px; margin-top: 2px; }
+  .msg-user .msg-time { text-align: right; }
+
+  .typing-indicator { display: flex; gap: 10px; align-items: flex-end; margin-top: 4px; }
+  .typing-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(74,168,196,0.15);
+    border: 1px solid rgba(74,168,196,0.25);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .typing-avatar svg { width: 16px; height: 16px; }
+  .typing-dots {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px 18px 18px 18px;
+    padding: 12px 18px; display: flex; gap: 4px; align-items: center;
+  }
+  .typing-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(74,168,196,0.5);
+    animation: typingBounce 1.2s ease-in-out infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingBounce { 0%,100%{transform:translateY(0);opacity:0.4} 50%{transform:translateY(-4px);opacity:1} }
+
+  .quick-replies { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .quick-btn {
+    padding: 7px 14px; border-radius: 20px;
+    background: rgba(74,168,196,0.08);
+    border: 1px solid rgba(74,168,196,0.2);
+    color: rgba(74,168,196,0.7); font-size: 12px;
+    cursor: pointer; transition: all 0.2s; font-family: inherit;
+  }
+  .quick-btn:hover { background: rgba(74,168,196,0.15); color: #4aa8c4; }
+
+  .input-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    padding: 12px 16px 44px;
+    background: linear-gradient(transparent, rgba(13,31,45,0.97) 35%);
+    z-index: 5;
+  }
+  .input-inner {
+    max-width: 390px; margin: 0 auto;
+    display: flex; gap: 10px; align-items: flex-end;
+  }
+  .input-field {
+    flex: 1; min-height: 42px; max-height: 120px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 21px; padding: 10px 18px;
+    color: rgba(255,255,255,0.85); font-size: 14px;
+    font-family: inherit; resize: none; outline: none;
+    line-height: 1.5; transition: border-color 0.2s;
+  }
+  .input-field::placeholder { color: rgba(255,255,255,0.2); }
+  .input-field:focus { border-color: rgba(74,168,196,0.3); }
+  .send-btn {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg, rgba(74,168,196,0.9), rgba(61,145,170,0.9));
+    border: none; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 18px;
+    box-shadow: 0 4px 16px rgba(74,168,196,0.3);
+    transition: transform 0.2s, opacity 0.2s;
+  }
+  .send-btn:active { transform: scale(0.92); }
+  .send-btn:disabled { opacity: 0.4; cursor: default; }
+  .voice-btn {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.4); font-size: 16px; transition: all 0.2s;
+  }
+  .voice-btn:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+<div class="stars" id="stars"></div>
+
+<div class="status-bar"><span>19:02</span><span>···</span></div>
+
+<div class="companion-bar">
+  <div class="companion-avatar">
+    <svg viewBox="0 0 90 90" fill="none">
+      <path d="M37 37 C33 41 33 49 37 53" stroke="#7ec8dc" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      <path d="M30 31 C24 37 24 53 30 59" stroke="#aadde9" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      <path d="M64 62 C58 72 46 74 38 66 C28 56 28 40 36 31 C44 22 58 22 66 32 L64 36" stroke="#4aa8c4" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M64 36 C70 40 70 52 64 56" stroke="#4aa8c4" stroke-width="3.0" stroke-linecap="round" fill="none"/>
+      <path d="M60 40 C62 50 56 60 50 62 C47 63 46 66 50 68 C53 70 57 68 57 64" stroke="#4aa8c4" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+    </svg>
+  </div>
+  <div class="companion-info">
+    <div class="companion-name">listen</div>
+    <div class="companion-status"><span class="status-dot"></span>在线 · 随时倾听</div>
+  </div>
+  <div style="color:rgba(255,255,255,0.2);font-size:18px;">&#8942;</div>
+</div>
+
+<div class="chat-area" id="chatArea">
+  <div class="date-divider">— 今晚 19:02 —</div>
+
+  <div class="msg-user">
+    <div>
+      <div class="msg-user-bubble">今天加班到很晚，一个人走在回家的路上，突然觉得有点孤单</div>
+      <div class="msg-time">19:00</div>
+    </div>
+  </div>
+
+  <div class="msg-ai">
+    <div class="msg-ai-avatar"><svg viewBox="0 0 90 90" fill="none">
+      <path d="M37 37 C33 41 33 49 37 53" stroke="#7ec8dc" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      <path d="M30 31 C24 37 24 53 30 59" stroke="#aadde9" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      <path d="M64 62 C58 72 46 74 38 66 C28 56 28 40 36 31 C44 22 58 22 66 32 L64 36" stroke="#4aa8c4" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M64 36 C70 40 70 52 64 56" stroke="#4aa8c4" stroke-width="3.0" stroke-linecap="round" fill="none"/>
+      <path d="M60 40 C62 50 56 60 50 62 C47 63 46 66 50 68 C53 70 57 68 57 64" stroke="#4aa8c4" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+    </svg></div>
+    <div>
+      <div class="msg-ai-bubble">
+        一个人走在夜路上的感觉，确实会让人觉得安静得有些空。<br><br>今天一整天都挺累的吧？加班辛苦了。<br><br>能跟我说说，是什么样的事情让你觉得孤单吗？
+      </div>
+      <div class="quick-replies">
+        <div class="quick-btn">工作压力太大了</div>
+        <div class="quick-btn">想找人说说话</div>
+        <div class="quick-btn">最近睡不太好</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg-user">
+    <div>
+      <div class="msg-user-bubble">嗯……就是突然很想找人说说话</div>
+      <div class="msg-time">19:01</div>
+    </div>
+  </div>
+
+  <div class="msg-ai">
+    <div class="msg-ai-avatar"><svg viewBox="0 0 90 90" fill="none">
+      <path d="M37 37 C33 41 33 49 37 53" stroke="#7ec8dc" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      <path d="M30 31 C24 37 24 53 30 59" stroke="#aadde9" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      <path d="M64 62 C58 72 46 74 38 66 C28 56 28 40 36 31 C44 22 58 22 66 32 L64 36" stroke="#4aa8c4" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M64 36 C70 40 70 52 64 56" stroke="#4aa8c4" stroke-width="3.0" stroke-linecap="round" fill="none"/>
+      <path d="M60 40 C62 50 56 60 50 62 C47 63 46 66 50 68 C53 70 57 68 57 64" stroke="#4aa8c4" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+    </svg></div>
+    <div>
+      <div class="msg-ai-bubble">
+        那份「想找人说话」的心情，已经被听见了。<br><br>有时候，<span style="color:rgba(74,168,196,0.7)">不需要找到具体的原因</span>，光是承认这种感受存在，就已经是一种温柔了。<br><br>不用急，想说什么都可以，我在这里。
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="input-bar">
+  <div class="input-inner">
+    <button class="voice-btn">&#127908;</button>
+    <textarea class="input-field" id="inputField" placeholder="想说点什么……" rows="1"></textarea>
+    <button class="send-btn" id="sendBtn" disabled>&#8250;</button>
+  </div>
+</div>
+
+<script>
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 50; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 1.5 + 0.5;
+    s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;opacity:${Math.random()*0.3+0.08};animation:twinkle ${Math.random()*3+2}s ease-in-out infinite;animation-delay:${Math.random()*4}s`;
+    starsEl.appendChild(s);
+  }
+
+  const inputField = document.getElementById('inputField');
+  const sendBtn = document.getElementById('sendBtn');
+  inputField.addEventListener('input', () => {
+    inputField.style.height = 'auto';
+    inputField.style.height = Math.min(inputField.scrollHeight, 120) + 'px';
+    sendBtn.disabled = inputField.value.trim() === '';
+  });
+
+  const chatArea = document.getElementById('chatArea');
+  function addUserMsg(text) {
+    const div = document.createElement('div');
+    div.className = 'msg-user';
+    div.innerHTML = `<div><div class="msg-user-bubble">${text}</div><div class="msg-time">${new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}</div></div>`;
+    chatArea.appendChild(div);
+    chatArea.scrollTop = chatArea.scrollHeight;
+    inputField.value = '';
+    sendBtn.disabled = true;
+    inputField.style.height = 'auto';
+  }
+
+  sendBtn.addEventListener('click', () => {
+    const text = inputField.value.trim();
+    if (!text) return;
+    addUserMsg(text);
+    const typing = document.createElement('div');
+    typing.className = 'typing-indicator';
+    typing.innerHTML = `<div class="typing-avatar"><svg viewBox="0 0 90 90" fill="none"><path d="M37 37 C33 41 33 49 37 53" stroke="#7ec8dc" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M30 31 C24 37 24 53 30 59" stroke="#aadde9" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M64 62 C58 72 46 74 38 66 C28 56 28 40 36 31 C44 22 58 22 66 32 L64 36" stroke="#4aa8c4" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M64 36 C70 40 70 52 64 56" stroke="#4aa8c4" stroke-width="3.0" stroke-linecap="round" fill="none"/><path d="M60 40 C62 50 56 60 50 62 C47 63 46 66 50 68 C53 70 57 68 57 64" stroke="#4aa8c4" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg></div><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+    chatArea.appendChild(typing);
+    chatArea.scrollTop = chatArea.scrollHeight;
+    setTimeout(() => {
+      typing.remove();
+      const replies = [
+        '谢谢你的分享，我听到了。慢慢来，不着急。',
+        '能说出来已经很好了。有时候被听见，本身就是一种治愈。',
+        '嗯，我在这里陪着你。'
+      ];
+      const aiDiv = document.createElement('div');
+      aiDiv.className = 'msg-ai';
+      aiDiv.innerHTML = `<div class="msg-ai-avatar"><svg viewBox="0 0 90 90" fill="none"><path d="M37 37 C33 41 33 49 37 53" stroke="#7ec8dc" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M30 31 C24 37 24 53 30 59" stroke="#aadde9" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M64 62 C58 72 46 74 38 66 C28 56 28 40 36 31 C44 22 58 22 66 32 L64 36" stroke="#4aa8c4" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M64 36 C70 40 70 52 64 56" stroke="#4aa8c4" stroke-width="3.0" stroke-linecap="round" fill="none"/><path d="M60 40 C62 50 56 60 50 62 C47 63 46 66 50 68 C53 70 57 68 57 64" stroke="#4aa8c4" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg></div><div><div class="msg-ai-bubble">${replies[Math.floor(Math.random()*replies.length)]}</div></div>`;
+      chatArea.appendChild(aiDiv);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }, 1800);
+  });
+
+  document.querySelectorAll('.quick-btn').forEach(btn => {
+    btn.addEventListener('click', () => addUserMsg(btn.textContent));
+  });
+</script>
+<style>@keyframes twinkle { 0%,100%{opacity:0.1} 50%{opacity:0.4} }</style>
+</body>
+</html>
