@@ -1,0 +1,66 @@
+:root {
+  color-scheme: dark;
+  --bg: #0d1f2d;
+  --card: rgba(255, 255, 255, 0.05);
+  --line: rgba(74, 168, 196, 0.2);
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.6);
+  --brand: #4aa8c4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(74, 168, 196, 0.14), transparent 35%),
+    linear-gradient(180deg, #081520 0%, var(--bg) 100%);
+  color: var(--text);
+  font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+}
+
+.page-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.hero-card {
+  width: min(100%, 520px);
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--card);
+  backdrop-filter: blur(12px);
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: var(--brand);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hero-card h1 {
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.2;
+}
+
+.desc {
+  margin: 16px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
