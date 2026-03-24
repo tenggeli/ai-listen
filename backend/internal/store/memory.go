@@ -147,12 +147,6 @@ type MemoryStore struct {
 	serviceItems  map[uint64]*ServiceItem
 }
 
-var defaultStore = NewMemoryStore()
-
-func Default() *MemoryStore { return defaultStore }
-
-func ResetDefaultForTest() { defaultStore = NewMemoryStore() }
-
 func NewMemoryStore() *MemoryStore {
 	s := &MemoryStore{
 		nextUserID:     1,
