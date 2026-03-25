@@ -1,9 +1,12 @@
 package admin
 
 import (
+	"net/http"
 	"strconv"
 
 	"ai-listen/backend/internal/store"
+	"ai-listen/backend/internal/support/authctx"
+	"ai-listen/backend/pkg/ecode"
 	"ai-listen/backend/pkg/httpx"
 	"ai-listen/backend/pkg/response"
 	"github.com/gin-gonic/gin"
@@ -19,56 +22,94 @@ func RegisterRoutes(group *gin.RouterGroup, logger *zap.Logger) {
 
 	authGroup := group.Group("/auth")
 	authGroup.POST("/login", handler.Login)
+	authGroup.Use(authctx.AdminRequired())
 	authGroup.POST("/logout", handler.Logout)
 	authGroup.GET("/me", handler.Me)
 
-	dashboardGroup := group.Group("/dashboard")
-	dashboardGroup.GET("/overview", handler.DashboardOverview)
+	protectedGroup := group.Group("")
+	protectedGroup.Use(authctx.AdminRequired())
 
-	group.GET("/users", handler.ListUsers)
-	group.GET("/users/:userId", handler.UserDetail)
-	group.PUT("/users/:userId/status", handler.UpdateUserStatus)
+	dashboardGroup := protectedGroup.Group("/dashboard")
+	dashboardGroup.GET("/overview", RequirePermission(permDashboardOverview), handler.DashboardOverview)
 
-	group.GET("/providers", handler.ListProviders)
-	group.GET("/providers/:providerId", handler.ProviderDetail)
-	group.POST("/providers/:providerId/approve", handler.ApproveProvider)
-	group.POST("/providers/:providerId/reject", handler.RejectProvider)
-	group.PUT("/providers/:providerId/status", handler.UpdateProviderStatus)
+	protectedGroup.GET("/users", RequirePermission(permUserList), handler.ListUsers)
+	protectedGroup.GET("/users/:userId", RequirePermission(permUserDetail), handler.UserDetail)
+	protectedGroup.PUT("/users/:userId/status", RequirePermission(permUserStatusUpdate), handler.UpdateUserStatus)
 
-	group.GET("/service-items", handler.ListServiceItems)
-	group.POST("/service-items", handler.CreateServiceItem)
-	group.PUT("/service-items/:serviceItemId", handler.UpdateServiceItem)
-	group.DELETE("/service-items/:serviceItemId", handler.DeleteServiceItem)
+	protectedGroup.GET("/providers", RequirePermission(permProviderList), handler.ListProviders)
+	protectedGroup.GET("/providers/:providerId", RequirePermission(permProviderDetail), handler.ProviderDetail)
+	protectedGroup.POST("/providers/:providerId/approve", RequirePermission(permProviderApprove), handler.ApproveProvider)
+	protectedGroup.POST("/providers/:providerId/reject", RequirePermission(permProviderReject), handler.RejectProvider)
+	protectedGroup.PUT("/providers/:providerId/status", RequirePermission(permProviderStatusUpdate), handler.UpdateProviderStatus)
 
-	group.GET("/orders", handler.ListOrders)
-	group.GET("/orders/:orderId", handler.OrderDetail)
-	group.POST("/orders/:orderId/manual-complete", handler.ManualCompleteOrder)
-	group.POST("/orders/:orderId/refund", handler.RefundOrder)
+	protectedGroup.GET("/service-items", RequirePermission(permServiceItemList), handler.ListServiceItems)
+	protectedGroup.POST("/service-items", RequirePermission(permServiceItemCreate), handler.CreateServiceItem)
+	protectedGroup.PUT("/service-items/:serviceItemId", RequirePermission(permServiceItemUpdate), handler.UpdateServiceItem)
+	protectedGroup.DELETE("/service-items/:serviceItemId", RequirePermission(permServiceItemDelete), handler.DeleteServiceItem)
 
-	group.GET("/withdraws", handler.ListWithdraws)
-	group.POST("/withdraws/:withdrawId/approve", handler.ApproveWithdraw)
-	group.POST("/withdraws/:withdrawId/reject", handler.RejectWithdraw)
-	group.GET("/finance/reports", handler.FinanceReports)
+	protectedGroup.GET("/orders", RequirePermission(permOrderList), handler.ListOrders)
+	protectedGroup.GET("/orders/:orderId", RequirePermission(permOrderDetail), handler.OrderDetail)
+	protectedGroup.POST("/orders/:orderId/manual-complete", RequirePermission(permOrderManualComplete), handler.ManualCompleteOrder)
+	protectedGroup.POST("/orders/:orderId/refund", RequirePermission(permOrderRefund), handler.RefundOrder)
 
-	group.GET("/posts", handler.ListPosts)
-	group.POST("/posts/:postId/hide", handler.HidePost)
-	group.GET("/audio", handler.ListAudio)
-	group.POST("/audio/:audioId/off-shelf", handler.OffShelfAudio)
+	protectedGroup.GET("/withdraws", RequirePermission(permWithdrawList), handler.ListWithdraws)
+	protectedGroup.POST("/withdraws/:withdrawId/approve", RequirePermission(permWithdrawApprove), handler.ApproveWithdraw)
+	protectedGroup.POST("/withdraws/:withdrawId/reject", RequirePermission(permWithdrawReject), handler.RejectWithdraw)
+	protectedGroup.GET("/finance/reports", RequirePermission(permFinanceReports), handler.FinanceReports)
 
-	group.GET("/complaints", handler.ListComplaints)
-	group.GET("/complaints/:complaintId", handler.ComplaintDetail)
-	group.POST("/complaints/:complaintId/resolve", handler.ResolveComplaint)
-	group.GET("/risk-events", handler.ListRiskEvents)
+	protectedGroup.GET("/posts", RequirePermission(permPostList), handler.ListPosts)
+	protectedGroup.POST("/posts/:postId/hide", RequirePermission(permPostHide), handler.HidePost)
+	protectedGroup.GET("/audio", RequirePermission(permAudioList), handler.ListAudio)
+	protectedGroup.POST("/audio/:audioId/off-shelf", RequirePermission(permAudioOffShelf), handler.OffShelfAudio)
 
-	group.GET("/configs", handler.ListConfigs)
-	group.PUT("/configs/:configKey", handler.UpdateConfig)
+	protectedGroup.GET("/complaints", RequirePermission(permComplaintList), handler.ListComplaints)
+	protectedGroup.GET("/complaints/:complaintId", RequirePermission(permComplaintDetail), handler.ComplaintDetail)
+	protectedGroup.POST("/complaints/:complaintId/resolve", RequirePermission(permComplaintResolve), handler.ResolveComplaint)
+	protectedGroup.GET("/risk-events", RequirePermission(permRiskEventList), handler.ListRiskEvents)
+
+	protectedGroup.GET("/configs", RequirePermission(permConfigList), handler.ListConfigs)
+	protectedGroup.PUT("/configs/:configKey", RequirePermission(permConfigUpdate), handler.UpdateConfig)
+
+	rbacGroup := protectedGroup.Group("/rbac")
+	rbacGroup.GET("/roles", RequirePermission(permRBACRoleList), handler.ListRoles)
+	rbacGroup.GET("/permissions", RequirePermission(permRBACPermissionList), handler.ListPermissions)
+	rbacGroup.PUT("/users/:adminUserId/roles", RequirePermission(permRBACUserRoleAssign), handler.AssignUserRoles)
 }
 
-func (h *Handler) Login(c *gin.Context) { httpx.NotImplemented(c, "admin.auth.login") }
+func (h *Handler) Login(c *gin.Context) {
+	var req LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil || req.Username == "" || req.Password == "" {
+		response.Fail(c, http.StatusBadRequest, ecode.BadRequest, gin.H{"reason": "username and password are required"})
+		return
+	}
+	adminUser, token, err := store.Default().AdminLogin(req.Username, req.Password)
+	if err != nil {
+		response.Fail(c, http.StatusUnauthorized, ecode.Unauthorized, gin.H{"reason": err.Error()})
+		return
+	}
+	response.Success(c, gin.H{
+		"module":      "admin",
+		"action":      "login",
+		"accessToken": token,
+		"adminUser":   adminUser,
+		"permissions": PermissionsByRoles(adminUser.Roles),
+	})
+}
 func (h *Handler) Logout(c *gin.Context) {
 	response.Success(c, gin.H{"module": "admin", "action": "logout"})
 }
-func (h *Handler) Me(c *gin.Context) { response.Success(c, gin.H{"module": "admin", "action": "me"}) }
+func (h *Handler) Me(c *gin.Context) {
+	adminUser, ok := authctx.CurrentAdmin(c)
+	if !ok {
+		return
+	}
+	response.Success(c, gin.H{
+		"module":      "admin",
+		"action":      "me",
+		"adminUser":   adminUser,
+		"permissions": PermissionsByRoles(adminUser.Roles),
+	})
+}
 func (h *Handler) DashboardOverview(c *gin.Context) {
 	response.Success(c, gin.H{"module": "admin", "action": "dashboard_overview"})
 }
@@ -175,4 +216,39 @@ func (h *Handler) ListConfigs(c *gin.Context) {
 }
 func (h *Handler) UpdateConfig(c *gin.Context) {
 	response.Success(c, gin.H{"module": "admin", "action": "update_config", "configKey": c.Param("configKey")})
+}
+
+func (h *Handler) ListRoles(c *gin.Context) {
+	response.Success(c, gin.H{"module": "admin", "action": "list_roles", "list": store.Default().AdminRoles()})
+}
+
+func (h *Handler) ListPermissions(c *gin.Context) {
+	response.Success(c, gin.H{"module": "admin", "action": "list_permissions", "list": store.Default().AdminPermissions()})
+}
+
+func (h *Handler) AssignUserRoles(c *gin.Context) {
+	adminUserID, err := strconv.ParseUint(c.Param("adminUserId"), 10, 64)
+	if err != nil || adminUserID == 0 {
+		response.Fail(c, http.StatusBadRequest, ecode.BadRequest, gin.H{"reason": "invalid adminUserId"})
+		return
+	}
+
+	var req UpdateAdminUserRolesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, http.StatusBadRequest, ecode.BadRequest, gin.H{"reason": "invalid request body"})
+		return
+	}
+
+	adminUser, err := store.Default().UpdateAdminUserRoles(adminUserID, req.RoleKeys)
+	if err != nil {
+		response.Fail(c, http.StatusBadRequest, ecode.BadRequest, gin.H{"reason": err.Error()})
+		return
+	}
+
+	response.Success(c, gin.H{
+		"module":      "admin",
+		"action":      "assign_user_roles",
+		"adminUser":   adminUser,
+		"permissions": PermissionsByRoles(adminUser.Roles),
+	})
 }

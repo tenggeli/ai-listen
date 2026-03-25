@@ -18,13 +18,14 @@ func TestProviderOrderFlow(t *testing.T) {
 
 	userToken := loginBySMS(t, engine, "13800000000")
 	providerToken := loginBySMS(t, engine, "13900000000")
+	adminToken := adminLogin(t, engine, "admin", "admin123456")
 
 	mustRequest(t, engine, http.MethodPost, "/api/v1/provider-center/apply", map[string]any{
 		"realName": "张三",
 		"idCardNo": "310101199001011234",
 	}, withAuth(providerToken), http.StatusOK)
 
-	mustRequest(t, engine, http.MethodPost, "/api/v1/admin/providers/1/approve", nil, nil, http.StatusOK)
+	mustRequest(t, engine, http.MethodPost, "/api/v1/admin/providers/1/approve", nil, withAuth(adminToken), http.StatusOK)
 
 	mustRequest(t, engine, http.MethodPut, "/api/v1/provider-center/profile", map[string]any{
 		"displayName": "晚餐搭子",
@@ -75,6 +76,41 @@ func TestProviderOrderFlow(t *testing.T) {
 	}
 }
 
+func TestAdminRouteRequiresAuth(t *testing.T) {
+	store.ResetDefaultForTest()
+	engine := router.New(zap.NewNop())
+
+	mustRequest(t, engine, http.MethodGet, "/api/v1/admin/providers", nil, nil, http.StatusUnauthorized)
+}
+
+func TestAdminRoutePermissionDenied(t *testing.T) {
+	store.ResetDefaultForTest()
+	engine := router.New(zap.NewNop())
+
+	contentToken := adminLogin(t, engine, "content_admin", "admin123456")
+
+	mustRequest(t, engine, http.MethodGet, "/api/v1/admin/posts", nil, withAuth(contentToken), http.StatusOK)
+	mustRequest(t, engine, http.MethodPost, "/api/v1/admin/providers/1/approve", nil, withAuth(contentToken), http.StatusForbidden)
+}
+
+func TestAdminAssignRoles(t *testing.T) {
+	store.ResetDefaultForTest()
+	engine := router.New(zap.NewNop())
+
+	superToken := adminLogin(t, engine, "admin", "admin123456")
+	contentToken := adminLogin(t, engine, "content_admin", "admin123456")
+
+	mustRequest(t, engine, http.MethodGet, "/api/v1/admin/finance/reports", nil, withAuth(contentToken), http.StatusForbidden)
+	mustRequest(t, engine, http.MethodGet, "/api/v1/admin/posts", nil, withAuth(contentToken), http.StatusOK)
+
+	mustRequest(t, engine, http.MethodPut, "/api/v1/admin/rbac/users/2/roles", map[string]any{
+		"roleKeys": []string{"finance_admin"},
+	}, withAuth(superToken), http.StatusOK)
+
+	mustRequest(t, engine, http.MethodGet, "/api/v1/admin/finance/reports", nil, withAuth(contentToken), http.StatusOK)
+	mustRequest(t, engine, http.MethodGet, "/api/v1/admin/posts", nil, withAuth(contentToken), http.StatusForbidden)
+}
+
 func loginBySMS(t *testing.T, engine http.Handler, mobile string) string {
 	t.Helper()
 	mustRequest(t, engine, http.MethodPost, "/api/v1/auth/sms/send", map[string]any{
@@ -91,6 +127,22 @@ func loginBySMS(t *testing.T, engine http.Handler, mobile string) string {
 	}
 	if err := json.Unmarshal(resp.Body.Bytes(), &body); err != nil {
 		t.Fatalf("decode login response: %v", err)
+	}
+	return body.Data["accessToken"].(string)
+}
+
+func adminLogin(t *testing.T, engine http.Handler, username, password string) string {
+	t.Helper()
+	resp := mustRequest(t, engine, http.MethodPost, "/api/v1/admin/auth/login", map[string]any{
+		"username": username,
+		"password": password,
+	}, nil, http.StatusOK)
+
+	var body struct {
+		Data map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(resp.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode admin login response: %v", err)
 	}
 	return body.Data["accessToken"].(string)
 }

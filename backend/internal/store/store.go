@@ -4,6 +4,14 @@ type Store interface {
 	IssueSMSCode(mobile string) string
 	LoginBySMS(mobile, code string) (*User, string, string, error)
 	RefreshToken(refreshToken string) (string, error)
+	AdminLogin(username, password string) (*AdminUser, string, error)
+	AdminByToken(raw string) (*AdminUser, error)
+	AdminUserByID(adminUserID uint64) (*AdminUser, error)
+	AdminPermissionsByRoles(roleKeys []string) []string
+	AdminHasPermission(adminUserID uint64, permission string) bool
+	AdminRoles() []*AdminRole
+	AdminPermissions() []*AdminPermission
+	UpdateAdminUserRoles(adminUserID uint64, roleKeys []string) (*AdminUser, error)
 	UserByToken(raw string) (*User, error)
 	GetUser(userID uint64) (*User, error)
 	UpdateUser(userID uint64, updater func(*User)) (*User, error)
