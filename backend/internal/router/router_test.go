@@ -8,12 +8,12 @@ import (
 	"testing"
 
 	"ai-listen/backend/internal/router"
-	"ai-listen/backend/internal/store"
+	"ai-listen/backend/internal/model"
 	"go.uber.org/zap"
 )
 
 func TestProviderOrderFlow(t *testing.T) {
-	store.ResetDefaultForTest()
+	model.ResetDefaultForTest()
 	engine := router.New(zap.NewNop())
 
 	userToken := loginBySMS(t, engine, "13800000000")
@@ -71,20 +71,20 @@ func TestProviderOrderFlow(t *testing.T) {
 		t.Fatalf("decode response: %v", err)
 	}
 	orderData := body.Data["order"].(map[string]any)
-	if int(orderData["status"].(float64)) != store.OrderStatusCompleted {
-		t.Fatalf("expected order status %d, got %v", store.OrderStatusCompleted, orderData["status"])
+	if int(orderData["status"].(float64)) != model.OrderStatusCompleted {
+		t.Fatalf("expected order status %d, got %v", model.OrderStatusCompleted, orderData["status"])
 	}
 }
 
 func TestAdminRouteRequiresAuth(t *testing.T) {
-	store.ResetDefaultForTest()
+	model.ResetDefaultForTest()
 	engine := router.New(zap.NewNop())
 
 	mustRequest(t, engine, http.MethodGet, "/api/v1/admin/providers", nil, nil, http.StatusUnauthorized)
 }
 
 func TestAdminRoutePermissionDenied(t *testing.T) {
-	store.ResetDefaultForTest()
+	model.ResetDefaultForTest()
 	engine := router.New(zap.NewNop())
 
 	contentToken := adminLogin(t, engine, "content_admin", "admin123456")
@@ -94,7 +94,7 @@ func TestAdminRoutePermissionDenied(t *testing.T) {
 }
 
 func TestAdminAssignRoles(t *testing.T) {
-	store.ResetDefaultForTest()
+	model.ResetDefaultForTest()
 	engine := router.New(zap.NewNop())
 
 	superToken := adminLogin(t, engine, "admin", "admin123456")

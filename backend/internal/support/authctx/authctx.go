@@ -3,7 +3,7 @@ package authctx
 import (
 	"net/http"
 
-	"ai-listen/backend/internal/store"
+	"ai-listen/backend/internal/model"
 	"ai-listen/backend/pkg/ecode"
 	"ai-listen/backend/pkg/response"
 	"github.com/gin-gonic/gin"
@@ -14,14 +14,14 @@ const (
 	adminContextKey = "current_admin"
 )
 
-func CurrentUser(c *gin.Context) (*store.User, bool) {
+func CurrentUser(c *gin.Context) (*model.User, bool) {
 	if value, exists := c.Get(userContextKey); exists {
-		if user, ok := value.(*store.User); ok && user != nil {
+		if user, ok := value.(*model.User); ok && user != nil {
 			return user, true
 		}
 	}
 
-	user, err := store.Default().UserByToken(c.GetHeader("Authorization"))
+	user, err := model.Default().UserByToken(c.GetHeader("Authorization"))
 	if err != nil {
 		response.Fail(c, http.StatusUnauthorized, ecode.Unauthorized, gin.H{"reason": err.Error()})
 		return nil, false
@@ -30,14 +30,14 @@ func CurrentUser(c *gin.Context) (*store.User, bool) {
 	return user, true
 }
 
-func CurrentAdmin(c *gin.Context) (*store.AdminUser, bool) {
+func CurrentAdmin(c *gin.Context) (*model.AdminUser, bool) {
 	if value, exists := c.Get(adminContextKey); exists {
-		if admin, ok := value.(*store.AdminUser); ok && admin != nil {
+		if admin, ok := value.(*model.AdminUser); ok && admin != nil {
 			return admin, true
 		}
 	}
 
-	admin, err := store.Default().AdminByToken(c.GetHeader("Authorization"))
+	admin, err := model.Default().AdminByToken(c.GetHeader("Authorization"))
 	if err != nil {
 		response.Fail(c, http.StatusUnauthorized, ecode.Unauthorized, gin.H{"reason": err.Error()})
 		return nil, false

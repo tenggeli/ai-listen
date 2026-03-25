@@ -5,14 +5,14 @@ import (
 
 	"ai-listen/backend/internal/config"
 	"ai-listen/backend/internal/router"
-	"ai-listen/backend/internal/store"
+	"ai-listen/backend/internal/model"
 	"go.uber.org/zap"
 )
 
 type App struct {
 	cfg    config.Config
 	logger *zap.Logger
-	db     *store.MySQLStore
+	db     *model.MySQLStore
 }
 
 func New() (*App, error) {
@@ -29,11 +29,11 @@ func New() (*App, error) {
 	}
 
 	if cfg.MySQLDSN != "" {
-		db, err := store.NewMySQLStore(cfg.MySQLDSN)
+		db, err := model.NewMySQLStore(cfg.MySQLDSN)
 		if err != nil {
 			return nil, fmt.Errorf("init mysql store: %w", err)
 		}
-		store.SetDefault(db)
+		model.SetDefault(db)
 		app.db = db
 	}
 
