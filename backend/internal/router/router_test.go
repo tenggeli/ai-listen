@@ -306,6 +306,86 @@ func TestAdminAssignRoles(t *testing.T) {
 	mustRequest(t, engine, http.MethodGet, "/api/v1/admin/posts", nil, withAuth(contentToken), http.StatusForbidden)
 }
 
+func TestAudioFlow(t *testing.T) {
+	model.ResetDefaultForTest()
+	engine := router.New(zap.NewNop())
+
+	userToken := loginBySMS(t, engine, "13800000031")
+
+	mustRequest(t, engine, http.MethodGet, "/api/v1/audio/categories", nil, nil, http.StatusOK)
+	listResp := mustRequest(t, engine, http.MethodGet, "/api/v1/audio?category=sleep", nil, nil, http.StatusOK)
+	mustRequest(t, engine, http.MethodGet, "/api/v1/audio/1", nil, nil, http.StatusOK)
+	mustRequest(t, engine, http.MethodPost, "/api/v1/audio/1/play-logs", map[string]any{"progressSec": 120}, withAuth(userToken), http.StatusOK)
+	favResp := mustRequest(t, engine, http.MethodPost, "/api/v1/audio/1/favorite", nil, withAuth(userToken), http.StatusOK)
+
+	var listBody struct {
+		Data map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(listResp.Body.Bytes(), &listBody); err != nil {
+		t.Fatalf("decode audio list response: %v", err)
+	}
+	list := listBody.Data["list"].([]any)
+	if len(list) == 0 {
+		t.Fatalf("expected non-empty audio list")
+	}
+
+	var favBody struct {
+		Data map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(favResp.Body.Bytes(), &favBody); err != nil {
+		t.Fatalf("decode audio favorite response: %v", err)
+	}
+	if created, ok := favBody.Data["created"].(bool); !ok || !created {
+		t.Fatalf("expected created=true in favorite response, got=%v", favBody.Data["created"])
+	}
+}
+
+func TestAIMatchSessionFlow(t *testing.T) {
+	model.ResetDefaultForTest()
+	engine := router.New(zap.NewNop())
+
+	providerToken := loginBySMS(t, engine, "13900000032")
+	adminToken := adminLogin(t, engine, "admin", "admin123456")
+
+	mustRequest(t, engine, http.MethodPost, "/api/v1/provider-center/apply", map[string]any{
+		"realName": "AI搭子",
+		"idCardNo": "310101199005055678",
+	}, withAuth(providerToken), http.StatusOK)
+	mustRequest(t, engine, http.MethodPost, "/api/v1/admin/providers/1/approve", nil, withAuth(adminToken), http.StatusOK)
+	mustRequest(t, engine, http.MethodPut, "/api/v1/provider-center/profile", map[string]any{
+		"displayName": "夜聊陪伴师",
+		"intro":       "擅长情绪安抚和失眠陪伴",
+		"tags":        []string{"陪伴", "助眠", "减压"},
+	}, withAuth(providerToken), http.StatusOK)
+	mustRequest(t, engine, http.MethodPut, "/api/v1/provider-center/service-items", map[string]any{
+		"items": []map[string]any{
+			{"serviceItemId": 1, "priceAmount": 10000, "priceUnit": "小时"},
+		},
+	}, withAuth(providerToken), http.StatusOK)
+
+	matchResp := mustRequest(t, engine, http.MethodPost, "/api/v1/ai/match", map[string]any{
+		"inputType": "text",
+		"content":   "最近失眠，想找个能聊天陪伴的人",
+		"cityCode":  "310100",
+	}, nil, http.StatusOK)
+
+	var matchBody struct {
+		Data map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(matchResp.Body.Bytes(), &matchBody); err != nil {
+		t.Fatalf("decode ai match response: %v", err)
+	}
+	sessionID, ok := matchBody.Data["sessionId"].(string)
+	if !ok || sessionID == "" {
+		t.Fatalf("expected non-empty sessionId, got=%v", matchBody.Data["sessionId"])
+	}
+	recommendations := matchBody.Data["recommendations"].([]any)
+	if len(recommendations) == 0 {
+		t.Fatalf("expected recommendations in ai match response")
+	}
+	mustRequest(t, engine, http.MethodGet, "/api/v1/ai/match/"+sessionID, nil, nil, http.StatusOK)
+}
+
 func loginBySMS(t *testing.T, engine http.Handler, mobile string) string {
 	t.Helper()
 	mustRequest(t, engine, http.MethodPost, "/api/v1/auth/sms/send", map[string]any{
