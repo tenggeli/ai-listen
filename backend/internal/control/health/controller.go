@@ -15,11 +15,6 @@ func NewHandler(logger *zap.Logger) *Controller {
 	return &Controller{logger: logger}
 }
 
-func RegisterRoutes(group *gin.RouterGroup, logger *zap.Logger) {
-	handler := NewHandler(logger)
-	group.GET("/health", handler.Health)
-}
-
 func (h *Controller) Health(c *gin.Context) {
 	h.logger.Debug("health check")
 

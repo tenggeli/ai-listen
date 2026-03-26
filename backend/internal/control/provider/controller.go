@@ -14,17 +14,6 @@ type Controller struct {
 	logger *zap.Logger
 }
 
-func RegisterRoutes(group *gin.RouterGroup, logger *zap.Logger) {
-	handler := &Controller{logger: logger}
-
-	providersGroup := group.Group("/providers")
-	providersGroup.GET("", handler.List)
-	providersGroup.GET("/:providerId", handler.Detail)
-	providersGroup.GET("/:providerId/posts", handler.Posts)
-	providersGroup.POST("/:providerId/favorite", handler.Favorite)
-	providersGroup.DELETE("/:providerId/favorite", handler.Unfavorite)
-}
-
 func (h *Controller) List(c *gin.Context) {
 	response.Success(c, gin.H{
 		"module": "provider",

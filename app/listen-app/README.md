@@ -1,10 +1,12 @@
 # listen-app
 
-当前目录用于后续 App 工程接入。
+该目录已从“统一 App 占位目录”迁移为历史说明目录。
 
-建议方案：
-- 优先使用 `uni-app + Vue3`
-- 与 `web/` 共享设计令牌、接口定义与部分业务逻辑
+当前 App 工程已拆分为两个独立子工程：
+- `app/apps/user-app`：用户 App
+- `app/apps/admin-app`：管理 App
 
-当前阶段先保留目录占位，待用户端 Web 和接口基础稳定后再初始化具体 App 工程。
+共享模块目录：
+- `app/packages/shared`
 
+后续请直接在以上新目录进行开发。

@@ -14,17 +14,6 @@ type Controller struct {
 	logger *zap.Logger
 }
 
-func RegisterRoutes(group *gin.RouterGroup, logger *zap.Logger) {
-	handler := &Controller{logger: logger}
-
-	authGroup := group.Group("/auth")
-	authGroup.POST("/sms/send", handler.SendSMS)
-	authGroup.POST("/login/sms", handler.LoginBySMS)
-	authGroup.POST("/login/wechat", handler.LoginByWechat)
-	authGroup.POST("/token/refresh", handler.RefreshToken)
-	authGroup.POST("/logout", handler.Logout)
-}
-
 func (h *Controller) SendSMS(c *gin.Context) {
 	var req SendSMSRequest
 	if err := c.ShouldBindJSON(&req); err != nil || req.Mobile == "" {

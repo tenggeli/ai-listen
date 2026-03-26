@@ -10,16 +10,6 @@ type Controller struct {
 	logger *zap.Logger
 }
 
-func RegisterRoutes(group *gin.RouterGroup, logger *zap.Logger) {
-	handler := &Controller{logger: logger}
-
-	group.GET("/audio/categories", handler.Categories)
-	group.GET("/audio", handler.List)
-	group.GET("/audio/:audioId", handler.Detail)
-	group.POST("/audio/:audioId/play-logs", handler.PlayLog)
-	group.POST("/audio/:audioId/favorite", handler.Favorite)
-}
-
 func (h *Controller) Categories(c *gin.Context) {
 	response.Success(c, gin.H{"module": "audio", "action": "categories"})
 }

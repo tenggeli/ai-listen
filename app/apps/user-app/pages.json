@@ -1,0 +1,28 @@
+{
+  "pages": [
+    {
+      "path": "src/pages/index/index",
+      "style": {
+        "navigationBarTitleText": "listen 用户端"
+      }
+    },
+    {
+      "path": "src/pages/login/index",
+      "style": {
+        "navigationBarTitleText": "短信登录"
+      }
+    },
+    {
+      "path": "src/pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的资料"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "listen",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F7F9FC"
+  }
+}

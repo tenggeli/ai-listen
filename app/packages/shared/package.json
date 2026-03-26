@@ -1,0 +1,13 @@
+{
+  "name": "@listen/app-shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./http": "./src/http/index.ts",
+    "./api": "./src/api/index.ts",
+    "./design": "./src/design/index.ts"
+  }
+}

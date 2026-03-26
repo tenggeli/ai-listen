@@ -109,14 +109,69 @@ func (s *MemoryStore) CreatePayment(orderID uint64) (*Payment, *Order, error) {
 		ID:        s.nextPaymentID,
 		OrderID:   orderID,
 		PayAmount: order.PayAmount,
-		Status:    20,
+		Status:    PaymentStatusPending,
 		CreatedAt: now,
-		PaidAt:    now,
 	}
 	s.payments[payment.ID] = payment
 	s.nextPaymentID++
-	s.transitionOrder(order, OrderStatusPendingAccept, "user", order.UserID, "payment completed")
-	return payment, cloneOrder(order), nil
+	return clonePayment(payment), cloneOrder(order), nil
+}
+
+func (s *MemoryStore) GetPayment(paymentID uint64) (*Payment, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	payment, ok := s.payments[paymentID]
+	if !ok {
+		return nil, ErrPaymentNotFound
+	}
+	return clonePayment(payment), nil
+}
+
+func (s *MemoryStore) AcquirePaymentCallbackKey(channel, idemKey string, paymentID uint64) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	key := channel + ":" + idemKey
+	existedPaymentID, ok := s.callbackKeys[key]
+	if !ok {
+		s.callbackKeys[key] = paymentID
+		return false, nil
+	}
+	if existedPaymentID == paymentID {
+		return true, nil
+	}
+	return false, ErrPaymentCallbackKeyUse
+}
+
+func (s *MemoryStore) ConfirmPaymentSuccess(paymentID uint64, thirdTradeNo, notifyRaw string) (*Payment, *Order, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, _ = thirdTradeNo, notifyRaw
+
+	payment, ok := s.payments[paymentID]
+	if !ok {
+		return nil, nil, ErrPaymentNotFound
+	}
+	order, ok := s.orders[payment.OrderID]
+	if !ok {
+		return nil, nil, ErrOrderNotFound
+	}
+	if payment.Status == PaymentStatusPaid {
+		return clonePayment(payment), cloneOrder(order), nil
+	}
+	if payment.Status != PaymentStatusPending {
+		return nil, nil, ErrInvalidPaymentStatus
+	}
+	if order.Status != OrderStatusPendingPayment {
+		return nil, nil, ErrInvalidOrderStatus
+	}
+
+	now := time.Now()
+	payment.Status = PaymentStatusPaid
+	payment.PaidAt = now
+	s.transitionOrder(order, OrderStatusPendingAccept, "user", order.UserID, "payment callback success")
+	return clonePayment(payment), cloneOrder(order), nil
 }
 
 func (s *MemoryStore) CancelOrder(orderID, userID uint64, reason string) (*Order, error) {

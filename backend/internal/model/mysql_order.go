@@ -124,26 +124,141 @@ func (s *MySQLStore) CreatePayment(orderID uint64) (*Payment, *Order, error) {
 	paymentNo := fmt.Sprintf("PAY%014d", now.UnixNano()%1e14)
 	res, err := tx.ExecContext(ctx, `
 		INSERT INTO payments(payment_no, order_id, user_id, pay_channel, pay_amount, status, paid_at)
-		VALUES (?, ?, ?, 1, ?, 20, ?)
-	`, paymentNo, orderID, order.UserID, order.PayAmount, now)
+		VALUES (?, ?, ?, 1, ?, ?, NULL)
+	`, paymentNo, orderID, order.UserID, order.PayAmount, PaymentStatusPending)
 	if err != nil {
 		return nil, nil, err
 	}
 	paymentID, _ := res.LastInsertId()
-
-	if _, err := tx.ExecContext(ctx, `UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, OrderStatusPendingAccept, orderID); err != nil {
+	if err := tx.Commit(); err != nil {
 		return nil, nil, err
 	}
-	if err := s.insertOrderLogTx(ctx, tx, orderID, OrderStatusPendingPayment, OrderStatusPendingAccept, operatorRoleUser, order.UserID, "payment completed"); err != nil {
+
+	payment := &Payment{ID: uint64(paymentID), OrderID: orderID, PayAmount: order.PayAmount, Status: PaymentStatusPending, CreatedAt: now}
+	loadedOrder, err := s.GetOrder(orderID)
+	return payment, loadedOrder, err
+}
+
+func (s *MySQLStore) GetPayment(paymentID uint64) (*Payment, error) {
+	var payment Payment
+	var paidAt sql.NullTime
+	err := s.db.QueryRow(`
+		SELECT id, order_id, pay_amount, status, created_at, paid_at
+		FROM payments
+		WHERE id = ?
+	`, paymentID).Scan(&payment.ID, &payment.OrderID, &payment.PayAmount, &payment.Status, &payment.CreatedAt, &paidAt)
+	if err == sql.ErrNoRows {
+		return nil, ErrPaymentNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	if paidAt.Valid {
+		payment.PaidAt = paidAt.Time
+	}
+	return &payment, nil
+}
+
+func (s *MySQLStore) AcquirePaymentCallbackKey(channel, idemKey string, paymentID uint64) (bool, error) {
+	ctx := context.Background()
+	res, err := s.db.ExecContext(ctx, `
+		INSERT IGNORE INTO payment_callback_idempotency(channel, idem_key, payment_id)
+		VALUES (?, ?, ?)
+	`, channel, idemKey, paymentID)
+	if err != nil {
+		return false, err
+	}
+	affected, _ := res.RowsAffected()
+	if affected > 0 {
+		return false, nil
+	}
+
+	var existedPaymentID uint64
+	err = s.db.QueryRowContext(ctx, `
+		SELECT payment_id FROM payment_callback_idempotency
+		WHERE channel = ? AND idem_key = ?
+		LIMIT 1
+	`, channel, idemKey).Scan(&existedPaymentID)
+	if err != nil {
+		return false, err
+	}
+	if existedPaymentID == paymentID {
+		return true, nil
+	}
+	return false, ErrPaymentCallbackKeyUse
+}
+
+func (s *MySQLStore) ConfirmPaymentSuccess(paymentID uint64, thirdTradeNo, notifyRaw string) (*Payment, *Order, error) {
+	ctx := context.Background()
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer tx.Rollback()
+
+	var payment Payment
+	var userID uint64
+	var paidAt sql.NullTime
+	err = tx.QueryRowContext(ctx, `
+		SELECT id, order_id, user_id, pay_amount, status, created_at, paid_at
+		FROM payments
+		WHERE id = ? FOR UPDATE
+	`, paymentID).Scan(&payment.ID, &payment.OrderID, &userID, &payment.PayAmount, &payment.Status, &payment.CreatedAt, &paidAt)
+	if err == sql.ErrNoRows {
+		return nil, nil, ErrPaymentNotFound
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+	if paidAt.Valid {
+		payment.PaidAt = paidAt.Time
+	}
+
+	var orderStatus int
+	err = tx.QueryRowContext(ctx, `SELECT status FROM orders WHERE id = ? FOR UPDATE`, payment.OrderID).Scan(&orderStatus)
+	if err == sql.ErrNoRows {
+		return nil, nil, ErrOrderNotFound
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if payment.Status == PaymentStatusPaid {
+		if err := tx.Commit(); err != nil {
+			return nil, nil, err
+		}
+		order, loadErr := s.GetOrder(payment.OrderID)
+		return &payment, order, loadErr
+	}
+	if payment.Status != PaymentStatusPending {
+		return nil, nil, ErrInvalidPaymentStatus
+	}
+	if orderStatus != OrderStatusPendingPayment {
+		return nil, nil, ErrInvalidOrderStatus
+	}
+
+	now := time.Now()
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE payments
+		SET status = ?, paid_at = ?, third_trade_no = ?, notify_raw = ?, updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?
+	`, PaymentStatusPaid, now, thirdTradeNo, notifyRaw, paymentID); err != nil {
+		return nil, nil, err
+	}
+	if _, err := tx.ExecContext(ctx, `UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, OrderStatusPendingAccept, payment.OrderID); err != nil {
+		return nil, nil, err
+	}
+	if err := s.insertOrderLogTx(ctx, tx, payment.OrderID, OrderStatusPendingPayment, OrderStatusPendingAccept, operatorRoleUser, userID, "payment callback success"); err != nil {
 		return nil, nil, err
 	}
 	if err := tx.Commit(); err != nil {
 		return nil, nil, err
 	}
 
-	payment := &Payment{ID: uint64(paymentID), OrderID: orderID, PayAmount: order.PayAmount, Status: 20, CreatedAt: now, PaidAt: now}
-	loadedOrder, err := s.GetOrder(orderID)
-	return payment, loadedOrder, err
+	payment.Status = PaymentStatusPaid
+	payment.PaidAt = now
+	loadedOrder, err := s.GetOrder(payment.OrderID)
+	return &payment, loadedOrder, err
 }
 
 func (s *MySQLStore) CancelOrder(orderID, userID uint64, reason string) (*Order, error) {

@@ -1,0 +1,22 @@
+{
+  "pages": [
+    {
+      "path": "src/pages/index/index",
+      "style": {
+        "navigationBarTitleText": "listen 管理端"
+      }
+    },
+    {
+      "path": "src/pages/login/index",
+      "style": {
+        "navigationBarTitleText": "管理员登录"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "listen admin",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F5F7FA"
+  }
+}

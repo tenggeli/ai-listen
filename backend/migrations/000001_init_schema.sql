@@ -261,6 +261,16 @@ CREATE TABLE IF NOT EXISTS payments (
   KEY idx_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS payment_callback_idempotency (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  channel VARCHAR(32) NOT NULL,
+  idem_key VARCHAR(128) NOT NULL,
+  payment_id BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_channel_idem_key (channel, idem_key),
+  KEY idx_payment_id (payment_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 CREATE TABLE IF NOT EXISTS refunds (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   refund_no VARCHAR(32) NOT NULL,

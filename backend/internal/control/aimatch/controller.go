@@ -10,14 +10,6 @@ type Controller struct {
 	logger *zap.Logger
 }
 
-func RegisterRoutes(group *gin.RouterGroup, logger *zap.Logger) {
-	handler := &Controller{logger: logger}
-
-	aiGroup := group.Group("/ai")
-	aiGroup.POST("/match", handler.Match)
-	aiGroup.GET("/match/:sessionId", handler.GetMatch)
-}
-
 func (h *Controller) Match(c *gin.Context) {
 	var req MatchRequest
 	_ = c.ShouldBindJSON(&req)
