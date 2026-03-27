@@ -11,7 +11,7 @@ type ServerConfig struct {
 func LoadServerConfig() ServerConfig {
 	port := envOrDefault("LISTEN_SERVER_PORT", "8080")
 	driver := envOrDefault("LISTEN_REPOSITORY_DRIVER", "memory")
-	dsn := envOrDefault("LISTEN_MYSQL_DSN", "root:root@tcp(127.0.0.1:3306)/listen?parseTime=true&loc=Local")
+	dsn := envOrDefault("LISTEN_MYSQL_DSN", "hwd:hWd12300-@tcp(127.0.0.1:3306)/listen?parseTime=true&loc=Local")
 	return ServerConfig{Port: port, RepositoryDriver: driver, MySQLDSN: dsn}
 }
 
