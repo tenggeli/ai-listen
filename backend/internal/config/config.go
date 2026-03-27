@@ -16,7 +16,7 @@ func Load() Config {
 
 	v.SetDefault("APP_NAME", "listen-backend")
 	v.SetDefault("APP_ENV", "dev")
-	v.SetDefault("HTTP_ADDR", ":8080")
+	v.SetDefault("HTTP_ADDR", ":18080")
 	v.SetDefault("MYSQL_DSN", "")
 	v.SetDefault("PAYMENT_CALLBACK_SECRET", "listen-dev-callback-secret")
 

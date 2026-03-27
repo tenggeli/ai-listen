@@ -28,6 +28,7 @@ ai-listen/
 ```bash
 cd backend
 go run ./cmd/server
+# 默认监听 :18080，可通过 HTTP_ADDR 覆盖
 ```
 
 ### 2) 启动后端（MySQL 模式）
@@ -35,6 +36,12 @@ go run ./cmd/server
 ```bash
 cd backend
 MYSQL_DSN='user:password@tcp(127.0.0.1:3306)/listen?charset=utf8mb4&parseTime=True&loc=Local' go run ./cmd/server
+```
+
+后台运行（日志输出到 `~/log/backend-YYYYMMDDHHMMSS.log`）：
+```bash
+cd backend
+./scripts/start_bg.sh
 ```
 
 支付回调签名密钥可通过 `PAYMENT_CALLBACK_SECRET` 配置（默认开发值：`listen-dev-callback-secret`）。
@@ -55,6 +62,11 @@ npm install
 npm run dev
 ```
 
+服务器代理（Nginx）可使用 `deploy/nginx/listen.proxy.conf`：
+- `/` -> `127.0.0.1:5173`（user-web）
+- `/admin/` -> `127.0.0.1:5174`（admin-web）
+- `/api/` -> `127.0.0.1:18080`（backend）
+
 ### 4) 启动 App（uni-app H5）
 
 ```bash
@@ -65,8 +77,8 @@ pnpm --filter listen-admin-app dev:h5
 ```
 
 ## 常用信息
-- 健康检查：`GET /api/v1/health`
-- 管理员登录：`POST /api/v1/admin/auth/login`
+- 健康检查：`GET http://127.0.0.1:18080/api/v1/health`
+- 管理员登录：`POST http://127.0.0.1:18080/api/v1/admin/auth/login`
 
 默认开发账号（内存/MySQL 种子一致）：
 - `admin / admin123456`

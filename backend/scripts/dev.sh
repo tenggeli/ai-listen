@@ -2,5 +2,4 @@
 
 set -e
 
-go run ./cmd/server
-
+HTTP_ADDR="${HTTP_ADDR:-:18080}" go run ./cmd/server
