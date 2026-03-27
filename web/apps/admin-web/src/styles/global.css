@@ -1,0 +1,13 @@
+:root {
+  font-family: "PingFang SC", "Noto Sans SC", sans-serif;
+  color: #111827;
+  background: #f8fafc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}

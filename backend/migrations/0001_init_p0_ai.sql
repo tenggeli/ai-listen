@@ -1,0 +1,49 @@
+CREATE TABLE IF NOT EXISTS ai_sessions (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  session_uid VARCHAR(64) NOT NULL UNIQUE,
+  user_id VARCHAR(64) NOT NULL,
+  scene_type VARCHAR(32) NOT NULL,
+  summary VARCHAR(255) NOT NULL DEFAULT '',
+  status VARCHAR(32) NOT NULL,
+  last_message_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_user_last_message (user_id, last_message_at)
+);
+
+CREATE TABLE IF NOT EXISTS ai_messages (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  session_uid VARCHAR(64) NOT NULL,
+  sender_type VARCHAR(16) NOT NULL,
+  message_type VARCHAR(16) NOT NULL DEFAULT 'text',
+  content TEXT NOT NULL,
+  intent_json JSON NULL,
+  safety_level VARCHAR(16) NOT NULL DEFAULT 'normal',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_session_created (session_uid, created_at)
+);
+
+CREATE TABLE IF NOT EXISTS ai_match_requests (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  request_uid VARCHAR(64) NOT NULL UNIQUE,
+  user_id VARCHAR(64) NOT NULL,
+  session_uid VARCHAR(64) NULL,
+  input_text TEXT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_user_created (user_id, created_at)
+);
+
+CREATE TABLE IF NOT EXISTS ai_match_results (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  request_uid VARCHAR(64) NOT NULL,
+  rank_no INT NOT NULL,
+  provider_id VARCHAR(64) NOT NULL,
+  score DECIMAL(5,4) NOT NULL,
+  reason_text VARCHAR(255) NOT NULL,
+  result_type VARCHAR(32) NOT NULL DEFAULT 'provider',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_request_rank (request_uid, rank_no)
+);
