@@ -34,6 +34,7 @@ function onSubmit() {
         <button type="button" :disabled="vm.state.matchState === PageLoadState.Loading" @click="onSubmit">开始 AI 匹配</button>
         <button type="button" class="ghost">语音输入（占位）</button>
         <button type="button" class="ghost">高级筛选（占位）</button>
+        <router-link class="ghost link-btn" to="/chat">进入 AI 对话页</router-link>
       </div>
       <p class="tips" v-if="vm.state.remainingState === PageLoadState.Success">今日剩余匹配次数：{{ vm.state.remaining }}</p>
       <p class="tips" v-else-if="vm.state.remainingState === PageLoadState.Loading">正在加载匹配次数...</p>
@@ -124,9 +125,16 @@ button:disabled {
   cursor: wait;
 }
 
-button.ghost {
+.ghost {
   background: #eff6ff;
   color: #1e3a8a;
+}
+
+.link-btn {
+  display: inline-block;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 8px 14px;
 }
 
 .tips {
