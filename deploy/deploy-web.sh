@@ -8,37 +8,53 @@ WEB_ROOT="/var/www/html"
 ADMIN_TARGET="${WEB_ROOT}/admin-web"
 USER_TARGET="${WEB_ROOT}/user-web"
 
-echo "[1/4] Build admin-web"
-cd "${ADMIN_WEB_DIR}"
-npm ci
-npm run build
+build_app() {
+  local app_dir="$1"
+  local app_name="$2"
 
-echo "[2/4] Build user-web"
-cd "${USER_WEB_DIR}"
-npm ci
-npm run build
+  echo "[build] ${app_name}"
+  cd "${app_dir}"
+  npm ci
+  npm run build
 
-echo "[3/4] Deploy dist files (requires sudo)"
-if [[ ! -d "${ADMIN_WEB_DIR}/dist" ]]; then
-  echo "admin-web dist not found: ${ADMIN_WEB_DIR}/dist"
-  exit 1
-fi
-if [[ ! -d "${USER_WEB_DIR}/dist" ]]; then
-  echo "user-web dist not found: ${USER_WEB_DIR}/dist"
-  exit 1
-fi
+  if [[ ! -d "${app_dir}/dist" ]]; then
+    echo "${app_name} dist not found: ${app_dir}/dist"
+    exit 1
+  fi
+}
 
-echo mkdir -p "${ADMIN_TARGET}"
-sudo mkdir -p "${ADMIN_TARGET}"
-sudo mkdir -p "${USER_TARGET}"
-echo rm -rf "${ADMIN_TARGET:?}/"*
-sudo rm -rf "${ADMIN_TARGET:?}/"*
-sudo rm -rf "${USER_TARGET:?}/"*
-echo cp -a "${ADMIN_WEB_DIR}/dist/." "${ADMIN_TARGET}/"
-sudo cp -a "${ADMIN_WEB_DIR}/dist/." "${ADMIN_TARGET}/"
-sudo cp -a "${USER_WEB_DIR}/dist/." "${USER_TARGET}/"
+deploy_app() {
+  local src_dist="$1"
+  local target_dir="$2"
 
-echo "[4/4] Validate and reload nginx"
+  local ts
+  ts="$(date +%Y%m%d%H%M%S)"
+  local tmp_dir="${target_dir}.tmp.${ts}"
+
+  echo "[deploy] ${src_dist} -> ${target_dir}"
+
+  sudo mkdir -p "${WEB_ROOT}"
+  sudo rm -rf "${tmp_dir}"
+  sudo mkdir -p "${tmp_dir}"
+  sudo cp -a "${src_dist}/." "${tmp_dir}/"
+
+  # 原子切换：先备份旧目录，再替换
+  if sudo test -d "${target_dir}"; then
+    sudo rm -rf "${target_dir}.bak"
+    sudo mv "${target_dir}" "${target_dir}.bak"
+  fi
+
+  sudo mv "${tmp_dir}" "${target_dir}"
+  sudo rm -rf "${target_dir}.bak"
+}
+
+build_app "${ADMIN_WEB_DIR}" "admin-web"
+build_app "${USER_WEB_DIR}" "user-web"
+
+deploy_app "${ADMIN_WEB_DIR}/dist" "${ADMIN_TARGET}"
+deploy_app "${USER_WEB_DIR}/dist" "${USER_TARGET}"
+
+echo "[nginx] check and reload"
 sudo nginx -t
 sudo systemctl reload nginx
 
