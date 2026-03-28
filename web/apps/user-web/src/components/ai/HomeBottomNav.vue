@@ -55,11 +55,11 @@ function iconPath(icon: string): string {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  width: min(100%, 430px);
+  width: min(100%, 390px);
   gap: 8px;
-  padding: 8px 12px calc(16px + env(safe-area-inset-bottom));
-  border-top: 1px solid rgba(74, 168, 196, 0.12);
-  background: rgba(10, 22, 34, 0.96);
+  padding: 0 0 calc(22px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(9, 22, 34, 0.97);
   backdrop-filter: blur(24px);
   transform: translateX(-50%);
 }
@@ -70,8 +70,8 @@ function iconPath(icon: string): string {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  min-width: 56px;
-  padding: 8px 10px;
+  min-width: 52px;
+  padding: 6px 10px;
   border: none;
   border-radius: 14px;
   background: transparent;
@@ -80,19 +80,19 @@ function iconPath(icon: string): string {
 }
 
 .nav-item.center {
-  width: 56px;
-  height: 56px;
-  margin-top: -24px;
+  width: 58px;
+  height: 58px;
+  margin-top: -16px;
   justify-content: center;
   border-radius: 50%;
-  background: linear-gradient(145deg, rgba(74, 168, 196, 0.22), rgba(30, 70, 100, 0.6));
-  border: 1.5px solid rgba(74, 168, 196, 0.38);
-  box-shadow: 0 0 24px rgba(74, 168, 196, 0.2);
-  color: #4aa8c4;
+  background: linear-gradient(145deg, rgba(115, 213, 255, 0.22), rgba(25, 74, 99, 0.8));
+  border: 1.5px solid rgba(115, 213, 255, 0.42);
+  box-shadow: 0 0 24px rgba(115, 213, 255, 0.18);
+  color: #93e0ff;
 }
 
 .nav-item.active {
-  color: #4aa8c4;
+  color: #93e0ff;
 }
 
 .nav-icon {
@@ -104,12 +104,12 @@ function iconPath(icon: string): string {
 
 .nav-label {
   font-size: 10px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
 .nav-item.center .nav-label {
   position: absolute;
   bottom: -18px;
-  color: rgba(74, 168, 196, 0.74);
+  color: rgba(147, 224, 255, 0.74);
 }
 </style>

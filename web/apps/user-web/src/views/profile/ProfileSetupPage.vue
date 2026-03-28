@@ -42,8 +42,8 @@ async function onSkip() {
   <main class="profile-page">
     <section class="card">
       <p class="step">步骤 1 / 2</p>
-      <h1>基础资料补全</h1>
-      <p class="desc">首次登录后需要先补充资料，后续可在“我的”里继续编辑。</p>
+      <h1>先认识你一下</h1>
+      <p class="desc">为了让首页推荐和对话语气更贴近你，先完成基础资料，后续可在“我的”继续编辑。</p>
 
       <div v-if="vm.state.loading" class="status">正在加载你的资料...</div>
 
@@ -99,16 +99,18 @@ async function onSkip() {
   padding: 20px;
   background:
     radial-gradient(circle at top left, rgba(31, 105, 136, 0.32), transparent 42%),
+    radial-gradient(circle at bottom right, rgba(29, 120, 149, 0.3), transparent 44%),
     linear-gradient(180deg, #091621 0%, #08131f 100%);
 }
 
 .card {
   width: min(100%, 420px);
   margin-top: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
   padding: 22px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.045);
+  backdrop-filter: blur(16px);
   height: fit-content;
 }
 
@@ -116,17 +118,21 @@ async function onSkip() {
   margin: 0;
   color: #8fdfff;
   font-size: 12px;
+  letter-spacing: 0.08em;
 }
 
 h1 {
-  margin: 8px 0;
+  margin: 10px 0 8px;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.2;
 }
 
 .desc {
   margin: 0;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.66);
   line-height: 1.7;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .status {
@@ -144,10 +150,10 @@ h1 {
 
 .input {
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 14px;
-  padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.04);
   color: #eff7fb;
 }
 
@@ -163,11 +169,11 @@ h1 {
 }
 
 .chip {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.75);
-  padding: 9px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.68);
+  padding: 11px 14px;
 }
 
 .chip.active {
@@ -191,19 +197,21 @@ h1 {
 button {
   flex: 1;
   border: none;
-  border-radius: 14px;
-  padding: 12px 14px;
+  border-radius: 18px;
+  padding: 15px 14px;
   font-weight: 600;
 }
 
 .ghost {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .primary {
   background: linear-gradient(135deg, #9be4ff, #58bee8);
   color: #082133;
+  box-shadow: 0 12px 28px rgba(86, 190, 232, 0.24);
 }
 
 button:disabled {

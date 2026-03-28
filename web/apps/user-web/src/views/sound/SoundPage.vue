@@ -59,6 +59,7 @@ function onSelectNav(key: string) {
 
     <section class="screen-shell">
       <header class="page-header">
+        <p class="hero-label">Night Companion</p>
         <h1 class="page-title">{{ vm.state.aggregate?.title ?? '声音' }}</h1>
         <p class="page-sub">{{ vm.state.aggregate?.subtitle ?? '用声音抚慰此刻的你' }}</p>
       </header>
@@ -132,7 +133,7 @@ function onSelectNav(key: string) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: min(100%, 430px);
+  width: min(100%, 390px);
   height: 44px;
   padding: 0 24px;
   color: rgba(255, 255, 255, 0.3);
@@ -143,27 +144,54 @@ function onSelectNav(key: string) {
 .screen-shell {
   position: relative;
   z-index: 1;
-  width: min(100%, 430px);
+  width: min(100%, 390px);
   min-height: 100vh;
   margin: 0 auto;
   padding: 52px 24px 96px;
 }
 
 .page-header {
-  padding-top: 14px;
+  margin-top: 18px;
+  padding: 24px;
+  border-radius: 28px;
+  border: 1px solid rgba(145, 220, 255, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
+  backdrop-filter: blur(18px);
+}
+
+.hero-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(115, 213, 255, 0.08);
+  color: #8fdfff;
+  font-size: 12px;
+}
+
+.hero-label::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8fdfff;
+  box-shadow: 0 0 14px rgba(143, 223, 255, 0.8);
 }
 
 .page-title {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 300;
-  letter-spacing: 0.08em;
+  margin: 14px 0 0;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.22;
 }
 
 .page-sub {
-  margin: 3px 0 0;
-  font-size: 12px;
-  color: rgba(74, 168, 196, 0.7);
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: rgba(237, 247, 251, 0.66);
+  line-height: 1.8;
 }
 
 .tabs-section,
@@ -176,8 +204,8 @@ function onSelectNav(key: string) {
 .state-card {
   padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.045);
 }
 
 .section-title {

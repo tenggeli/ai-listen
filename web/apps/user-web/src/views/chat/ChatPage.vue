@@ -163,7 +163,7 @@ function onUseQuickReply(reply: string) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: min(100%, 430px);
+  width: min(100%, 390px);
   height: 44px;
   padding: 0 24px;
   color: rgba(255, 255, 255, 0.3);
@@ -179,9 +179,12 @@ function onUseQuickReply(reply: string) {
   display: flex;
   align-items: center;
   gap: 12px;
-  width: min(100%, 430px);
-  padding: 12px 16px;
-  background: linear-gradient(rgba(13, 31, 45, 0.95), rgba(13, 31, 45, 0.6));
+  width: min(100%, 390px);
+  margin-top: 14px;
+  padding: 16px 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(145, 220, 255, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
   backdrop-filter: blur(10px);
   transform: translateX(-50%);
 }
@@ -193,7 +196,7 @@ function onUseQuickReply(reply: string) {
   width: 34px;
   height: 34px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 50%;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.04);
   color: rgba(255, 255, 255, 0.6);
   text-decoration: none;
@@ -208,11 +211,11 @@ function onUseQuickReply(reply: string) {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border: 1.5px solid rgba(74, 168, 196, 0.3);
-  border-radius: 50%;
-  background: rgba(74, 168, 196, 0.15);
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(115, 213, 255, 0.3);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(115, 213, 255, 0.28), rgba(115, 213, 255, 0.08));
   flex-shrink: 0;
 }
 
@@ -252,10 +255,10 @@ function onUseQuickReply(reply: string) {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  width: min(100%, 430px);
+  width: min(100%, 390px);
   min-height: 100vh;
   margin: 0 auto;
-  padding: 112px 20px 138px;
+  padding: 126px 20px 146px;
 }
 
 .date-divider {
@@ -288,10 +291,10 @@ function onUseQuickReply(reply: string) {
 
 .quick-btn {
   padding: 7px 14px;
-  border: 1px solid rgba(74, 168, 196, 0.2);
+  border: 1px solid rgba(115, 213, 255, 0.22);
   border-radius: 999px;
-  background: rgba(74, 168, 196, 0.08);
-  color: rgba(74, 168, 196, 0.74);
+  background: rgba(115, 213, 255, 0.1);
+  color: #90dfff;
   cursor: pointer;
 }
 
@@ -300,9 +303,11 @@ function onUseQuickReply(reply: string) {
   bottom: 0;
   left: 50%;
   z-index: 5;
-  width: min(100%, 430px);
-  padding: 12px 16px calc(24px + env(safe-area-inset-bottom));
-  background: linear-gradient(transparent, rgba(13, 31, 45, 0.97) 35%);
+  width: min(100%, 390px);
+  padding: 14px 18px calc(24px + env(safe-area-inset-bottom));
+  background: rgba(7, 18, 28, 0.96);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px);
   transform: translateX(-50%);
 }
 
@@ -338,7 +343,7 @@ function onUseQuickReply(reply: string) {
   width: 42px;
   height: 42px;
   border: none;
-  border-radius: 50%;
+  border-radius: 16px;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -350,10 +355,10 @@ function onUseQuickReply(reply: string) {
 }
 
 .send-btn {
-  background: linear-gradient(135deg, rgba(74, 168, 196, 0.92), rgba(61, 145, 170, 0.92));
-  color: #fff;
+  background: linear-gradient(135deg, #97e3ff, #58bee8);
+  color: #082132;
   font-size: 28px;
-  box-shadow: 0 4px 16px rgba(74, 168, 196, 0.3);
+  box-shadow: 0 12px 24px rgba(88, 190, 232, 0.24);
 }
 
 .send-btn:disabled {

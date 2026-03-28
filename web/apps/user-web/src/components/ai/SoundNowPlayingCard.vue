@@ -70,9 +70,9 @@ const waveformHeights = [8, 14, 20, 28, 32, 26, 18, 24, 30, 22, 16, 28, 32, 20, 
   position: relative;
   overflow: hidden;
   padding: 20px;
-  border: 1px solid rgba(74, 168, 196, 0.25);
-  border-radius: 24px;
-  background: linear-gradient(135deg, rgba(30, 55, 80, 0.8), rgba(15, 35, 55, 0.95));
+  border: 1px solid rgba(115, 213, 255, 0.16);
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(18, 54, 76, 0.94), rgba(10, 27, 40, 0.95));
 }
 
 .now-playing::before {
@@ -101,14 +101,14 @@ const waveformHeights = [8, 14, 20, 28, 32, 26, 18, 24, 30, 22, 16, 28, 32, 20, 
   margin: 0 0 10px;
   font-size: 10px;
   letter-spacing: 0.2em;
-  color: rgba(74, 168, 196, 0.64);
+  color: #8fdfff;
 }
 
 .dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #4aa8c4;
+  background: #8fdfff;
   animation: dotBlink 1.5s ease-in-out infinite;
 }
 
@@ -124,7 +124,7 @@ const waveformHeights = [8, 14, 20, 28, 32, 26, 18, 24, 30, 22, 16, 28, 32, 20, 
 .author {
   margin: 0 0 16px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.36);
+  color: rgba(237, 247, 251, 0.54);
 }
 
 .waveform {
@@ -141,7 +141,7 @@ const waveformHeights = [8, 14, 20, 28, 32, 26, 18, 24, 30, 22, 16, 28, 32, 20, 
   width: 3px;
   height: var(--h);
   border-radius: 2px;
-  background: rgba(74, 168, 196, 0.5);
+  background: rgba(115, 213, 255, 0.5);
   animation: waveBounce 0.8s ease-in-out infinite alternate;
   animation-delay: var(--delay);
 }
@@ -167,7 +167,7 @@ const waveformHeights = [8, 14, 20, 28, 32, 26, 18, 24, 30, 22, 16, 28, 32, 20, 
   width: 35%;
   height: 100%;
   border-radius: 2px;
-  background: linear-gradient(90deg, #4aa8c4, rgba(74, 168, 196, 0.5));
+  background: linear-gradient(90deg, #9ae4ff, #58bee8);
 }
 
 .progress-dot {
@@ -177,7 +177,7 @@ const waveformHeights = [8, 14, 20, 28, 32, 26, 18, 24, 30, 22, 16, 28, 32, 20, 
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #4aa8c4;
+  background: #97e3ff;
   transform: translateX(-50%);
   box-shadow: 0 0 6px rgba(74, 168, 196, 0.6);
 }
@@ -222,10 +222,10 @@ const waveformHeights = [8, 14, 20, 28, 32, 26, 18, 24, 30, 22, 16, 28, 32, 20, 
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: rgba(74, 168, 196, 0.18);
-  border: 1.5px solid rgba(74, 168, 196, 0.4);
-  color: #4aa8c4;
-  box-shadow: 0 0 20px rgba(74, 168, 196, 0.15);
+  background: linear-gradient(135deg, #98e3ff, #58bee8);
+  border: none;
+  color: #082132;
+  box-shadow: 0 14px 28px rgba(88, 190, 232, 0.24);
 }
 
 @keyframes dotBlink {

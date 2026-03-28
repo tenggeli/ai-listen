@@ -34,7 +34,7 @@ const logoSvg = `
   justify-content: center;
   width: 30px;
   height: 30px;
-  border-radius: 50%;
+  border-radius: 12px;
   flex-shrink: 0;
   border: 1px solid rgba(74, 168, 196, 0.24);
   background: rgba(74, 168, 196, 0.14);
@@ -48,10 +48,11 @@ const logoSvg = `
 .dots {
   display: flex;
   gap: 4px;
-  padding: 12px 18px;
+  padding: 14px 16px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 4px 18px 18px 18px;
+  border-radius: 6px 20px 20px 20px;
   background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
 }
 
 .dots span {

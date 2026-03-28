@@ -47,24 +47,24 @@ function iconMarkup(icon: string): string {
   align-items: center;
   gap: 8px;
   padding: 12px 8px;
-  border-radius: 16px;
+  border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(126, 200, 220, 0.88);
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(147, 224, 255, 0.92);
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .quick-btn:hover {
   transform: translateY(-1px);
-  background: rgba(74, 168, 196, 0.08);
-  border-color: rgba(74, 168, 196, 0.22);
+  background: rgba(115, 213, 255, 0.08);
+  border-color: rgba(115, 213, 255, 0.24);
 }
 
 .quick-label {
   font-size: 11px;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.48);
+  color: rgba(237, 247, 251, 0.52);
 }
 
 @media (max-width: 480px) {

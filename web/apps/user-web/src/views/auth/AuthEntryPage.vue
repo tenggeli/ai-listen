@@ -31,7 +31,12 @@ async function onWechatLogin() {
       <header class="hero">
         <p class="brand">LISTEN</p>
         <h1>今晚，不必一个人把情绪扛过去</h1>
-        <p class="sub">轻注册登录，先进入体验，再逐步补齐资料与性格偏好。</p>
+        <p class="sub">用最低门槛进入，先让 AI 听见你，再逐步补齐资料与性格偏好。</p>
+        <div class="feature-row">
+          <span class="feature">微信一键进入</span>
+          <span class="feature">手机号验证码</span>
+          <span class="feature">轻资料补全</span>
+        </div>
       </header>
 
       <section class="card">
@@ -66,6 +71,11 @@ async function onWechatLogin() {
         </button>
 
         <p v-if="vm.state.errorMessage" class="error">{{ vm.state.errorMessage }}</p>
+
+        <div class="help">
+          <h3>登录后引导</h3>
+          <p>首次进入会先补全基础资料，再进入性格设置；两步都支持跳过，先体验后完善。</p>
+        </div>
       </section>
     </section>
   </main>
@@ -89,15 +99,28 @@ async function onWechatLogin() {
 }
 
 .hero {
-  padding: 26px 22px;
+  position: relative;
+  overflow: hidden;
+  padding: 26px 22px 22px;
   border-radius: 28px;
   border: 1px solid rgba(145, 220, 255, 0.18);
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
 }
 
+.hero::after {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(115, 213, 255, 0.16), transparent 68%);
+}
+
 .brand {
   margin: 0;
-  font-size: 28px;
+  font-size: 30px;
   letter-spacing: 0.2em;
   font-weight: 300;
 }
@@ -116,12 +139,29 @@ h1 {
   font-size: 14px;
 }
 
+.feature-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.feature {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 12px;
+  color: rgba(239, 247, 251, 0.64);
+}
+
 .card {
   margin-top: 18px;
-  padding: 20px;
-  border-radius: 26px;
+  padding: 22px;
+  border-radius: 28px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
 }
 
 .tab-row {
@@ -222,5 +262,26 @@ h1 {
   margin: 10px 0 0;
   color: #ffb6b6;
   font-size: 12px;
+}
+
+.help {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(9, 35, 49, 0.7);
+}
+
+.help h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.help p {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(239, 247, 251, 0.6);
 }
 </style>

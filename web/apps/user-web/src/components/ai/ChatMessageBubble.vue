@@ -45,7 +45,7 @@ const logoSvg = `
   justify-content: center;
   width: 30px;
   height: 30px;
-  border-radius: 50%;
+  border-radius: 12px;
   flex-shrink: 0;
   border: 1px solid rgba(74, 168, 196, 0.24);
   background: rgba(74, 168, 196, 0.14);
@@ -67,24 +67,25 @@ const logoSvg = `
 }
 
 .bubble {
-  padding: 12px 16px;
+  padding: 14px 16px;
   font-size: 14px;
-  line-height: 1.8;
+  line-height: 1.9;
   white-space: pre-wrap;
+  backdrop-filter: blur(12px);
 }
 
 .ai-bubble {
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 4px 18px 18px 18px;
+  border-radius: 6px 20px 20px 20px;
   background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(237, 247, 251, 0.82);
 }
 
 .user-bubble {
-  border: 1px solid rgba(74, 168, 196, 0.3);
-  border-radius: 18px 4px 18px 18px;
-  background: rgba(74, 168, 196, 0.2);
-  color: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(115, 213, 255, 0.28);
+  border-radius: 20px 6px 20px 20px;
+  background: rgba(115, 213, 255, 0.14);
+  color: #f6fcff;
 }
 
 .time {

@@ -47,8 +47,8 @@ async function onSkip() {
   <main class="personality-page">
     <section class="card">
       <p class="step">步骤 2 / 2</p>
-      <h1>性格设置</h1>
-      <p class="desc">告诉 Listen 你的偏好，后续推荐和对话会更贴近你。</p>
+      <h1>给 Listen 一点性格线索</h1>
+      <p class="desc">这会影响首页问候语、对话语气、服务推荐和声音内容偏好。</p>
 
       <div v-if="vm.state.loading" class="status">正在加载你的偏好...</div>
 
@@ -67,7 +67,7 @@ async function onSkip() {
           </button>
         </div>
 
-        <h2 class="section-title">MBTI</h2>
+        <h2 class="section-title">MBTI 倾向</h2>
         <div class="mbti-grid">
           <button
             v-for="item in mbtiOptions"
@@ -100,16 +100,18 @@ async function onSkip() {
   padding: 20px;
   background:
     radial-gradient(circle at top left, rgba(34, 118, 150, 0.35), transparent 44%),
+    radial-gradient(circle at bottom right, rgba(21, 56, 93, 0.35), transparent 45%),
     linear-gradient(180deg, #08131c 0%, #08131f 100%);
 }
 
 .card {
   width: min(100%, 420px);
   margin-top: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
   padding: 22px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.045);
+  backdrop-filter: blur(16px);
   height: fit-content;
 }
 
@@ -117,22 +119,27 @@ async function onSkip() {
   margin: 0;
   color: #8fdfff;
   font-size: 12px;
+  letter-spacing: 0.08em;
 }
 
 h1 {
-  margin: 8px 0;
+  margin: 10px 0 8px;
+  font-size: 30px;
+  line-height: 1.2;
+  font-weight: 500;
 }
 
 .desc {
   margin: 0;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.66);
   line-height: 1.7;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 h2 {
   margin: 14px 0 8px;
-  font-size: 14px;
+  font-size: 18px;
+  font-weight: 500;
   color: rgba(255, 255, 255, 0.9);
 }
 
@@ -153,11 +160,11 @@ h2 {
 
 .tag,
 .mbti {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.8);
-  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(241, 248, 252, 0.62);
+  padding: 12px 14px;
 }
 
 .tag.active,
@@ -165,6 +172,7 @@ h2 {
   border-color: rgba(115, 213, 255, 0.4);
   background: rgba(115, 213, 255, 0.18);
   color: #9be4ff;
+  box-shadow: 0 10px 24px rgba(89, 190, 231, 0.08);
 }
 
 .mbti-grid {
@@ -188,19 +196,21 @@ h2 {
 button {
   flex: 1;
   border: none;
-  border-radius: 14px;
-  padding: 12px 14px;
+  border-radius: 18px;
+  padding: 16px 14px;
   font-weight: 600;
 }
 
 .secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(241, 248, 252, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .primary {
   background: linear-gradient(135deg, #9be4ff, #58bee8);
   color: #082133;
+  box-shadow: 0 14px 30px rgba(88, 190, 232, 0.24);
 }
 
 button:disabled {

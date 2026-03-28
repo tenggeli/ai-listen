@@ -60,7 +60,7 @@ function onSelectNav(key: string) {
       <header class="top-nav">
         <div class="brand-block">
           <p class="brand-name">listen</p>
-          <p class="brand-sub">陪 伴</p>
+          <p class="brand-sub">AI COMPANION ENTRY</p>
         </div>
         <div class="top-actions">
           <button type="button" class="icon-btn" aria-label="搜索">
@@ -121,17 +121,17 @@ function onSelectNav(key: string) {
         <BreathingCore :state="vm.state.matchState" @click="onSubmit" />
         <p v-if="vm.state.overview" class="partner-hint">
           <span class="partner-dot" />
-          <span><strong>{{ vm.state.overview.waitingCount }}</strong> 位搭子正在线</span>
+          <span>今晚在线陪伴者 <strong>{{ vm.state.overview.waitingCount }}</strong> 人</span>
         </p>
       </section>
 
       <section class="entry-panel">
-        <label for="query">告诉 listen 你现在想被怎样陪伴</label>
+        <label for="query">文本输入</label>
         <textarea
           id="query"
           v-model="vm.state.query"
           rows="3"
-          placeholder="例如：今晚有点焦虑，想找一个能耐心倾听的人聊一会儿"
+          placeholder="例如：今天加班到很晚，回家的路上突然很想找个人说说话。"
         />
         <div class="tips-row">
           <p v-if="vm.state.remainingState === PageLoadState.Success">今日剩余匹配次数：{{ vm.state.remaining }}</p>
@@ -168,7 +168,7 @@ function onSelectNav(key: string) {
 
       <section class="action-bar">
         <button type="button" class="main-btn" :disabled="vm.state.matchState === PageLoadState.Loading" @click="onSubmit">
-          寻找今天的搭子
+          开始 AI 匹配
         </button>
         <button type="button" class="filter-btn">高级筛选</button>
       </section>
@@ -189,10 +189,10 @@ function onSelectNav(key: string) {
 
 .screen-shell {
   position: relative;
-  width: min(100%, 430px);
+  width: min(100%, 390px);
   min-height: 100vh;
   margin: 0 auto;
-  padding: 22px 20px 96px;
+  padding: 22px 20px 110px;
   overflow: hidden;
 }
 
@@ -221,22 +221,22 @@ function onSelectNav(key: string) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 8px;
+  margin-top: 18px;
 }
 
 .brand-name {
   margin: 0;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 300;
-  letter-spacing: 0.35em;
+  letter-spacing: 0.24em;
   text-transform: lowercase;
 }
 
 .brand-sub {
   margin: 2px 0 0;
-  font-size: 10px;
-  letter-spacing: 0.45em;
-  color: #4aa8c4;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #8bdcff;
 }
 
 .top-actions {
@@ -270,31 +270,52 @@ function onSelectNav(key: string) {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #4aa8c4;
+  background: #8fdfff;
+  box-shadow: 0 0 12px rgba(143, 223, 255, 0.8);
 }
 
 .greeting-section {
   margin-top: 18px;
+  padding: 24px;
+  border-radius: 28px;
+  border: 1px solid rgba(145, 220, 255, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
+  backdrop-filter: blur(18px);
 }
 
 .greeting-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 4px;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.32);
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(115, 213, 255, 0.08);
+  font-size: 12px;
+  color: #8fdfff;
+}
+
+.greeting-time::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8fdfff;
+  box-shadow: 0 0 14px rgba(143, 223, 255, 0.8);
 }
 
 .greeting-text {
-  margin: 0;
+  margin: 14px 0 0;
   font-size: 30px;
-  font-weight: 300;
-  line-height: 1.32;
+  font-weight: 500;
+  line-height: 1.22;
 }
 
 .greeting-sub {
-  margin: 6px 0 0;
-  font-size: 13px;
-  color: rgba(126, 200, 220, 0.72);
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: rgba(237, 247, 251, 0.66);
+  line-height: 1.8;
 }
 
 .status-message {
@@ -311,9 +332,9 @@ function onSelectNav(key: string) {
   gap: 12px;
   margin-top: 18px;
   padding: 16px 18px;
-  border: 1px solid rgba(74, 168, 196, 0.16);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.045);
   backdrop-filter: blur(12px);
 }
 
@@ -326,11 +347,11 @@ function onSelectNav(key: string) {
 .mood-dot {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(74, 168, 196, 0.25), rgba(74, 168, 196, 0.08));
-  border: 1px solid rgba(74, 168, 196, 0.28);
+  width: 48px;
+  height: 48px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(115, 213, 255, 0.26), rgba(115, 213, 255, 0.08));
+  border: 1px solid rgba(115, 213, 255, 0.28);
 }
 
 .status-label,
@@ -353,7 +374,7 @@ function onSelectNav(key: string) {
 
 .status-right p + p {
   margin-top: 4px;
-  color: rgba(126, 200, 220, 0.68);
+  color: rgba(237, 247, 251, 0.54);
 }
 
 .quick-panel {
@@ -406,24 +427,24 @@ function onSelectNav(key: string) {
 }
 
 .partner-hint strong {
-  color: #7ec8dc;
+  color: #8fdfff;
 }
 
 .partner-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #4aa8c4;
-  box-shadow: 0 0 12px rgba(74, 168, 196, 0.6);
+  background: #8fdfff;
+  box-shadow: 0 0 12px rgba(143, 223, 255, 0.7);
 }
 
 .entry-panel,
 .result-panel {
   margin-top: 18px;
-  padding: 16px;
-  border: 1px solid rgba(74, 168, 196, 0.12);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.04);
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.045);
   backdrop-filter: blur(12px);
 }
 
@@ -437,10 +458,10 @@ function onSelectNav(key: string) {
   width: 100%;
   resize: vertical;
   min-height: 96px;
-  border: 1px solid rgba(74, 168, 196, 0.12);
-  border-radius: 16px;
-  padding: 14px;
-  background: rgba(6, 15, 24, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: rgba(10, 35, 49, 0.78);
   color: rgba(255, 255, 255, 0.88);
   font: inherit;
 }
@@ -468,12 +489,12 @@ function onSelectNav(key: string) {
 
 .result-head h2 {
   margin: 4px 0 0;
-  font-size: 20px;
-  font-weight: 400;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .chat-link {
-  color: #7ec8dc;
+  color: #93e0ff;
   text-decoration: none;
   font-size: 12px;
 }
@@ -512,13 +533,13 @@ function onSelectNav(key: string) {
 
 .main-btn {
   width: 100%;
-  height: 54px;
-  border: 1.5px solid rgba(74, 168, 196, 0.4);
-  border-radius: 999px;
-  background: rgba(30, 65, 88, 0.9);
-  color: rgba(255, 255, 255, 0.9);
-  letter-spacing: 0.2em;
-  box-shadow: 0 4px 30px rgba(74, 168, 196, 0.16);
+  height: 56px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #9be4ff, #5abfe8);
+  color: #082031;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  box-shadow: 0 12px 26px rgba(88, 190, 232, 0.24);
 }
 
 .main-btn:disabled {
@@ -526,10 +547,11 @@ function onSelectNav(key: string) {
 }
 
 .filter-btn {
-  padding: 8px 20px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.4);
+  padding: 10px 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(237, 247, 251, 0.74);
 }
 
 @media (max-width: 640px) {

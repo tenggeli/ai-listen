@@ -54,16 +54,16 @@ defineEmits<{
   gap: 14px;
   padding: 14px 16px;
   border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.045);
   color: inherit;
   cursor: pointer;
   text-align: left;
 }
 
 .card.active {
-  border-color: rgba(74, 168, 196, 0.35);
-  background: rgba(74, 168, 196, 0.08);
+  border-color: rgba(115, 213, 255, 0.26);
+  background: rgba(115, 213, 255, 0.08);
 }
 
 .thumb {
@@ -73,8 +73,8 @@ defineEmits<{
   width: 46px;
   height: 46px;
   border: 1px solid rgba(74, 168, 196, 0.2);
-  border-radius: 12px;
-  background: rgba(74, 168, 196, 0.1);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(115, 213, 255, 0.24), rgba(115, 213, 255, 0.08));
   font-size: 20px;
   flex-shrink: 0;
 }
@@ -107,7 +107,7 @@ defineEmits<{
 }
 
 .play-icon {
-  color: rgba(74, 168, 196, 0.54);
+  color: rgba(147, 224, 255, 0.64);
 }
 
 .play-icon svg {

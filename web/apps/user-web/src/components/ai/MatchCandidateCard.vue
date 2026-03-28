@@ -25,11 +25,11 @@ defineProps<{
 
 <style scoped>
 .card {
-  border: 1px solid rgba(74, 168, 196, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 18px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
+  padding: 14px;
+  background: rgba(10, 35, 48, 0.74);
+  backdrop-filter: blur(12px);
 }
 
 header {
@@ -43,7 +43,7 @@ header {
   margin: 0 0 6px;
   font-size: 11px;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.28);
+  color: rgba(237, 247, 251, 0.32);
 }
 
 h3 {
@@ -53,15 +53,15 @@ h3 {
 }
 
 span {
-  color: #7ec8dc;
+  color: #93e0ff;
   font-size: 12px;
 }
 
 p {
   margin: 8px 0 0;
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 13px;
-  line-height: 1.5;
+  color: rgba(237, 247, 251, 0.6);
+  font-size: 12px;
+  line-height: 1.8;
 }
 
 footer {
@@ -72,15 +72,17 @@ footer {
 
 button {
   flex: 1;
-  border: 1px solid rgba(74, 168, 196, 0.2);
-  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
   padding: 10px 12px;
-  background: rgba(30, 65, 88, 0.92);
-  color: rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(237, 247, 251, 0.72);
   cursor: pointer;
 }
 
 .ghost {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(115, 213, 255, 0.12);
+  border-color: rgba(115, 213, 255, 0.28);
+  color: #93e0ff;
 }
 </style>
