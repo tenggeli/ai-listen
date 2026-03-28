@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>listen 陪伴 · 服务页</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a1723;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;color:#eff7fb;overflow-x:hidden}
+body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;opacity:.5}
+body::before{width:320px;height:320px;background:#14435f;left:-140px;top:-60px}
+body::after{width:320px;height:320px;background:#1b7d95;right:-130px;bottom:-120px}
+.phone{position:relative;z-index:1;max-width:390px;margin:0 auto;padding:52px 0 96px;min-height:100vh}
+.status{padding:0 24px;color:rgba(255,255,255,.35);font-size:12px;display:flex;justify-content:space-between}
+.header{padding:16px 24px 0}
+.title{font-size:26px;font-weight:500}
+.sub{margin-top:6px;color:rgba(239,247,251,.62);font-size:13px;line-height:1.7}
+.search{margin:16px 24px 0;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;color:rgba(239,247,251,.42);font-size:14px}
+.chips,.filters{display:flex;gap:8px;overflow:auto;padding:14px 24px 0;scrollbar-width:none}
+.chips::-webkit-scrollbar,.filters::-webkit-scrollbar{display:none}
+.chip,.filter{flex-shrink:0;padding:9px 14px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);font-size:12px;color:rgba(239,247,251,.56)}
+.chip.active,.filter.active{background:rgba(115,213,255,.12);border-color:rgba(115,213,255,.32);color:#93e0ff}
+.banner{margin:16px 24px 0;padding:18px;border-radius:24px;background:linear-gradient(135deg,rgba(20,53,74,.95),rgba(11,28,41,.96));border:1px solid rgba(115,213,255,.16);position:relative;overflow:hidden}
+.banner::after{content:'';position:absolute;right:-20px;bottom:-26px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(115,213,255,.18),transparent 70%)}
+.banner strong{display:block;font-size:16px}
+.banner p{margin-top:8px;color:rgba(239,247,251,.64);font-size:13px;line-height:1.7;max-width:220px}
+.banner .mini{margin-top:12px;display:inline-flex;padding:8px 12px;border-radius:999px;background:rgba(115,213,255,.1);color:#90e0ff;font-size:12px}
+.list{display:grid;gap:12px;padding:18px 24px 0}
+.card{padding:16px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(14px)}
+.row{display:flex;gap:12px}
+.avatar{width:62px;height:62px;border-radius:18px;background:linear-gradient(135deg,rgba(115,213,255,.28),rgba(115,213,255,.08));border:1px solid rgba(115,213,255,.28);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.info{flex:1;min-width:0}
+.name-row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.name{font-size:16px;font-weight:500}
+.badge{padding:5px 8px;border-radius:999px;background:rgba(115,213,255,.12);color:#93e0ff;font-size:11px;white-space:nowrap}
+.meta{margin-top:6px;color:rgba(239,247,251,.54);font-size:12px;display:flex;gap:8px;flex-wrap:wrap}
+.desc{margin-top:10px;color:rgba(239,247,251,.66);font-size:13px;line-height:1.7}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.tag{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05);font-size:12px;color:rgba(239,247,251,.56)}
+.bottom{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06)}
+.price{font-size:18px;color:#f7fcff}
+.price span{font-size:12px;color:rgba(239,247,251,.42)}
+.action{display:flex;gap:10px}
+.btn,.btn-primary{border:none;border-radius:14px;padding:11px 14px;font-size:13px;font-weight:600}
+.btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(239,247,251,.72)}
+.btn-primary{background:linear-gradient(135deg,#98e3ff,#59bee7);color:#082132}
+.fab{position:fixed;right:calc(50% - 173px);bottom:104px;padding:13px 16px;border-radius:999px;background:linear-gradient(135deg,#9be4ff,#5abfe8);color:#082031;font-weight:700;font-size:13px;box-shadow:0 14px 28px rgba(90,191,232,.24)}
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:390px;height:86px;padding:0 0 22px;display:flex;justify-content:space-around;align-items:center;background:rgba(9,22,34,.97);border-top:1px solid rgba(255,255,255,.06);backdrop-filter:blur(24px)}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:5px;color:rgba(255,255,255,.24);font-size:10px}
+.nav-item.active{color:#93e0ff}
+.nav-center{margin-top:-16px;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,rgba(115,213,255,.22),rgba(25,74,99,.8));border:1.5px solid rgba(115,213,255,.42);box-shadow:0 0 24px rgba(115,213,255,.18)}
+.prototype-link,.flow-nav a{text-decoration:none}
+.prototype-link{position:fixed;top:16px;right:16px;z-index:12;padding:10px 14px;border-radius:999px;background:rgba(7,25,38,.82);border:1px solid rgba(143,223,255,.22);color:#9ae4ff;font-size:12px;backdrop-filter:blur(18px);box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.flow-nav{position:fixed;top:62px;right:16px;z-index:12;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.flow-nav a{padding:9px 12px;border-radius:999px;background:rgba(7,25,38,.78);border:1px solid rgba(255,255,255,.09);color:rgba(239,247,251,.78);font-size:12px;backdrop-filter:blur(18px)}
+</style>
+</head>
+<body>
+<a class="prototype-link" href="./listen_prototype_hub.html">原型总览</a>
+<div class="flow-nav">
+  <a href="./listen_home_v2_dark.html">上一页: 首页</a>
+  <a href="./listen_page_provider_detail.html">下一页: 服务详情</a>
+</div>
+  <main class="phone">
+    <div class="status"><span>20:34</span><span>服务</span></div>
+    <section class="header">
+      <div class="title">服务</div>
+      <div class="sub">查看 AI 推荐承接结果，也可以自己筛选今天更想要的陪伴方式。</div>
+    </section>
+
+    <div class="search">搜索服务方、场景或你想要的陪伴方式 <span>⌕</span></div>
+
+    <div class="chips">
+      <div class="chip active">全部</div>
+      <div class="chip">饭搭子</div>
+      <div class="chip">电影搭子</div>
+      <div class="chip">散步聊天</div>
+      <div class="chip">心理疏导</div>
+      <div class="chip">陪玩</div>
+    </div>
+
+    <div class="filters">
+      <div class="filter active">AI 推荐优先</div>
+      <div class="filter">在线</div>
+      <div class="filter">1km 内</div>
+      <div class="filter">评分 4.8+</div>
+      <div class="filter">性格温和</div>
+      <div class="filter">¥100-200</div>
+    </div>
+
+    <div class="banner">
+      <strong>今晚更适合“轻聊天 + 同城低压陪伴”</strong>
+      <p>根据你的首页输入与性格偏好，优先为你展示响应快、标签温和、夜间在线的服务方。</p>
+      <span class="mini">来自 AI 推荐承接</span>
+    </div>
+
+    <section class="list">
+      <article class="card">
+        <div class="row">
+          <div class="avatar">🌙</div>
+          <div class="info">
+            <div class="name-row"><div class="name">暖心倾听师 · 小林</div><div class="badge">实名认证</div></div>
+            <div class="meta"><span>4.9 分</span><span>128 次服务</span><span>800m</span><span>在线</span></div>
+            <div class="desc">擅长情绪陪伴、轻聊天与晚间低压见面，适合刚下班、心里有点空的时候。</div>
+            <div class="tags"><span class="tag">深夜聊天</span><span class="tag">温柔倾听</span><span class="tag">同城可约</span></div>
+          </div>
+        </div>
+        <div class="bottom"><div class="price">¥158 <span>/ 小时起</span></div><div class="action"><button class="btn">查看详情</button><button class="btn-primary">发起订单</button></div></div>
+      </article>
+
+      <article class="card">
+        <div class="row">
+          <div class="avatar">🎬</div>
+          <div class="info">
+            <div class="name-row"><div class="name">电影散步搭子 · 念念</div><div class="badge">高评分</div></div>
+            <div class="meta"><span>4.8 分</span><span>76 次服务</span><span>1.6km</span><span>在线</span></div>
+            <div class="desc">适合今晚想出门透口气的人。擅长看电影、散步、轻社交，不会给你太强的社交压力。</div>
+            <div class="tags"><span class="tag">电影</span><span class="tag">散步</span><span class="tag">ENFP</span></div>
+          </div>
+        </div>
+        <div class="bottom"><div class="price">¥188 <span>/ 次起</span></div><div class="action"><button class="btn">查看详情</button><button class="btn-primary">发起订单</button></div></div>
+      </article>
+
+      <article class="card">
+        <div class="row">
+          <div class="avatar">🌧</div>
+          <div class="info">
+            <div class="name-row"><div class="name">睡前放松向导 · 阿乔</div><div class="badge">夜间优先</div></div>
+            <div class="meta"><span>4.9 分</span><span>205 次服务</span><span>线上优先</span></div>
+            <div class="desc">偏向声音陪伴、睡前放松和安抚式聊天，适合焦虑、失眠、需要被稳稳接住的时刻。</div>
+            <div class="tags"><span class="tag">助眠</span><span class="tag">治愈声音</span><span class="tag">INFP</span></div>
+          </div>
+        </div>
+        <div class="bottom"><div class="price">¥99 <span>/ 30 分钟</span></div><div class="action"><button class="btn">查看详情</button><button class="btn-primary">立即聊聊</button></div></div>
+      </article>
+    </section>
+  </main>
+
+  <div class="fab">高级筛选</div>
+
+  <nav class="nav">
+    <div class="nav-item">首页</div>
+    <div class="nav-item active">服务</div>
+    <div class="nav-item nav-center">AI</div>
+    <div class="nav-item">声音</div>
+    <div class="nav-item">我的</div>
+  </nav>
+<script>
+function go(url){window.location.href=url;}
+document.querySelectorAll(".action .btn").forEach((el)=>el.addEventListener("click",()=>go("./listen_page_provider_detail.html")));
+document.querySelectorAll(".action .btn-primary")[0]?.addEventListener("click",()=>go("./listen_page_provider_detail.html"));
+document.querySelectorAll(".action .btn-primary")[1]?.addEventListener("click",()=>go("./listen_page_provider_detail.html"));
+document.querySelectorAll(".action .btn-primary")[2]?.addEventListener("click",()=>go("./listen_page_chat.html"));
+document.querySelector(".fab")?.addEventListener("click",()=>go("./listen_page_services.html"));
+const servicesNav=document.querySelectorAll(".nav .nav-item");
+servicesNav[0]?.addEventListener("click",()=>go("./listen_home_v2_dark.html"));
+servicesNav[1]?.addEventListener("click",()=>go("./listen_page_services.html"));
+servicesNav[2]?.addEventListener("click",()=>go("./listen_page_chat.html"));
+servicesNav[3]?.addEventListener("click",()=>go("./listen_page_sound.html"));
+servicesNav[4]?.addEventListener("click",()=>go("./listen_page_me.html"));
+</script>
+</body>
+</html>

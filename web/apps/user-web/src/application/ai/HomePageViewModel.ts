@@ -34,9 +34,12 @@ export class HomePageViewModel {
     this.state.remainingState = PageLoadState.Loading
     this.state.errorMessage = ''
     try {
-      const overview = await this.api.getHomeDashboard(this.userId)
-      this.state.overview = overview
-      this.state.remaining = overview.remainingCount
+      const [overview, remaining] = await Promise.all([
+        this.api.getHomeDashboard(this.userId),
+        this.api.getRemaining(this.userId)
+      ])
+      this.state.overview = overview.withRemainingCount(remaining)
+      this.state.remaining = remaining
       this.state.homeState = overview.hasContent() ? PageLoadState.Success : PageLoadState.Empty
       this.state.remainingState = PageLoadState.Success
     } catch (error) {
@@ -51,6 +54,13 @@ export class HomePageViewModel {
   }
 
   async submitMatch(): Promise<void> {
+    if (!this.state.query.trim()) {
+      this.state.candidates = []
+      this.state.matchState = PageLoadState.Empty
+      this.state.errorMessage = ''
+      return
+    }
+
     this.state.matchState = PageLoadState.Loading
     this.state.errorMessage = ''
     try {

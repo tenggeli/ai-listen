@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>listen 陪伴 · 我的</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#091621;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;color:#edf7fb;overflow-x:hidden}
+body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;opacity:.5}
+body::before{width:320px;height:320px;background:#143e5f;left:-160px;top:-80px}
+body::after{width:300px;height:300px;background:#1b7d97;right:-140px;bottom:-120px}
+.phone{position:relative;z-index:1;max-width:390px;margin:0 auto;padding:52px 20px 96px;min-height:100vh}
+.status{display:flex;justify-content:space-between;color:rgba(255,255,255,.34);font-size:12px}
+.hero{margin-top:18px;padding:22px;border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(145,220,255,.14)}
+.head{display:flex;gap:16px;align-items:center}
+.avatar{width:76px;height:76px;border-radius:24px;background:linear-gradient(135deg,rgba(115,213,255,.28),rgba(115,213,255,.08));border:1px solid rgba(115,213,255,.3);display:flex;align-items:center;justify-content:center;font-size:30px}
+.info{flex:1}
+.name{font-size:22px;font-weight:500}
+.sub{margin-top:6px;color:rgba(237,247,251,.56);font-size:13px}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.tag{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05);font-size:12px;color:rgba(237,247,251,.58)}
+.asset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.asset{padding:14px 12px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);text-align:center}
+.asset strong{display:block;font-size:18px}
+.asset span{display:block;margin-top:6px;font-size:11px;color:rgba(237,247,251,.48)}
+.section{margin-top:16px;padding:18px;border-radius:24px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}
+.section h2{font-size:16px;font-weight:500}
+.row-list{display:grid;gap:10px;margin-top:14px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-radius:18px;background:rgba(10,35,48,.74);border:1px solid rgba(255,255,255,.06);color:rgba(237,247,251,.74);font-size:14px}
+.row small{color:rgba(237,247,251,.42)}
+.order-tabs{display:flex;gap:8px;margin-top:14px;overflow:auto;scrollbar-width:none}
+.order-tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);font-size:12px;color:rgba(237,247,251,.52)}
+.tab.active{background:rgba(115,213,255,.12);border-color:rgba(115,213,255,.3);color:#93e0ff}
+.order-card{margin-top:12px;padding:16px;border-radius:20px;background:rgba(10,35,48,.74);border:1px solid rgba(255,255,255,.06)}
+.order-card strong{display:block;font-size:14px}
+.order-card p{margin-top:8px;color:rgba(237,247,251,.58);font-size:12px;line-height:1.7}
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:390px;height:86px;padding:0 0 22px;display:flex;justify-content:space-around;align-items:center;background:rgba(9,22,34,.97);border-top:1px solid rgba(255,255,255,.06);backdrop-filter:blur(24px)}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:5px;color:rgba(255,255,255,.24);font-size:10px}
+.nav-item.active{color:#93e0ff}
+.nav-center{margin-top:-16px;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,rgba(115,213,255,.22),rgba(25,74,99,.8));border:1.5px solid rgba(115,213,255,.42)}
+.prototype-link,.flow-nav a{text-decoration:none}
+.prototype-link{position:fixed;top:16px;right:16px;z-index:12;padding:10px 14px;border-radius:999px;background:rgba(7,25,38,.82);border:1px solid rgba(143,223,255,.22);color:#9ae4ff;font-size:12px;backdrop-filter:blur(18px);box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.flow-nav{position:fixed;top:62px;right:16px;z-index:12;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.flow-nav a{padding:9px 12px;border-radius:999px;background:rgba(7,25,38,.78);border:1px solid rgba(255,255,255,.09);color:rgba(239,247,251,.78);font-size:12px;backdrop-filter:blur(18px)}
+</style>
+</head>
+<body>
+<a class="prototype-link" href="./listen_prototype_hub.html">原型总览</a>
+<div class="flow-nav">
+  <a href="./listen_home_v2_dark.html">上一页: 首页</a>
+  <a href="./listen_prototype_hub.html">下一页: 返回总览</a>
+</div>
+  <main class="phone">
+    <div class="status"><span>20:41</span><span>我的</span></div>
+
+    <section class="hero">
+      <div class="head">
+        <div class="avatar">🌙</div>
+        <div class="info">
+          <div class="name">今晚想被抱抱</div>
+          <div class="sub">已陪伴 12 天 · INFP · 上海</div>
+        </div>
+      </div>
+      <div class="tags"><span class="tag">深夜聊天</span><span class="tag">电影</span><span class="tag">治愈声音</span><span class="tag">可继续完善性格</span></div>
+      <div class="asset-grid">
+        <div class="asset"><strong>3</strong><span>待处理订单</span></div>
+        <div class="asset"><strong>¥286</strong><span>钱包余额</span></div>
+        <div class="asset"><strong>12</strong><span>收藏对象</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>订单</h2>
+      <div class="order-tabs">
+        <div class="tab active">全部</div>
+        <div class="tab">待接单</div>
+        <div class="tab">待出发</div>
+        <div class="tab">服务中</div>
+        <div class="tab">已完成</div>
+      </div>
+      <div class="order-card">
+        <strong>暖心倾听师 · 小林</strong>
+        <p>今晚 21:00 · 线上倾听 30 分钟 · 已支付，等待对方确认接单。</p>
+      </div>
+      <div class="order-card">
+        <strong>电影散步搭子 · 念念</strong>
+        <p>明天 19:30 · 电影陪伴 1 场 · 待你确认见面地点。</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>资产与设置</h2>
+      <div class="row-list">
+        <div class="row"><span>钱包</span><small>余额、账单、支付方式</small></div>
+        <div class="row"><span>收藏与互动</span><small>服务方、声音、动态</small></div>
+        <div class="row"><span>VIP 权益</span><small>高级筛选、优先推荐</small></div>
+        <div class="row"><span>资料与性格设置</span><small>兴趣标签、MBTI、城市</small></div>
+        <div class="row"><span>通知与隐私</span><small>消息、黑名单、权限</small></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="nav">
+    <div class="nav-item">首页</div>
+    <div class="nav-item">服务</div>
+    <div class="nav-item nav-center">AI</div>
+    <div class="nav-item">声音</div>
+    <div class="nav-item active">我的</div>
+  </nav>
+<script>
+function go(url){window.location.href=url;}
+document.querySelectorAll(".row")[0]?.addEventListener("click",()=>go("./listen_page_me.html"));
+document.querySelectorAll(".row")[1]?.addEventListener("click",()=>go("./listen_page_square.html"));
+document.querySelectorAll(".row")[2]?.addEventListener("click",()=>go("./listen_page_services.html"));
+document.querySelectorAll(".row")[3]?.addEventListener("click",()=>go("./listen_page_personality_setup.html"));
+document.querySelectorAll(".row")[4]?.addEventListener("click",()=>go("./listen_prototype_hub.html"));
+const meNav=document.querySelectorAll(".nav .nav-item");
+meNav[0]?.addEventListener("click",()=>go("./listen_home_v2_dark.html"));
+meNav[1]?.addEventListener("click",()=>go("./listen_page_services.html"));
+meNav[2]?.addEventListener("click",()=>go("./listen_page_chat.html"));
+meNav[3]?.addEventListener("click",()=>go("./listen_page_sound.html"));
+meNav[4]?.addEventListener("click",()=>go("./listen_page_me.html"));
+</script>
+</body>
+</html>

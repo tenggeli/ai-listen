@@ -5,267 +5,135 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>listen 陪伴 · 声音</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:#0d1f2d; min-height:100vh; font-family:-apple-system,'PingFang SC',sans-serif; overflow-x:hidden; overflow-y:auto; color:rgba(255,255,255,0.8); }
-  .bg-glow { position:fixed; inset:0; pointer-events:none; background: radial-gradient(ellipse 50% 40% at 50% 25%, rgba(74,168,196,0.08) 0%,transparent 70%), radial-gradient(ellipse 30% 50% at 15% 80%, rgba(74,120,196,0.05) 0%,transparent 60%); }
-  .stars { position:fixed; inset:0; pointer-events:none; }
-  .star { position:absolute; border-radius:50%; background:rgba(255,255,255,0.5); animation:twinkle var(--d,4s) ease-in-out infinite var(--delay,0s); }
-  @keyframes twinkle { 0%,100%{opacity:0.2} 50%{opacity:0.8} }
-  .status-bar { position:fixed; top:0; left:0; right:0; height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; color:rgba(255,255,255,0.3); z-index:10; }
-  .main-container { width:100%; max-width:390px; margin:0 auto; padding:52px 0 90px; position:relative; z-index:1; }
-
-  .page-header { padding:14px 24px 0; }
-  .page-title { font-size:22px; font-weight:300; letter-spacing:2px; }
-  .page-sub { font-size:12px; color:rgba(74,168,196,0.7); margin-top:3px; }
-
-  /* 分类 */
-  .cat-tabs { display:flex; gap:6px; padding:14px 24px 0; overflow-x:auto; scrollbar-width:none; }
-  .cat-tabs::-webkit-scrollbar { display:none; }
-  .cat-tab { flex-shrink:0; padding:7px 16px; border-radius:20px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); color:rgba(255,255,255,0.3); font-size:12px; cursor:pointer; transition:all 0.2s; }
-  .cat-tab.active { background:rgba(74,168,196,0.14); border-color:rgba(74,168,196,0.38); color:#4aa8c4; }
-
-  /* 正在播放大卡 */
-  .now-playing {
-    margin:16px 24px 0;
-    background:linear-gradient(135deg, rgba(30,55,80,0.8), rgba(15,35,55,0.95));
-    border:1px solid rgba(74,168,196,0.25); border-radius:24px; padding:20px;
-    position:relative; overflow:hidden;
-  }
-  .now-playing::before {
-    content:''; position:absolute; right:-30px; top:-30px;
-    width:140px; height:140px; border-radius:50%;
-    background:radial-gradient(circle, rgba(74,168,196,0.1) 0%, transparent 70%);
-    animation:glowPulse 4s ease-in-out infinite;
-  }
-  @keyframes glowPulse { 0%,100%{transform:scale(0.9);opacity:0.5} 50%{transform:scale(1.1);opacity:1} }
-  .np-label { font-size:10px; color:rgba(74,168,196,0.6); letter-spacing:2px; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
-  .np-dot { width:5px; height:5px; border-radius:50%; background:#4aa8c4; animation:dotBlink 1.5s ease-in-out infinite; }
-  @keyframes dotBlink { 0%,100%{opacity:0.3} 50%{opacity:1} }
-  .np-title { font-size:18px; font-weight:400; color:rgba(255,255,255,0.9); margin-bottom:4px; }
-  .np-author { font-size:12px; color:rgba(255,255,255,0.35); margin-bottom:16px; }
-  /* 波形动画 */
-  .waveform { display:flex; align-items:flex-end; gap:3px; height:32px; margin-bottom:14px; }
-  .wave-bar { width:3px; border-radius:2px; background:rgba(74,168,196,0.5); animation:waveBounce var(--d,0.8s) ease-in-out infinite alternate; }
-  @keyframes waveBounce { 0%{height:4px;opacity:0.3} 100%{height:var(--h,20px);opacity:0.8} }
-  /* 进度条 */
-  .progress-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
-  .progress-bar { flex:1; height:3px; background:rgba(255,255,255,0.1); border-radius:2px; position:relative; cursor:pointer; }
-  .progress-fill { height:100%; width:35%; background:linear-gradient(90deg,#4aa8c4,rgba(74,168,196,0.5)); border-radius:2px; }
-  .progress-dot { width:10px; height:10px; border-radius:50%; background:#4aa8c4; position:absolute; top:-3.5px; left:35%; transform:translateX(-50%); box-shadow:0 0 6px rgba(74,168,196,0.6); }
-  .time-label { font-size:11px; color:rgba(255,255,255,0.25); }
-  /* 控制按钮 */
-  .controls { display:flex; align-items:center; justify-content:center; gap:24px; }
-  .ctrl-btn { display:flex; align-items:center; justify-content:center; cursor:pointer; color:rgba(255,255,255,0.45); transition:color 0.2s; }
-  .ctrl-btn:hover { color:#4aa8c4; }
-  .play-btn { width:48px; height:48px; border-radius:50%; background:rgba(74,168,196,0.18); border:1.5px solid rgba(74,168,196,0.4); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 0 20px rgba(74,168,196,0.15); transition:all 0.2s; color:#4aa8c4; }
-  .play-btn:hover { background:rgba(74,168,196,0.28); }
-
-  /* Section 标题 */
-  .section-title { padding:18px 24px 10px; font-size:13px; color:rgba(255,255,255,0.35); letter-spacing:2px; display:flex; align-items:center; gap:8px; }
-  .section-title::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.06); }
-
-  /* 音频列表 */
-  .audio-list { padding:0 24px; display:flex; flex-direction:column; gap:10px; }
-  .audio-card {
-    display:flex; align-items:center; gap:14px;
-    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07);
-    border-radius:16px; padding:14px 16px; cursor:pointer; transition:all 0.2s;
-  }
-  .audio-card:hover { border-color:rgba(74,168,196,0.22); background:rgba(74,168,196,0.05); }
-  .audio-card.active { border-color:rgba(74,168,196,0.35); background:rgba(74,168,196,0.08); }
-  .audio-thumb { width:46px; height:46px; border-radius:12px; background:rgba(74,168,196,0.1); border:1px solid rgba(74,168,196,0.2); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
-  .audio-info { flex:1; min-width:0; }
-  .audio-title { font-size:14px; color:rgba(255,255,255,0.8); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .audio-meta { display:flex; align-items:center; gap:8px; font-size:11px; color:rgba(255,255,255,0.25); }
-  .audio-duration { font-size:11px; color:rgba(255,255,255,0.25); flex-shrink:0; }
-  .audio-play-icon { flex-shrink:0; color:rgba(74,168,196,0.5); }
-
-  /* 底部导航 */
-  .bottom-nav { position:fixed; bottom:0; left:0; right:0; height:82px; padding:0 0 20px; background:rgba(10,22,34,0.97); border-top:1px solid rgba(74,168,196,0.1); backdrop-filter:blur(24px); display:flex; align-items:center; justify-content:space-around; z-index:20; max-width:390px; left:50%; transform:translateX(-50%); }
-  .nav-item { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; padding:8px 10px; border-radius:14px; transition:all 0.22s; position:relative; }
-  .nav-item.active .nav-label { color:#4aa8c4; }
-  .nav-item.nav-center { margin-top:-18px; background:linear-gradient(145deg,rgba(74,168,196,0.22),rgba(30,70,100,0.6)); border:1.5px solid rgba(74,168,196,0.4); border-radius:50%; width:56px; height:56px; padding:0; justify-content:center; box-shadow:0 0 24px rgba(74,168,196,0.22); }
-  .nav-item.nav-center .nav-label { position:absolute; bottom:-18px; font-size:9px; color:rgba(74,168,196,0.7); }
-  .nav-label { font-size:9px; color:rgba(255,255,255,0.22); letter-spacing:0.5px; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#081521;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;color:#edf7fb;overflow-x:hidden}
+body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;opacity:.5}
+body::before{width:320px;height:320px;background:#174663;left:-150px;top:-90px}
+body::after{width:320px;height:320px;background:#1b7d98;right:-140px;bottom:-140px}
+.stars{position:fixed;inset:0;pointer-events:none}.star{position:absolute;border-radius:50%;background:rgba(255,255,255,.45);animation:twinkle var(--d,4s) ease-in-out infinite var(--delay,0s)}
+@keyframes twinkle{0%,100%{opacity:.18}50%{opacity:.8}}
+.phone{position:relative;z-index:1;max-width:390px;margin:0 auto;min-height:100vh;padding:52px 20px 96px}
+.status{display:flex;justify-content:space-between;color:rgba(255,255,255,.34);font-size:12px}
+.hero{margin-top:18px;padding:24px;border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid rgba(145,220,255,.14);backdrop-filter:blur(18px)}
+.hero-label{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:rgba(115,213,255,.08);color:#8fdfff;font-size:12px}.hero-label::before{content:'';width:8px;height:8px;border-radius:50%;background:#8fdfff;box-shadow:0 0 14px rgba(143,223,255,.8)}
+.hero h1{margin-top:14px;font-size:28px;font-weight:500}.hero p{margin-top:10px;color:rgba(237,247,251,.66);font-size:14px;line-height:1.8}
+.tabs{display:flex;gap:8px;overflow:auto;padding-top:16px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{flex-shrink:0;padding:9px 14px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);font-size:12px;color:rgba(237,247,251,.54)}.tab.active{background:rgba(115,213,255,.12);border-color:rgba(115,213,255,.32);color:#93e0ff}
+.now{margin-top:16px;padding:20px;border-radius:28px;background:linear-gradient(135deg,rgba(18,54,76,.94),rgba(10,27,40,.95));border:1px solid rgba(115,213,255,.16);position:relative;overflow:hidden}.now::before{content:'';position:absolute;right:-24px;top:-32px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(115,213,255,.16),transparent 70%)}
+.now-label{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:2px;color:#8fdfff}.now-label::before{content:'';width:7px;height:7px;border-radius:50%;background:#8fdfff;box-shadow:0 0 14px rgba(143,223,255,.8)}
+.now h2{margin-top:12px;font-size:22px;font-weight:500}.now p{margin-top:6px;color:rgba(237,247,251,.54);font-size:12px}
+.wave{display:flex;align-items:flex-end;gap:4px;height:44px;margin:18px 0 16px}.bar{width:4px;border-radius:4px;background:rgba(115,213,255,.5);animation:wave var(--d,.8s) ease-in-out infinite alternate}@keyframes wave{0%{height:6px;opacity:.3}100%{height:var(--h,28px);opacity:.9}}
+.progress-row{display:flex;align-items:center;gap:10px}.time{font-size:11px;color:rgba(237,247,251,.38)}.progress{flex:1;height:4px;border-radius:999px;background:rgba(255,255,255,.08);position:relative}.progress-fill{width:36%;height:100%;border-radius:999px;background:linear-gradient(90deg,#9ae4ff,#58bee8)}.progress-dot{position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:#97e3ff;box-shadow:0 0 14px rgba(151,227,255,.6)}
+.controls{display:flex;justify-content:center;gap:24px;margin-top:18px}.ctrl,.play{display:flex;align-items:center;justify-content:center}.ctrl{width:40px;height:40px;color:rgba(237,247,251,.56)}.play{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#98e3ff,#58bee8);color:#082132;box-shadow:0 14px 28px rgba(88,190,232,.24)}
+.section-title{display:flex;align-items:center;gap:10px;margin-top:18px;color:rgba(237,247,251,.34);font-size:12px;letter-spacing:2px}.section-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.06)}
+.list{display:grid;gap:10px;margin-top:14px}.card{display:flex;gap:14px;align-items:center;padding:15px 16px;border-radius:22px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}.card.active{background:rgba(115,213,255,.08);border-color:rgba(115,213,255,.26)}
+.thumb{width:50px;height:50px;border-radius:16px;background:linear-gradient(135deg,rgba(115,213,255,.24),rgba(115,213,255,.08));border:1px solid rgba(115,213,255,.22);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}.info{flex:1;min-width:0}.info strong{display:block;font-size:14px;font-weight:500}.meta{margin-top:6px;color:rgba(237,247,251,.46);font-size:11px}.duration{font-size:11px;color:rgba(237,247,251,.36)}
+.bottom-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:390px;height:86px;padding:0 0 22px;display:flex;justify-content:space-around;align-items:center;background:rgba(9,22,34,.97);border-top:1px solid rgba(255,255,255,.06);backdrop-filter:blur(24px)}.nav-item{display:flex;flex-direction:column;align-items:center;gap:5px;color:rgba(255,255,255,.24);font-size:10px}.nav-item.active{color:#93e0ff}.nav-center{margin-top:-16px;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,rgba(115,213,255,.22),rgba(25,74,99,.8));border:1.5px solid rgba(115,213,255,.42)}
+.prototype-link,.flow-nav a{text-decoration:none}
+.prototype-link{position:fixed;top:16px;right:16px;z-index:12;padding:10px 14px;border-radius:999px;background:rgba(7,25,38,.82);border:1px solid rgba(143,223,255,.22);color:#9ae4ff;font-size:12px;backdrop-filter:blur(18px);box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.flow-nav{position:fixed;top:62px;right:16px;z-index:12;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.flow-nav a{padding:9px 12px;border-radius:999px;background:rgba(7,25,38,.78);border:1px solid rgba(255,255,255,.09);color:rgba(239,247,251,.78);font-size:12px;backdrop-filter:blur(18px)}
 </style>
 </head>
 <body>
-<div class="bg-glow"></div>
+<a class="prototype-link" href="./listen_prototype_hub.html">原型总览</a>
+<div class="flow-nav">
+  <a href="./listen_home_v2_dark.html">上一页: 首页</a>
+  <a href="./listen_page_me.html">下一页: 我的</a>
+</div>
 <div class="stars" id="stars"></div>
-<div class="status-bar"><span id="curTime">13:58</span><span>···</span></div>
+<main class="phone">
+  <div class="status"><span id="curTime">21:06</span><span>声音</span></div>
 
-<div class="main-container">
-  <div class="page-header">
-    <div class="page-title">声音</div>
-    <div class="page-sub">用声音抚慰此刻的你</div>
+  <section class="hero">
+    <div class="hero-label">Night Companion</div>
+    <h1>用声音，把今晚慢慢放下来</h1>
+    <p>如果你还不想立刻找人说话，也可以先让一段声音替你把呼吸、情绪和节奏重新安顿好。</p>
+  </section>
+
+  <div class="tabs">
+    <div class="tab active">全部</div>
+    <div class="tab">自然白噪音</div>
+    <div class="tab">睡眠引导</div>
+    <div class="tab">正念冥想</div>
+    <div class="tab">治愈故事</div>
+    <div class="tab">呼吸练习</div>
   </div>
 
-  <div class="cat-tabs">
-    <div class="cat-tab active">全部</div>
-    <div class="cat-tab">自然白噪音</div>
-    <div class="cat-tab">睡眠引导</div>
-    <div class="cat-tab">正念冥想</div>
-    <div class="cat-tab">治愈故事</div>
-    <div class="cat-tab">呼吸练习</div>
-  </div>
-
-  <!-- 正在播放 -->
-  <div class="now-playing">
-    <div class="np-label"><div class="np-dot"></div>正在播放</div>
-    <div class="np-title">深夜雨声 · 安眠版</div>
-    <div class="np-author">listen 治愈声音库 · 自然白噪音</div>
-
-    <!-- 波形动画 -->
-    <div class="waveform" id="waveform"></div>
-
-    <!-- 进度条 -->
+  <section class="now">
+    <div class="now-label">正在播放</div>
+    <h2>深夜雨声 · 安眠版</h2>
+    <p>listen 治愈声音库 · 自然白噪音</p>
+    <div class="wave" id="wave"></div>
     <div class="progress-row">
-      <span class="time-label">12:34</span>
-      <div class="progress-bar">
-        <div class="progress-fill"></div>
-        <div class="progress-dot"></div>
-      </div>
-      <span class="time-label">35:00</span>
+      <span class="time">12:34</span>
+      <div class="progress"><div class="progress-fill"></div><div class="progress-dot"></div></div>
+      <span class="time">35:00</span>
     </div>
-
-    <!-- 控制 -->
     <div class="controls">
-      <div class="ctrl-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/>
-        </svg>
-      </div>
-      <div class="play-btn" id="playBtn" onclick="togglePlay()">
-        <svg id="playIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
-        </svg>
-      </div>
-      <div class="ctrl-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/>
-        </svg>
-      </div>
+      <div class="ctrl">⏮</div>
+      <div class="play">❚❚</div>
+      <div class="ctrl">⏭</div>
     </div>
-  </div>
+  </section>
 
-  <!-- 推荐列表 -->
   <div class="section-title">为你推荐</div>
-  <div class="audio-list">
 
-    <div class="audio-card active">
-      <div class="audio-thumb">🌧</div>
-      <div class="audio-info">
-        <div class="audio-title">深夜雨声 · 安眠版</div>
-        <div class="audio-meta"><span>自然白噪音</span><span>·</span><span>1,248 次播放</span></div>
-      </div>
-      <div class="audio-duration">35:00</div>
-      <div class="audio-play-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
-        </svg>
-      </div>
+  <section class="list">
+    <div class="card active">
+      <div class="thumb">🌧</div>
+      <div class="info"><strong>深夜雨声 · 安眠版</strong><div class="meta">自然白噪音 · 1,248 次播放</div></div>
+      <div class="duration">35:00</div>
     </div>
-
-    <div class="audio-card">
-      <div class="audio-thumb">🌊</div>
-      <div class="audio-info">
-        <div class="audio-title">海浪呼吸引导 · 4-7-8 法</div>
-        <div class="audio-meta"><span>呼吸练习</span><span>·</span><span>856 次播放</span></div>
-      </div>
-      <div class="audio-duration">12:00</div>
-      <div class="audio-play-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      </div>
+    <div class="card">
+      <div class="thumb">🌊</div>
+      <div class="info"><strong>海浪呼吸引导 · 4-7-8 法</strong><div class="meta">呼吸练习 · 856 次播放</div></div>
+      <div class="duration">12:00</div>
     </div>
-
-    <div class="audio-card">
-      <div class="audio-thumb">🍃</div>
-      <div class="audio-info">
-        <div class="audio-title">森林清晨 · 入睡前冥想</div>
-        <div class="audio-meta"><span>正念冥想</span><span>·</span><span>2,034 次播放</span></div>
-      </div>
-      <div class="audio-duration">20:30</div>
-      <div class="audio-play-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      </div>
+    <div class="card">
+      <div class="thumb">🍃</div>
+      <div class="info"><strong>森林清晨 · 入睡前冥想</strong><div class="meta">正念冥想 · 2,034 次播放</div></div>
+      <div class="duration">20:30</div>
     </div>
-
-    <div class="audio-card">
-      <div class="audio-thumb">🌙</div>
-      <div class="audio-info">
-        <div class="audio-title">今晚陪你说话 · 深夜电台 Vol.12</div>
-        <div class="audio-meta"><span>治愈故事</span><span>·</span><span>3,671 次播放</span></div>
-      </div>
-      <div class="audio-duration">28:15</div>
-      <div class="audio-play-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      </div>
+    <div class="card">
+      <div class="thumb">🌙</div>
+      <div class="info"><strong>今晚陪你说话 · 深夜电台 Vol.12</strong><div class="meta">治愈故事 · 3,671 次播放</div></div>
+      <div class="duration">28:15</div>
     </div>
-
-    <div class="audio-card">
-      <div class="audio-thumb">🔥</div>
-      <div class="audio-info">
-        <div class="audio-title">壁炉暖意 · 冬夜陪伴</div>
-        <div class="audio-meta"><span>自然白噪音</span><span>·</span><span>987 次播放</span></div>
-      </div>
-      <div class="audio-duration">60:00</div>
-      <div class="audio-play-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      </div>
+    <div class="card">
+      <div class="thumb">⭐</div>
+      <div class="info"><strong>星空冥想 · 放下今天的重量</strong><div class="meta">正念冥想 · 4,122 次播放</div></div>
+      <div class="duration">18:00</div>
     </div>
+  </section>
+</main>
 
-    <div class="audio-card">
-      <div class="audio-thumb">⭐</div>
-      <div class="audio-info">
-        <div class="audio-title">星空冥想 · 放下今天的重量</div>
-        <div class="audio-meta"><span>正念冥想</span><span>·</span><span>4,122 次播放</span></div>
-      </div>
-      <div class="audio-duration">18:00</div>
-      <div class="audio-play-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- 底部导航 -->
-<div class="bottom-nav">
-  <div class="nav-item"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="rgba(255,255,255,0.25)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="9 22 9 12 15 12 15 22" stroke="rgba(255,255,255,0.25)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">首页</div></div>
-  <div class="nav-item"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.5" stroke="rgba(255,255,255,0.25)" stroke-width="1.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="rgba(255,255,255,0.25)" stroke-width="1.6" stroke-linecap="round"/></svg><div class="nav-label">广场</div></div>
-  <div class="nav-item nav-center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#4aa8c4" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="#4aa8c4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="#4aa8c4" stroke-width="1.8" stroke-linecap="round"/></svg><div class="nav-label">加入</div></div>
-  <div class="nav-item active"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" stroke="#4aa8c4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke="#4aa8c4" stroke-width="1.8" stroke-linecap="round"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14" stroke="#4aa8c4" stroke-width="1.8" stroke-linecap="round"/></svg><div class="nav-label" style="color:#4aa8c4;">声音</div></div>
-  <div class="nav-item"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="rgba(255,255,255,0.25)" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="rgba(255,255,255,0.25)" stroke-width="1.8"/></svg><div class="nav-label">我的</div></div>
-</div>
+<nav class="bottom-nav">
+  <div class="nav-item">首页</div>
+  <div class="nav-item">服务</div>
+  <div class="nav-item nav-center">AI</div>
+  <div class="nav-item active">声音</div>
+  <div class="nav-item">我的</div>
+</nav>
 
 <script>
-// 星点
 const starsEl=document.getElementById('stars');
-for(let i=0;i<40;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*1.6+0.4;s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${3+Math.random()*5}s;--delay:${Math.random()*6}s;opacity:${0.1+Math.random()*0.4};`;starsEl.appendChild(s);}
+for(let i=0;i<40;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*1.6+0.4;s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${3+Math.random()*5}s;--delay:${Math.random()*6}s;opacity:${0.1+Math.random()*0.4};`;starsEl.appendChild(s);} 
 const now=new Date();document.getElementById('curTime').textContent=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-
-// 分类切换
-document.querySelectorAll('.cat-tab').forEach(t=>{t.addEventListener('click',()=>{document.querySelectorAll('.cat-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');});});
-
-// 音频切换
-document.querySelectorAll('.audio-card').forEach(card=>{card.addEventListener('click',()=>{document.querySelectorAll('.audio-card').forEach(c=>c.classList.remove('active'));card.classList.add('active');});});
-
-// 波形动画
-const waveform=document.getElementById('waveform');
-const heights=[8,14,20,28,32,26,18,24,30,22,16,28,32,20,12,24,30,18,26,14,20,28,16,22,30];
-heights.forEach((h,i)=>{const bar=document.createElement('div');bar.className='wave-bar';bar.style.cssText=`--h:${h}px;height:${h}px;--d:${0.5+Math.random()*0.6}s;animation-delay:${i*0.05}s;`;waveform.appendChild(bar);});
-
-// 播放/暂停切换
-let playing = true;
-function togglePlay() {
-  playing = !playing;
-  document.getElementById('playIcon').innerHTML = playing
-    ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
-    : '<polygon points="5 3 19 12 5 21 5 3"/>';
-  document.querySelectorAll('.wave-bar').forEach(bar=>{
-    bar.style.animationPlayState = playing ? 'running' : 'paused';
-  });
-}
+const wave=document.getElementById('wave');
+const heights=[10,16,24,32,40,24,18,28,38,22,16,30,40,18,12,24,34,22,30,14];
+heights.forEach((h,i)=>{const b=document.createElement('div');b.className='bar';b.style.cssText=`--h:${h}px;--d:${0.5+Math.random()*0.7}s;animation-delay:${i*0.05}s;`;wave.appendChild(b);});
+function go(url){window.location.href=url;}
+document.querySelectorAll(".card")[0]?.addEventListener("click",()=>go("./listen_page_sound.html"));
+document.querySelectorAll(".card")[1]?.addEventListener("click",()=>go("./listen_page_sound.html"));
+document.querySelectorAll(".card")[2]?.addEventListener("click",()=>go("./listen_page_sound.html"));
+document.querySelectorAll(".card")[3]?.addEventListener("click",()=>go("./listen_page_chat.html"));
+document.querySelectorAll(".card")[4]?.addEventListener("click",()=>go("./listen_page_sound.html"));
+const soundNav=document.querySelectorAll(".bottom-nav .nav-item");
+soundNav[0]?.addEventListener("click",()=>go("./listen_home_v2_dark.html"));
+soundNav[1]?.addEventListener("click",()=>go("./listen_page_services.html"));
+soundNav[2]?.addEventListener("click",()=>go("./listen_page_chat.html"));
+soundNav[3]?.addEventListener("click",()=>go("./listen_page_sound.html"));
+soundNav[4]?.addEventListener("click",()=>go("./listen_page_me.html"));
 </script>
 </body>
 </html>

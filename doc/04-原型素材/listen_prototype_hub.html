@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Listen 原型总览</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;background:#081521;color:#eef6fb;min-height:100vh;overflow-x:hidden}
+body::before,body::after{content:'';position:fixed;inset:auto;pointer-events:none;border-radius:50%;filter:blur(80px);opacity:.45}
+body::before{width:340px;height:340px;top:-80px;left:-100px;background:#1f6d8d}
+body::after{width:360px;height:360px;right:-120px;bottom:-100px;background:#153b5d}
+.main{position:relative;z-index:1;max-width:1120px;margin:0 auto;padding:56px 20px 80px}
+.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:20px;align-items:stretch}
+.panel{background:rgba(255,255,255,.05);border:1px solid rgba(148,217,255,.14);backdrop-filter:blur(18px);border-radius:28px}
+.hero-copy{padding:32px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(106,201,255,.08);color:#8bd7ff;font-size:12px;letter-spacing:1px}
+.eyebrow::before{content:'';width:8px;height:8px;border-radius:50%;background:#73d5ff;box-shadow:0 0 16px rgba(115,213,255,.8)}
+h1{margin-top:18px;font-size:44px;line-height:1.08;font-weight:500;letter-spacing:1px}
+.hero-copy p{margin-top:14px;color:rgba(238,246,251,.72);line-height:1.8;font-size:15px;max-width:640px}
+.meta{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:28px}
+.meta-card{padding:14px 16px;border-radius:20px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)}
+.meta-label{font-size:11px;color:rgba(255,255,255,.42);letter-spacing:1px;text-transform:uppercase}
+.meta-value{margin-top:8px;font-size:18px;color:#f5fbff}
+.hero-flow{padding:28px}
+.hero-flow h2{font-size:18px;font-weight:500}
+.flow-list{margin-top:18px;display:grid;gap:12px}
+.flow-item{padding:14px 16px;border-radius:20px;background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08)}
+.flow-item strong{display:block;font-size:14px;color:#f5fbff}
+.flow-item span{display:block;margin-top:6px;color:rgba(255,255,255,.6);font-size:13px;line-height:1.7}
+.section{margin-top:28px}
+.section h3{font-size:18px;font-weight:500;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card{padding:18px;border-radius:24px;background:rgba(255,255,255,.045);border:1px solid rgba(148,217,255,.12);text-decoration:none;color:inherit;transition:.24s transform,.24s border-color,.24s background}
+.card:hover{transform:translateY(-4px);border-color:rgba(115,213,255,.4);background:rgba(115,213,255,.08)}
+.card-type{font-size:11px;color:#84d8ff;letter-spacing:1px;text-transform:uppercase}
+.card h4{margin-top:10px;font-size:20px;font-weight:500}
+.card p{margin-top:10px;color:rgba(238,246,251,.66);line-height:1.7;font-size:14px;min-height:72px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.tag{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);font-size:12px;color:rgba(255,255,255,.62)}
+.note{margin-top:24px;padding:18px 20px;border-radius:24px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(238,246,251,.72);line-height:1.8}
+@media (max-width:960px){.hero,.grid{grid-template-columns:1fr}.meta{grid-template-columns:1fr 1fr 1fr}h1{font-size:34px}}
+@media (max-width:640px){.main{padding:24px 14px 60px}.meta{grid-template-columns:1fr}.hero-copy,.hero-flow{padding:22px}h1{font-size:28px}}
+</style>
+</head>
+<body>
+  <main class="main">
+    <section class="hero">
+      <div class="panel hero-copy">
+        <div class="eyebrow">Listen Prototype System</div>
+        <h1>围绕“被理解、被连接、被陪伴”的完整原型组</h1>
+        <p>本轮原型以现有首页、AI 对话、声音页面为基础，结合产品设计与 PRD 补齐了新用户进入路径、服务承接页和资产沉淀页。新增重点流程为：注册成功后进入资料补全，再引导设置性格偏好，其中包含兴趣标签、MBTI 选择与“跳过”按钮。</p>
+        <div class="meta">
+          <div class="meta-card"><div class="meta-label">新增页面</div><div class="meta-value">7</div></div>
+          <div class="meta-card"><div class="meta-label">覆盖链路</div><div class="meta-value">新用户 MVP</div></div>
+          <div class="meta-card"><div class="meta-label">视觉语言</div><div class="meta-value">深色未来感</div></div>
+        </div>
+      </div>
+      <div class="panel hero-flow">
+        <h2>新增引导流</h2>
+        <div class="flow-list">
+          <div class="flow-item"><strong>1. 登录 / 注册</strong><span>支持微信授权与手机号验证码登录，强调低门槛进入。</span></div>
+          <div class="flow-item"><strong>2. 基础资料补全</strong><span>昵称、性别、年龄段、城市、头像，保证首次核心资料完整。</span></div>
+          <div class="flow-item"><strong>3. 性格设置</strong><span>兴趣标签 + MBTI 选择，允许“先跳过”，避免阻塞首进体验。</span></div>
+          <div class="flow-item"><strong>4. 进入首页体验</strong><span>回到 AI 主入口，承接聊天、匹配、声音和服务浏览。</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h3>现有基础原型</h3>
+      <div class="grid">
+        <a class="card" href="./listen_home_v2_dark.html">
+          <div class="card-type">Existing</div>
+          <h4>首页</h4>
+          <p>AI 主入口、呼吸球、快捷分流与匹配承接的首屏原型。</p>
+          <div class="tags"><span class="tag">AI 入口</span><span class="tag">主导航</span></div>
+        </a>
+        <a class="card" href="./listen_page_chat.html">
+          <div class="card-type">Existing</div>
+          <h4>AI 对话页</h4>
+          <p>陪伴式消息流、快捷回复和输入操作区的对话原型。</p>
+          <div class="tags"><span class="tag">聊天</span><span class="tag">情绪承接</span></div>
+        </a>
+        <a class="card" href="./listen_page_sound.html">
+          <div class="card-type">Existing</div>
+          <h4>声音页</h4>
+          <p>夜间治愈内容消费场景，包含分类、正在播放与推荐列表。</p>
+          <div class="tags"><span class="tag">内容陪伴</span><span class="tag">夜间留存</span></div>
+        </a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h3>本轮新增原型</h3>
+      <div class="grid">
+        <a class="card" href="./listen_page_auth_entry.html">
+          <div class="card-type">New</div>
+          <h4>登录 / 注册</h4>
+          <p>承接微信授权与手机号登录，突出产品情绪价值和低门槛进入体验。</p>
+          <div class="tags"><span class="tag">新用户</span><span class="tag">登录</span></div>
+        </a>
+        <a class="card" href="./listen_page_profile_setup.html">
+          <div class="card-type">New</div>
+          <h4>基础资料补全</h4>
+          <p>完成昵称、性别、年龄段、城市、头像配置，并强调首次资料完整度。</p>
+          <div class="tags"><span class="tag">资料</span><span class="tag">首次登录</span></div>
+        </a>
+        <a class="card" href="./listen_page_personality_setup.html">
+          <div class="card-type">New</div>
+          <h4>性格设置</h4>
+          <p>注册成功后引导配置兴趣与 MBTI，并保留“跳过”按钮，满足特殊需求。</p>
+          <div class="tags"><span class="tag">兴趣</span><span class="tag">MBTI</span><span class="tag">可跳过</span></div>
+        </a>
+        <a class="card" href="./listen_page_services.html">
+          <div class="card-type">New</div>
+          <h4>服务页</h4>
+          <p>承接 AI 推荐后服务浏览，包含分类、筛选、服务方卡片和悬浮操作。</p>
+          <div class="tags"><span class="tag">交易承接</span><span class="tag">筛选</span></div>
+        </a>
+        <a class="card" href="./listen_page_provider_detail.html">
+          <div class="card-type">New</div>
+          <h4>服务方详情</h4>
+          <p>展示认证、标签、服务项目、评价摘要与发起订单入口。</p>
+          <div class="tags"><span class="tag">详情页</span><span class="tag">下单前</span></div>
+        </a>
+        <a class="card" href="./listen_page_square.html">
+          <div class="card-type">New</div>
+          <h4>广场页</h4>
+          <p>补齐内容氛围区，展示动态、身份标识和可互动社交线索。</p>
+          <div class="tags"><span class="tag">内容氛围</span><span class="tag">社交线索</span></div>
+        </a>
+        <a class="card" href="./listen_page_me.html">
+          <div class="card-type">New</div>
+          <h4>我的页</h4>
+          <p>沉淀订单、钱包、收藏、VIP 与资料设置，形成长期使用关系。</p>
+          <div class="tags"><span class="tag">资产沉淀</span><span class="tag">设置</span></div>
+        </a>
+      </div>
+    </section>
+
+    <div class="note">
+      建议先按“登录 / 注册 → 基础资料补全 → 性格设置 → 首页 → 服务页 / AI 对话 / 声音页 → 我的页”的顺序查看原型。这样能最快理解 Listen 新用户从进入到转化的主路径。
+    </div>
+  </main>
+</body>
+</html>

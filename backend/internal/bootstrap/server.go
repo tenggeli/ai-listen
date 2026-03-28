@@ -26,6 +26,7 @@ func NewServer() Server {
 
 	clock := aiApp.SystemClock{}
 	idGenerator := aiApp.NewTimestampIDGenerator(clock)
+	homeOverviewService := infraAi.NewMockHomeOverviewService()
 	matchService := infraAi.NewMockMatchService()
 	quotaRepo := memory.NewMatchQuotaRepository()
 	sessionRepo := memory.NewSessionRepository()
@@ -44,7 +45,7 @@ func NewServer() Server {
 			mysqlProviderRepo := mysqlInfra.NewProviderRepository(db)
 
 			aiController := user.NewAIController(
-				aiApp.NewGetAiHomeUseCase(mysqlQuotaRepo, clock),
+				aiApp.NewGetAiHomeUseCase(mysqlQuotaRepo, homeOverviewService, clock),
 				aiApp.NewGetRemainingMatchUseCase(mysqlQuotaRepo, clock),
 				aiApp.NewSubmitMatchUseCase(mysqlQuotaRepo, matchService, clock),
 				aiApp.NewCreateAiSessionUseCase(mysqlSessionRepo, idGenerator),
@@ -75,7 +76,7 @@ func NewServer() Server {
 	}
 
 	aiController := user.NewAIController(
-		aiApp.NewGetAiHomeUseCase(quotaRepo, clock),
+		aiApp.NewGetAiHomeUseCase(quotaRepo, homeOverviewService, clock),
 		aiApp.NewGetRemainingMatchUseCase(quotaRepo, clock),
 		aiApp.NewSubmitMatchUseCase(quotaRepo, matchService, clock),
 		aiApp.NewCreateAiSessionUseCase(sessionRepo, idGenerator),

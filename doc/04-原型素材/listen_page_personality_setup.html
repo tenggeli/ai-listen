@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>listen 陪伴 · 性格设置</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#08131c;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;color:#f1f8fc;overflow-x:hidden}
+body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;opacity:.55}
+body::before{width:280px;height:280px;background:#1a88a6;left:-120px;top:20px}
+body::after{width:320px;height:320px;background:#15385d;right:-120px;bottom:-120px}
+.phone{position:relative;z-index:1;max-width:390px;margin:0 auto;min-height:100vh;padding:50px 18px 30px}
+.topline{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:rgba(255,255,255,.34);padding:0 6px}
+.skip{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(255,255,255,.68)}
+.hero{margin-top:18px;padding:24px;border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid rgba(144,224,255,.14);backdrop-filter:blur(18px)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:rgba(115,213,255,.08);color:#8fdfff;font-size:12px}
+.eyebrow::before{content:'';width:8px;height:8px;border-radius:50%;background:#8fdfff;box-shadow:0 0 14px rgba(143,223,255,.8)}
+.hero h1{margin-top:16px;font-size:30px;line-height:1.2;font-weight:500}
+.hero p{margin-top:12px;color:rgba(241,248,252,.68);font-size:14px;line-height:1.8}
+.progress{margin-top:16px;height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+.progress .fill{width:100%;height:100%;background:linear-gradient(90deg,#8fdfff,#58bee8)}
+.section{margin-top:16px;padding:20px;border-radius:26px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(16px)}
+.section h2{font-size:18px;font-weight:500}
+.section-sub{margin-top:8px;color:rgba(241,248,252,.56);font-size:13px;line-height:1.7}
+.grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.tag,.mbti{padding:12px 14px;border-radius:16px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);font-size:13px;color:rgba(241,248,252,.62)}
+.tag.active,.mbti.active{background:rgba(115,213,255,.12);border-color:rgba(115,213,255,.3);color:#93e0ff;box-shadow:0 10px 24px rgba(89,190,231,.08)}
+.mbti-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.mbti{text-align:center;padding:14px 0;font-weight:600}
+.card-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.persona-card{padding:14px;border-radius:20px;background:rgba(10,34,49,.72);border:1px solid rgba(255,255,255,.06)}
+.persona-card strong{display:block;font-size:13px}
+.persona-card span{display:block;margin-top:6px;color:rgba(241,248,252,.58);font-size:12px;line-height:1.7}
+.footer-actions{display:flex;gap:10px;margin-top:18px}
+.secondary,.primary{flex:1;border:none;border-radius:18px;padding:16px 16px;font-size:14px;font-weight:600}
+.secondary{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(241,248,252,.72)}
+.primary{background:linear-gradient(135deg,#9be4ff,#58bee8);color:#072131;box-shadow:0 14px 30px rgba(88,190,232,.24)}
+.notice{margin-top:16px;padding:16px 18px;border-radius:20px;background:rgba(11,34,47,.78);border:1px solid rgba(255,255,255,.06);font-size:12px;line-height:1.8;color:rgba(241,248,252,.62)}
+.prototype-link,.flow-nav a{text-decoration:none}
+.prototype-link{position:fixed;top:16px;right:16px;z-index:12;padding:10px 14px;border-radius:999px;background:rgba(7,25,38,.82);border:1px solid rgba(143,223,255,.22);color:#9ae4ff;font-size:12px;backdrop-filter:blur(18px);box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.flow-nav{position:fixed;top:62px;right:16px;z-index:12;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.flow-nav a{padding:9px 12px;border-radius:999px;background:rgba(7,25,38,.78);border:1px solid rgba(255,255,255,.09);color:rgba(239,247,251,.78);font-size:12px;backdrop-filter:blur(18px)}
+</style>
+</head>
+<body>
+<a class="prototype-link" href="./listen_prototype_hub.html">原型总览</a>
+<div class="flow-nav">
+  <a href="./listen_page_profile_setup.html">上一页: 资料补全</a>
+  <a href="./listen_home_v2_dark.html">下一页: 进入首页</a>
+</div>
+  <main class="phone">
+    <div class="topline">
+      <span>20:30 · 步骤 2 / 2</span>
+      <button class="skip">跳过</button>
+    </div>
+
+    <section class="hero">
+      <div class="eyebrow">Special Flow</div>
+      <h1>注册成功后，先给 Listen 一点你的性格线索</h1>
+      <p>这一步会影响首页问候语、AI 对话推荐语气、服务筛选优先级与声音内容偏好。若你想先体验，也可以点击右上角“跳过”。</p>
+      <div class="progress"><div class="fill"></div></div>
+    </section>
+
+    <section class="section">
+      <h2>你更容易被什么陪伴打动？</h2>
+      <div class="section-sub">选择 3-6 个兴趣或情绪偏好，让首页和推荐更快懂你。</div>
+      <div class="grid">
+        <div class="tag active">深夜聊天</div>
+        <div class="tag active">治愈声音</div>
+        <div class="tag">线下散步</div>
+        <div class="tag active">电影搭子</div>
+        <div class="tag">咖啡馆</div>
+        <div class="tag">游戏陪玩</div>
+        <div class="tag">情绪疏导</div>
+        <div class="tag">轻社交</div>
+        <div class="tag">睡眠放松</div>
+        <div class="tag">展览</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>MBTI 倾向</h2>
+      <div class="section-sub">如果你已经了解自己的 MBTI，可以直接选择；如果不确定，也可以稍后再说。</div>
+      <div class="mbti-grid">
+        <div class="mbti">INFJ</div>
+        <div class="mbti active">INFP</div>
+        <div class="mbti">ENFP</div>
+        <div class="mbti">ENFJ</div>
+        <div class="mbti">INTJ</div>
+        <div class="mbti">INTP</div>
+        <div class="mbti">ISFJ</div>
+        <div class="mbti">ESFP</div>
+      </div>
+
+      <div class="card-row">
+        <div class="persona-card">
+          <strong>更偏安静倾诉型</strong>
+          <span>适合首页推荐温和聊天、深夜陪伴、治愈声音等低刺激内容。</span>
+        </div>
+        <div class="persona-card">
+          <strong>更偏轻社交外向型</strong>
+          <span>适合服务页推荐饭搭子、电影搭子、同城即刻约伴等场景。</span>
+        </div>
+      </div>
+
+      <div class="footer-actions">
+        <button class="secondary">以后再设置</button>
+        <button class="primary">完成并进入首页</button>
+      </div>
+    </section>
+
+    <div class="notice">特殊需求已纳入原型：用户注册成功后进入本页，引导设置性格，包括“爱好、MBTI”，并提供“跳过”按钮。</div>
+  </main>
+<script>
+function go(url){window.location.href=url;}
+document.querySelector(".skip")?.addEventListener("click",()=>go("./listen_home_v2_dark.html"));
+document.querySelector(".footer-actions .secondary")?.addEventListener("click",()=>go("./listen_home_v2_dark.html"));
+document.querySelector(".footer-actions .primary")?.addEventListener("click",()=>go("./listen_home_v2_dark.html"));
+</script>
+</body>
+</html>

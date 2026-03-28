@@ -40,8 +40,9 @@ npm run dev
 
 默认端口 `5173`。
 
-- 默认使用 Mock：`VITE_USE_MOCK` 非 `false`
-- 对接真实后端：设置 `VITE_USE_MOCK=false`
+- 首页默认直连 Go 后端 `/api/v1/ai/home`、`/api/v1/ai/match/remaining`、`/api/v1/ai/match`
+- 如需自定义用户 Web 首页接口前缀：设置 `VITE_AI_API_BASE_URL`
+- `Chat` / `声音` 页面仍可通过 `VITE_USE_MOCK=false` 切到真实后端
 
 ### 3) 启动管理后台
 

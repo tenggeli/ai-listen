@@ -6,12 +6,11 @@ import HomeBottomNav, { type HomeNavItem } from '../../components/ai/HomeBottomN
 import HomeQuickActions from '../../components/ai/HomeQuickActions.vue'
 import MatchCandidateCard from '../../components/ai/MatchCandidateCard.vue'
 import { HomePageViewModel } from '../../application/ai/HomePageViewModel'
-import { HttpAiApi, MockAiApi } from '../../api/AiApi'
+import { HttpAiApi } from '../../api/AiApi'
 import type { AiHomeQuickAction } from '../../domain/ai/AiHomeQuickAction'
 import { PageLoadState } from '../../domain/ai/PageLoadState'
 
-const useMock = import.meta.env.VITE_USE_MOCK !== 'false'
-const api = useMock ? new MockAiApi() : new HttpAiApi('/api/v1')
+const api = new HttpAiApi(import.meta.env.VITE_AI_API_BASE_URL ?? '/api/v1')
 const vm = new HomePageViewModel(api, 'demo-user-001')
 const router = useRouter()
 const navItems: HomeNavItem[] = [

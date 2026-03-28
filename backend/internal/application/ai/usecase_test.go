@@ -66,7 +66,7 @@ func TestGetRemainingMatchUseCase_DefaultFive(t *testing.T) {
 
 func TestGetAiHomeUseCase_BuildOverview(t *testing.T) {
 	repo := memory.NewMatchQuotaRepository()
-	uc := NewGetAiHomeUseCase(repo, fixedClock{})
+	uc := NewGetAiHomeUseCase(repo, infraAi.NewMockHomeOverviewService(), fixedClock{})
 
 	output, err := uc.Execute(context.Background(), GetHomeOverviewInput{UserID: "u1"})
 	if err != nil {

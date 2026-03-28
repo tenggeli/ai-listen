@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>listen 陪伴 · 登录注册</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#091621;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;color:#eff7fb;overflow-x:hidden}
+body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;opacity:.5}
+body::before{width:300px;height:300px;background:#1d7598;left:-120px;top:-60px}
+body::after{width:320px;height:320px;background:#143d63;right:-120px;bottom:-90px}
+.phone{position:relative;z-index:1;max-width:390px;margin:0 auto;min-height:100vh;padding:52px 20px 30px;display:flex;flex-direction:column}
+.topline{display:flex;justify-content:space-between;color:rgba(255,255,255,.34);font-size:12px;padding:0 6px}
+.hero{margin-top:26px;padding:26px 22px 22px;border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(145,220,255,.14);backdrop-filter:blur(18px);position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;right:-40px;top:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(115,213,255,.18),transparent 68%);border-radius:50%}
+.logo{width:66px;height:66px;border-radius:22px;border:1px solid rgba(116,214,255,.28);display:flex;align-items:center;justify-content:center;background:rgba(7,31,44,.75);box-shadow:0 0 40px rgba(115,213,255,.15)}
+.logo svg{width:34px;height:34px}
+.brand{margin-top:18px;font-size:30px;letter-spacing:6px;font-weight:300}
+.title{margin-top:12px;font-size:28px;line-height:1.25;font-weight:500;max-width:280px}
+.sub{margin-top:10px;font-size:14px;line-height:1.8;color:rgba(239,247,251,.68);max-width:290px}
+.feature-row{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.feature{padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-size:12px;color:rgba(239,247,251,.64)}
+.card{margin-top:18px;padding:22px;border-radius:28px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px)}
+.tab-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.tab{padding:12px 14px;border-radius:16px;text-align:center;font-size:14px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:rgba(239,247,251,.56)}
+.tab.active{background:rgba(115,213,255,.1);border-color:rgba(115,213,255,.3);color:#8fe0ff}
+.wx-btn,.submit-btn{width:100%;border:none;border-radius:18px;padding:16px 18px;font-size:15px;font-weight:600;cursor:pointer}
+.wx-btn{background:linear-gradient(135deg,#76e79d,#39c06f);color:#092113;box-shadow:0 12px 28px rgba(73,207,120,.18)}
+.divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:rgba(255,255,255,.24);font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08)}
+.field{margin-top:12px}
+.label{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:8px;display:block}
+.input{width:100%;padding:14px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#eff7fb;font-size:15px;outline:none}
+.inline{display:grid;grid-template-columns:1fr 110px;gap:10px}
+.code-btn{border:none;border-radius:16px;background:rgba(115,213,255,.12);color:#8ddcff;font-size:13px;font-weight:600}
+.submit-btn{margin-top:18px;background:linear-gradient(135deg,#8ddcff,#59bee7);color:#082033;box-shadow:0 12px 28px rgba(89,190,231,.22)}
+.agree{display:flex;align-items:flex-start;gap:10px;margin-top:16px;color:rgba(239,247,251,.54);font-size:12px;line-height:1.7}
+.checkbox{width:18px;height:18px;border-radius:6px;background:rgba(115,213,255,.18);border:1px solid rgba(115,213,255,.34);display:flex;align-items:center;justify-content:center;color:#8fe0ff;flex-shrink:0;margin-top:1px}
+.help{margin-top:18px;padding:16px;border-radius:20px;background:rgba(9,35,49,.7);border:1px solid rgba(255,255,255,.06)}
+.help h3{font-size:14px;font-weight:500}
+.help p{margin-top:8px;color:rgba(239,247,251,.6);font-size:13px;line-height:1.7}
+.footer{margin-top:auto;padding-top:18px;color:rgba(255,255,255,.28);font-size:11px;text-align:center;line-height:1.7}
+.prototype-link,.flow-nav a{text-decoration:none}
+.prototype-link{position:fixed;top:16px;right:16px;z-index:12;padding:10px 14px;border-radius:999px;background:rgba(7,25,38,.82);border:1px solid rgba(143,223,255,.22);color:#9ae4ff;font-size:12px;backdrop-filter:blur(18px);box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.flow-nav{position:fixed;top:62px;right:16px;z-index:12;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.flow-nav a{padding:9px 12px;border-radius:999px;background:rgba(7,25,38,.78);border:1px solid rgba(255,255,255,.09);color:rgba(239,247,251,.78);font-size:12px;backdrop-filter:blur(18px)}
+</style>
+</head>
+<body>
+<a class="prototype-link" href="./listen_prototype_hub.html">原型总览</a>
+<div class="flow-nav">
+  <a href="./listen_page_profile_setup.html">下一页: 资料补全</a>
+</div>
+  <main class="phone">
+    <div class="topline"><span>20:26</span><span>登录 / 注册</span></div>
+
+    <section class="hero">
+      <div class="logo">
+        <svg viewBox="0 0 90 90" fill="none">
+          <path d="M37 37 C33 41 33 49 37 53" stroke="#8bdcff" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M30 31 C24 37 24 53 30 59" stroke="#caefff" stroke-width="2.3" stroke-linecap="round"/>
+          <path d="M64 62 C58 72 46 74 38 66 C28 56 28 40 36 31 C44 22 58 22 66 32 L64 36" stroke="#5dcdf7" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M64 36 C70 40 70 52 64 56" stroke="#5dcdf7" stroke-width="3" stroke-linecap="round"/>
+          <path d="M60 40 C62 50 56 60 50 62 C47 63 46 66 50 68 C53 70 57 68 57 64" stroke="#5dcdf7" stroke-width="2.7" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="brand">LISTEN</div>
+      <div class="title">今晚，不必一个人把情绪扛过去</div>
+      <div class="sub">用最低门槛进入产品，让 AI 先听见你，再帮你找到陪伴、声音或真实连接。</div>
+      <div class="feature-row">
+        <span class="feature">微信一键进入</span>
+        <span class="feature">手机号验证码</span>
+        <span class="feature">轻资料补全</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="tab-row">
+        <div class="tab active">微信登录</div>
+        <div class="tab">手机号登录</div>
+      </div>
+
+      <button class="wx-btn">微信授权登录</button>
+
+      <div class="divider">或使用手机号登录</div>
+
+      <div class="field">
+        <label class="label">手机号</label>
+        <input class="input" value="138 0013 8000" />
+      </div>
+      <div class="field">
+        <label class="label">验证码</label>
+        <div class="inline">
+          <input class="input" value="264981" />
+          <button class="code-btn">59s 后重发</button>
+        </div>
+      </div>
+
+      <div class="agree">
+        <div class="checkbox">✓</div>
+        <div>我已阅读并同意《用户协议》《隐私政策》与《陪伴服务说明》。未勾选协议时，登录按钮不可点击。</div>
+      </div>
+
+      <button class="submit-btn">登录后继续</button>
+
+      <div class="help">
+        <h3>登录成功后的引导</h3>
+        <p>若用户是首次进入，则先进入基础资料补全页，再进入“性格设置”页面，配置兴趣标签与 MBTI。该步骤支持跳过，避免阻塞首次体验。</p>
+      </div>
+    </section>
+
+    <div class="footer">原型说明：该页同时承接注册与登录，不区分强注册心智，减少首次进入决策压力。</div>
+  </main>
+<script>
+function go(url){window.location.href=url;}
+document.querySelector(".wx-btn")?.addEventListener("click",()=>go("./listen_page_profile_setup.html"));
+document.querySelector(".submit-btn")?.addEventListener("click",()=>go("./listen_page_profile_setup.html"));
+</script>
+</body>
+</html>

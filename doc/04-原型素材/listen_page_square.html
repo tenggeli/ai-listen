@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>listen 陪伴 · 广场</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#091621;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;color:#edf7fb;overflow-x:hidden}
+body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;opacity:.5}
+body::before{width:320px;height:320px;background:#163f62;left:-160px;top:-80px}
+body::after{width:320px;height:320px;background:#197b95;right:-140px;bottom:-140px}
+.phone{position:relative;z-index:1;max-width:390px;margin:0 auto;padding:52px 20px 96px;min-height:100vh}
+.status{display:flex;justify-content:space-between;color:rgba(255,255,255,.34);font-size:12px}
+.header{margin-top:16px}
+.title{font-size:26px;font-weight:500}
+.sub{margin-top:6px;color:rgba(237,247,251,.62);font-size:13px;line-height:1.7}
+.topics{display:flex;gap:8px;overflow:auto;padding-top:16px;scrollbar-width:none}
+.topics::-webkit-scrollbar{display:none}
+.topic{flex-shrink:0;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);font-size:12px;color:rgba(237,247,251,.58)}
+.topic.active{background:rgba(115,213,255,.12);border-color:rgba(115,213,255,.3);color:#93e0ff}
+.feed{display:grid;gap:14px;margin-top:16px}
+.card{padding:18px;border-radius:24px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}
+.head{display:flex;gap:12px;align-items:center}
+.avatar{width:46px;height:46px;border-radius:16px;background:linear-gradient(135deg,rgba(115,213,255,.28),rgba(115,213,255,.08));border:1px solid rgba(115,213,255,.3);display:flex;align-items:center;justify-content:center;font-size:20px}
+.info strong{display:block;font-size:15px}
+.info span{display:block;margin-top:4px;color:rgba(237,247,251,.48);font-size:12px}
+.mark{margin-left:auto;padding:6px 10px;border-radius:999px;background:rgba(115,213,255,.12);color:#93e0ff;font-size:11px}
+.content{margin-top:14px;color:rgba(237,247,251,.72);font-size:14px;line-height:1.9}
+.media{margin-top:14px;padding:24px;border-radius:20px;background:linear-gradient(135deg,rgba(18,54,76,.88),rgba(11,27,40,.92));border:1px solid rgba(255,255,255,.06);color:rgba(237,247,251,.48);font-size:12px;text-align:center}
+.actions{display:flex;gap:16px;margin-top:14px;color:rgba(237,247,251,.48);font-size:12px}
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:390px;height:86px;padding:0 0 22px;display:flex;justify-content:space-around;align-items:center;background:rgba(9,22,34,.97);border-top:1px solid rgba(255,255,255,.06);backdrop-filter:blur(24px)}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:5px;color:rgba(255,255,255,.24);font-size:10px}
+.nav-item.active{color:#93e0ff}
+.nav-center{margin-top:-16px;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,rgba(115,213,255,.22),rgba(25,74,99,.8));border:1.5px solid rgba(115,213,255,.42)}
+.prototype-link,.flow-nav a{text-decoration:none}
+.prototype-link{position:fixed;top:16px;right:16px;z-index:12;padding:10px 14px;border-radius:999px;background:rgba(7,25,38,.82);border:1px solid rgba(143,223,255,.22);color:#9ae4ff;font-size:12px;backdrop-filter:blur(18px);box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.flow-nav{position:fixed;top:62px;right:16px;z-index:12;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.flow-nav a{padding:9px 12px;border-radius:999px;background:rgba(7,25,38,.78);border:1px solid rgba(255,255,255,.09);color:rgba(239,247,251,.78);font-size:12px;backdrop-filter:blur(18px)}
+</style>
+</head>
+<body>
+<a class="prototype-link" href="./listen_prototype_hub.html">原型总览</a>
+<div class="flow-nav">
+  <a href="./listen_home_v2_dark.html">上一页: 首页</a>
+  <a href="./listen_page_me.html">下一页: 我的</a>
+</div>
+  <main class="phone">
+    <div class="status"><span>20:39</span><span>广场</span></div>
+    <section class="header">
+      <div class="title">广场</div>
+      <div class="sub">看见同城气氛、真实动态和可互动的陪伴线索，让平台不只是工具，也有温度。</div>
+    </section>
+    <div class="topics">
+      <div class="topic active">今日话题</div>
+      <div class="topic">同城在线</div>
+      <div class="topic">夜聊瞬间</div>
+      <div class="topic">电影搭子</div>
+      <div class="topic">散步邀约</div>
+    </div>
+
+    <section class="feed">
+      <article class="card">
+        <div class="head"><div class="avatar">🌙</div><div class="info"><strong>小林</strong><span>服务方 · 4 分钟前</span></div><div class="mark">实名认证</div></div>
+        <div class="content">刚结束今天最后一场散步聊天。很多时候，陪伴不是一定要说很多，而是有人和你一起把这段路走完。</div>
+        <div class="media">动态配图 / 夜色街道氛围图</div>
+        <div class="actions"><span>♡ 128</span><span>评论 23</span><span>收藏</span></div>
+      </article>
+
+      <article class="card">
+        <div class="head"><div class="avatar">🎬</div><div class="info"><strong>念念</strong><span>同城用户 · 12 分钟前</span></div><div class="mark">今晚可约</div></div>
+        <div class="content">突然很想看一部轻松一点的电影，不想一个人进场。希望对方不用太会聊天，但能一起把这场电影看完。</div>
+        <div class="actions"><span>♡ 87</span><span>评论 11</span><span>去看看</span></div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="nav">
+    <div class="nav-item">首页</div>
+    <div class="nav-item">服务</div>
+    <div class="nav-item nav-center">AI</div>
+    <div class="nav-item">声音</div>
+    <div class="nav-item active">广场</div>
+  </nav>
+<script>
+function go(url){window.location.href=url;}
+document.querySelectorAll(".actions")[0]?.addEventListener("click",()=>go("./listen_page_provider_detail.html"));
+document.querySelectorAll(".actions")[1]?.addEventListener("click",()=>go("./listen_page_services.html"));
+const squareNav=document.querySelectorAll(".nav .nav-item");
+squareNav[0]?.addEventListener("click",()=>go("./listen_home_v2_dark.html"));
+squareNav[1]?.addEventListener("click",()=>go("./listen_page_services.html"));
+squareNav[2]?.addEventListener("click",()=>go("./listen_page_chat.html"));
+squareNav[3]?.addEventListener("click",()=>go("./listen_page_sound.html"));
+squareNav[4]?.addEventListener("click",()=>go("./listen_page_square.html"));
+</script>
+</body>
+</html>

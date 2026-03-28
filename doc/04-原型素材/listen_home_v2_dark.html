@@ -5,667 +5,227 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>listen 陪伴 · 首页</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: #0d1f2d;
-    min-height: 100vh;
-    font-family: -apple-system, 'PingFang SC', sans-serif;
-    display: flex; flex-direction: column; overflow-x: hidden;
-    overflow-y: auto;
-  }
-
-  /* 背景光晕 */
-  .bg-glow {
-    position: fixed; inset: 0; pointer-events: none;
-    background:
-      radial-gradient(ellipse 60% 40% at 50% 30%, rgba(74,168,196,0.09) 0%, transparent 70%),
-      radial-gradient(ellipse 40% 60% at 20% 70%, rgba(40,100,140,0.06) 0%, transparent 60%),
-      radial-gradient(ellipse 30% 30% at 80% 80%, rgba(74,100,196,0.04) 0%, transparent 60%);
-  }
-
-  /* 星点 */
-  .stars { position: fixed; inset: 0; pointer-events: none; }
-  .star { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.5); animation: twinkle var(--d,4s) ease-in-out infinite var(--delay,0s); }
-  @keyframes twinkle { 0%,100%{opacity:0.2} 50%{opacity:0.8} }
-
-  /* 状态栏 */
-  .status-bar {
-    position: fixed; top: 0; left: 0; right: 0; height: 44px;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 24px; font-size: 12px; color: rgba(255,255,255,0.3); z-index: 10;
-  }
-
-  /* 主容器 */
-  .main-container {
-    display: flex; flex-direction: column; align-items: center;
-    width: 100%; max-width: 390px; margin: 0 auto;
-    padding: 52px 0 100px;
-    position: relative; z-index: 1;
-    min-height: 100vh;
-  }
-
-  /* ══════════════════════ 上半部分 ══════════════════════ */
-
-  /* 顶部品牌+通知栏 */
-  .top-nav {
-    width: 100%; display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 24px 0;
-  }
-  .brand-logo-row { display: flex; flex-direction: column; align-items: flex-start; }
-  .brand-name {
-    font-size: 17px; font-weight: 300; letter-spacing: 5px;
-    color: rgba(255,255,255,0.85);
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  }
-  .brand-sub { font-size: 10px; letter-spacing: 4px; color: #4aa8c4; margin-top: 1px; }
-  .top-nav-actions { display: flex; gap: 10px; align-items: center; }
-  .nav-icon-btn {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; color: rgba(255,255,255,0.5); font-size: 14px;
-    position: relative;
-  }
-  .badge {
-    position: absolute; top: 4px; right: 4px;
-    width: 7px; height: 7px; border-radius: 50%;
-    background: #4aa8c4; border: 1.5px solid #0d1f2d;
-  }
-
-  /* 问候语区 */
-  .greeting-section {
-    width: 100%; padding: 16px 24px 0;
-  }
-  .greeting-time { font-size: 11px; color: rgba(255,255,255,0.25); letter-spacing: 1px; margin-bottom: 4px; }
-  .greeting-text { font-size: 22px; font-weight: 300; color: rgba(255,255,255,0.88); letter-spacing: 1px; line-height: 1.4; }
-  .greeting-sub { font-size: 13px; color: rgba(74,168,196,0.7); margin-top: 4px; letter-spacing: 0.5px; }
-
-  /* 今日状态卡片 */
-  .status-card {
-    margin: 16px 24px 0;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(74,168,196,0.15);
-    border-radius: 18px; padding: 14px 18px;
-    display: flex; align-items: center; justify-content: space-between;
-    backdrop-filter: blur(10px);
-  }
-  .status-left { display: flex; align-items: center; gap: 12px; }
-  .status-mood-dot {
-    width: 40px; height: 40px; border-radius: 50%;
-    background: linear-gradient(135deg, rgba(74,168,196,0.25), rgba(74,168,196,0.08));
-    border: 1.5px solid rgba(74,168,196,0.3);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-  }
-  .status-info-text .s-label { font-size: 11px; color: rgba(255,255,255,0.25); letter-spacing: 0.5px; }
-  .status-info-text .s-value { font-size: 14px; color: rgba(255,255,255,0.75); margin-top: 2px; font-weight: 400; }
-  .status-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-  .status-weather { font-size: 11px; color: rgba(255,255,255,0.3); letter-spacing: 0.3px; }
-  .status-days { font-size: 11px; color: rgba(74,168,196,0.6); letter-spacing: 0.3px; }
-
-  /* 快捷功能入口 */
-  .quick-actions {
-    width: 100%; padding: 16px 24px 0;
-    display: flex; gap: 10px;
-  }
-  .quick-btn {
-    flex: 1; padding: 12px 8px; border-radius: 16px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.07);
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .quick-btn:hover {
-    background: rgba(74,168,196,0.08);
-    border-color: rgba(74,168,196,0.2);
-  }
-  .quick-btn-icon { font-size: 18px; }
-  .quick-btn-label { font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 0.5px; }
-
-  /* 分割线 */
-  .section-divider {
-    width: calc(100% - 48px); margin: 18px 24px 0;
-    height: 1px; background: rgba(255,255,255,0.05);
-    position: relative;
-  }
-  .section-divider::after {
-    content: "今日陪伴";
-    position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
-    background: #0d1f2d; padding: 0 12px;
-    font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 2px;
-  }
-
-  /* ══════════════════════ 呼吸圆圈区 ══════════════════════ */
-
-  .breath-area {
-    position: relative;
-    width: 280px; height: 280px;
-    display: flex; align-items: center; justify-content: center;
-    margin: 20px auto 0;
-  }
-
-  /* 最外层散射光晕 */
-  .glow-outer {
-    position: absolute;
-    width: 280px; height: 280px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(74,168,196,0.04) 0%, transparent 70%);
-    animation: glowPulse 6s ease-in-out infinite;
-  }
-  @keyframes glowPulse {
-    0%,100% { transform: scale(0.9); opacity: 0.5; }
-    50% { transform: scale(1.1); opacity: 1; }
-  }
-
-  /* 涟漪圆圈 */
-  .ripple {
-    position: absolute; border-radius: 50%;
-    border: 1px solid rgba(74,168,196,0.12);
-    animation: rippleExpand 5s ease-out infinite;
-  }
-  .ripple:nth-child(2) { animation-delay: 0s; }
-  .ripple:nth-child(3) { animation-delay: 1.2s; }
-  .ripple:nth-child(4) { animation-delay: 2.4s; }
-  .ripple:nth-child(5) { animation-delay: 3.6s; }
-  @keyframes rippleExpand {
-    0%   { width:110px; height:110px; opacity:0.7; border-color: rgba(74,168,196,0.25); }
-    60%  { opacity:0.3; }
-    100% { width:270px; height:270px; opacity:0; border-color: rgba(74,168,196,0.03); }
-  }
-
-  /* 中间环 */
-  .mid-ring {
-    position: absolute;
-    width: 175px; height: 175px; border-radius: 50%;
-    border: 1px solid rgba(74,168,196,0.14);
-    animation: midRingPulse 6s ease-in-out infinite;
-  }
-  @keyframes midRingPulse {
-    0%,100% { transform: scale(0.96); opacity: 0.5; }
-    50% { transform: scale(1.04); opacity: 0.9; }
-  }
-
-  /* 内环 */
-  .inner-ring {
-    position: absolute;
-    width: 130px; height: 130px; border-radius: 50%;
-    border: 1.5px solid rgba(74,168,196,0.22);
-    animation: innerRingPulse 6s ease-in-out infinite;
-  }
-  @keyframes innerRingPulse {
-    0%,100% { transform: scale(0.94); border-color: rgba(74,168,196,0.15); }
-    50% { transform: scale(1.06); border-color: rgba(74,168,196,0.32); }
-  }
-
-  /* 核心圆 */
-  .core-circle {
-    position: relative; z-index: 5;
-    width: 105px; height: 105px; border-radius: 50%;
-    background: radial-gradient(circle at 40% 40%,
-      rgba(74,168,196,0.18) 0%,
-      rgba(20,50,70,0.85) 60%,
-      rgba(13,31,45,0.95) 100%
-    );
-    border: 1.5px solid rgba(74,168,196,0.35);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    box-shadow:
-      0 0 50px rgba(74,168,196,0.18),
-      0 0 15px rgba(74,168,196,0.12),
-      inset 0 0 30px rgba(74,168,196,0.06);
-    animation: corePulse 6s ease-in-out infinite;
-  }
-  @keyframes corePulse {
-    0%,100% {
-      transform: scale(0.93);
-      box-shadow: 0 0 30px rgba(74,168,196,0.12), inset 0 0 20px rgba(74,168,196,0.04);
-    }
-    50% {
-      transform: scale(1.04);
-      box-shadow: 0 0 65px rgba(74,168,196,0.28), 0 0 20px rgba(74,168,196,0.15), inset 0 0 35px rgba(74,168,196,0.08);
-    }
-  }
-
-  /* Logo SVG */
-  .logo-icon { width: 46px; height: 46px; }
-
-  /* 核心圆下方小字 */
-  .core-sub {
-    font-size: 9px; color: rgba(74,168,196,0.5);
-    letter-spacing: 2px; margin-top: 5px;
-    text-align: center;
-  }
-
-  /* 搭子状态指示 */
-  .partner-hint {
-    margin-top: 14px;
-    display: flex; align-items: center; gap: 6px;
-    font-size: 12px; color: rgba(255,255,255,0.3);
-    letter-spacing: 0.5px;
-  }
-  .partner-dot { width: 6px; height: 6px; border-radius: 50%; background: #4aa8c4; animation: dotBlink 2s ease-in-out infinite; }
-  @keyframes dotBlink { 0%,100%{opacity:0.3} 50%{opacity:1} }
-  .partner-count { color: rgba(74,168,196,0.7); font-weight: 500; }
-
-  /* ══════════════════════ 底部按钮区 ══════════════════════ */
-
-  .bottom-bar {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    padding: 12px 24px 44px;
-    background: linear-gradient(transparent, rgba(13,31,45,0.97) 40%);
-    z-index: 5;
-    display: flex; flex-direction: column; align-items: center; gap: 10px;
-    max-width: 390px; left: 50%; transform: translateX(-50%);
-  }
-
-  /* 主按钮：寻找今天的搭子 */
-  .main-btn {
-    width: 100%; height: 54px;
-    background: rgba(30,65,88,0.9);
-    border: 1.5px solid rgba(74,168,196,0.4);
-    border-radius: 27px;
-    color: rgba(255,255,255,0.88); font-size: 16px;
-    letter-spacing: 3px; cursor: pointer;
-    font-family: inherit;
-    box-shadow: 0 4px 30px rgba(74,168,196,0.18), inset 0 1px 0 rgba(255,255,255,0.06);
-    transition: all 0.25s;
-    position: relative; overflow: hidden;
-  }
-  .main-btn::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(90deg, transparent 0%, rgba(74,168,196,0.08) 50%, transparent 100%);
-    animation: btnShimmer 3s ease-in-out infinite;
-  }
-  @keyframes btnShimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-  }
-  .main-btn:active { transform: scale(0.98); }
-
-  /* 高级筛选按钮 */
-  .filter-btn {
-    display: flex; align-items: center; gap: 6px;
-    padding: 7px 20px; border-radius: 20px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.09);
-    color: rgba(255,255,255,0.35); font-size: 12px;
-    letter-spacing: 1.5px; cursor: pointer;
-    font-family: inherit; transition: all 0.2s;
-  }
-  .filter-btn:active { background: rgba(74,168,196,0.08); border-color: rgba(74,168,196,0.2); color: rgba(74,168,196,0.7); }
-  .filter-icon { font-size: 11px; opacity: 0.6; }
-
-  /* 底部导航 */
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    height: 82px; padding: 0 0 20px;
-    background: rgba(10,22,34,0.97);
-    border-top: 1px solid rgba(74,168,196,0.1);
-    backdrop-filter: blur(24px);
-    display: flex; align-items: center; justify-content: space-around;
-    z-index: 20; max-width: 390px; left: 50%; transform: translateX(-50%);
-  }
-  .nav-item {
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    cursor: pointer; padding: 8px 10px; border-radius: 14px;
-    transition: all 0.22s; position: relative;
-  }
-  .nav-item.active .nav-svg-icon { stroke: #4aa8c4; }
-  .nav-item.active .nav-label { color: #4aa8c4; }
-  /* 中间「加入」特殊凸起样式 */
-  .nav-item.nav-center {
-    margin-top: -18px;
-    background: linear-gradient(145deg, rgba(74,168,196,0.22), rgba(30,70,100,0.6));
-    border: 1.5px solid rgba(74,168,196,0.38);
-    border-radius: 50%; width: 56px; height: 56px;
-    padding: 0; justify-content: center;
-    box-shadow: 0 0 24px rgba(74,168,196,0.22), 0 -2px 10px rgba(74,168,196,0.1);
-  }
-  .nav-item.nav-center .nav-svg-icon { stroke: #4aa8c4; }
-  .nav-item.nav-center .nav-label {
-    position: absolute; bottom: -18px;
-    font-size: 9px; color: rgba(74,168,196,0.7); letter-spacing: 0.5px;
-    white-space: nowrap;
-  }
-  .nav-svg-icon { transition: stroke 0.2s; }
-  .nav-icon-wrap { display: flex; align-items: center; justify-content: center; }
-  .nav-label { font-size: 9px; color: rgba(255,255,255,0.22); letter-spacing: 0.5px; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#081521;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;color:#edf7fb;overflow-x:hidden}
+body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;opacity:.52}
+body::before{width:340px;height:340px;background:#1b7394;left:-140px;top:-80px}
+body::after{width:340px;height:340px;background:#143b5e;right:-140px;bottom:-140px}
+.stars{position:fixed;inset:0;pointer-events:none}
+.star{position:absolute;border-radius:50%;background:rgba(255,255,255,.45);animation:twinkle var(--d,4s) ease-in-out infinite var(--delay,0s)}
+@keyframes twinkle{0%,100%{opacity:.18}50%{opacity:.8}}
+.phone{position:relative;z-index:1;max-width:390px;margin:0 auto;min-height:100vh;padding:52px 20px 112px}
+.status{display:flex;justify-content:space-between;color:rgba(255,255,255,.34);font-size:12px}
+.top-nav{margin-top:18px;display:flex;justify-content:space-between;align-items:center}
+.brand strong{display:block;font-size:22px;letter-spacing:5px;font-weight:300}
+.brand span{display:block;margin-top:4px;font-size:11px;letter-spacing:2px;color:#8bdcff}
+.nav-actions{display:flex;gap:10px}
+.icon-btn{width:40px;height:40px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.58);position:relative}
+.badge{position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:#8fdfff;box-shadow:0 0 12px rgba(143,223,255,.8)}
+.hero{margin-top:18px;padding:24px;border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid rgba(145,220,255,.14);backdrop-filter:blur(18px)}
+.hero-label{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:rgba(115,213,255,.08);color:#8fdfff;font-size:12px}
+.hero-label::before{content:'';width:8px;height:8px;border-radius:50%;background:#8fdfff;box-shadow:0 0 14px rgba(143,223,255,.8)}
+.hero h1{margin-top:14px;font-size:30px;line-height:1.22;font-weight:500}
+.hero p{margin-top:10px;color:rgba(237,247,251,.66);font-size:14px;line-height:1.8}
+.status-card{margin-top:16px;padding:18px;border-radius:24px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center}
+.status-left{display:flex;gap:12px;align-items:center}
+.mood{width:48px;height:48px;border-radius:18px;background:linear-gradient(135deg,rgba(115,213,255,.26),rgba(115,213,255,.08));border:1px solid rgba(115,213,255,.28);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 24px rgba(115,213,255,.14)}
+.status-copy strong{display:block;font-size:15px}
+.status-copy span{display:block;margin-top:6px;color:rgba(237,247,251,.48);font-size:12px}
+.status-side{text-align:right;font-size:12px;color:rgba(237,247,251,.54);line-height:1.8}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.quick{padding:14px 8px;border-radius:20px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);text-align:center}
+.quick .icon{font-size:18px}
+.quick span{display:block;margin-top:8px;color:rgba(237,247,251,.52);font-size:11px;line-height:1.4}
+.section-title{display:flex;align-items:center;gap:10px;margin-top:18px;color:rgba(237,247,251,.34);font-size:12px;letter-spacing:2px}
+.section-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.06)}
+.breath-panel{margin-top:14px;padding:24px 18px 20px;border-radius:30px;background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));border:1px solid rgba(145,220,255,.12);text-align:center;overflow:hidden;position:relative}
+.breath-panel::before{content:'';position:absolute;inset:auto auto -90px -70px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(115,213,255,.16),transparent 70%)}
+.breath-panel::after{content:'';position:absolute;right:-70px;top:-60px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,rgba(84,190,232,.12),transparent 70%)}
+.breath-area{position:relative;width:290px;height:290px;max-width:100%;margin:0 auto;display:flex;align-items:center;justify-content:center}
+.glow-ring,.ripple,.mid-ring,.inner-ring{position:absolute;border-radius:50%}
+.glow-ring{width:280px;height:280px;background:radial-gradient(circle,rgba(115,213,255,.08),transparent 70%);animation:glow 6s ease-in-out infinite}
+@keyframes glow{0%,100%{transform:scale(.92);opacity:.5}50%{transform:scale(1.08);opacity:1}}
+.ripple{border:1px solid rgba(115,213,255,.16);animation:ripple 5.2s ease-out infinite}
+.ripple.r2{animation-delay:1.2s}.ripple.r3{animation-delay:2.4s}.ripple.r4{animation-delay:3.6s}
+@keyframes ripple{0%{width:112px;height:112px;opacity:.7}100%{width:280px;height:280px;opacity:0}}
+.mid-ring{width:178px;height:178px;border:1px solid rgba(115,213,255,.18);animation:mid 6s ease-in-out infinite}
+@keyframes mid{0%,100%{transform:scale(.95);opacity:.5}50%{transform:scale(1.03);opacity:.95}}
+.inner-ring{width:132px;height:132px;border:1.5px solid rgba(115,213,255,.28);animation:inner 6s ease-in-out infinite}
+@keyframes inner{0%,100%{transform:scale(.94)}50%{transform:scale(1.06)}}
+.core{position:relative;z-index:2;width:108px;height:108px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 40% 40%,rgba(121,221,255,.22),rgba(14,41,58,.95) 68%,rgba(8,21,33,.98) 100%);border:1.5px solid rgba(115,213,255,.36);box-shadow:0 0 60px rgba(115,213,255,.24), inset 0 0 30px rgba(115,213,255,.06);animation:core 6s ease-in-out infinite}
+@keyframes core{0%,100%{transform:scale(.93)}50%{transform:scale(1.04)}}
+.core svg{width:46px;height:46px}.core small{margin-top:6px;font-size:9px;letter-spacing:2px;color:rgba(143,223,255,.6)}
+.panel-copy{margin-top:12px;color:rgba(237,247,251,.62);font-size:13px;line-height:1.8}
+.partner{margin-top:12px;display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);font-size:12px;color:rgba(237,247,251,.56)}
+.partner::before{content:'';width:7px;height:7px;border-radius:50%;background:#8fdfff;box-shadow:0 0 14px rgba(143,223,255,.9)}
+.entry-card{margin-top:16px;padding:18px;border-radius:24px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}
+.entry-card label{display:block;font-size:12px;color:rgba(255,255,255,.44);margin-bottom:8px}
+.entry-card textarea{width:100%;min-height:110px;border:none;outline:none;resize:none;padding:14px 16px;border-radius:18px;background:rgba(10,35,49,.78);border:1px solid rgba(255,255,255,.06);color:#edf7fb;font-size:14px;line-height:1.8}
+.entry-card textarea::placeholder{color:rgba(255,255,255,.24)}
+.action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.btn,.btn-primary{border:none;border-radius:16px;padding:13px 16px;font-size:13px;font-weight:600}
+.btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(237,247,251,.72)}
+.btn-primary{background:linear-gradient(135deg,#98e3ff,#58bee8);color:#082132;box-shadow:0 12px 26px rgba(88,190,232,.24)}
+.mini-tip{margin-top:12px;color:#91e0ff;font-size:12px}
+.candidate-panel{margin-top:16px;padding:18px;border-radius:24px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}
+.candidate-panel h2{font-size:16px;font-weight:500}
+.candidate-list{display:grid;gap:10px;margin-top:14px}
+.candidate{padding:14px;border-radius:18px;background:rgba(10,35,48,.74);border:1px solid rgba(255,255,255,.06)}
+.candidate-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.candidate-top strong{font-size:14px}.score{font-size:12px;color:#93e0ff}
+.candidate p{margin-top:8px;color:rgba(237,247,251,.6);font-size:12px;line-height:1.8}
+.candidate-actions{display:flex;gap:10px;margin-top:12px}
+.candidate-actions button{border:none;border-radius:14px;padding:10px 12px;font-size:12px;font-weight:600}
+.candidate-actions .ghost{background:rgba(255,255,255,.05);color:rgba(237,247,251,.72);border:1px solid rgba(255,255,255,.08)}
+.candidate-actions .solid{background:rgba(115,213,255,.12);color:#93e0ff;border:1px solid rgba(115,213,255,.28)}
+.bottom-sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:390px;padding:14px 20px 28px;background:rgba(7,18,28,.96);border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(24px)}
+.sheet-actions{display:flex;gap:10px}.sheet-actions button{flex:1;border:none;border-radius:18px;padding:15px 16px;font-size:14px;font-weight:700}
+.sheet-actions .ghost{background:rgba(255,255,255,.05);color:rgba(237,247,251,.74);border:1px solid rgba(255,255,255,.08)}
+.sheet-actions .primary{background:linear-gradient(135deg,#9be4ff,#5abfe8);color:#082031}
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:82px;width:100%;max-width:390px;height:0;pointer-events:none}
+.bottom-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:390px;height:86px;padding:0 0 22px;display:flex;justify-content:space-around;align-items:center;background:rgba(9,22,34,.97);border-top:1px solid rgba(255,255,255,.06);backdrop-filter:blur(24px)}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:5px;color:rgba(255,255,255,.24);font-size:10px}
+.nav-item.active{color:#93e0ff}.nav-center{margin-top:-16px;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,rgba(115,213,255,.22),rgba(25,74,99,.8));border:1.5px solid rgba(115,213,255,.42);box-shadow:0 0 24px rgba(115,213,255,.18)}
+.prototype-link,.flow-nav a{text-decoration:none}
+.prototype-link{position:fixed;top:16px;right:16px;z-index:12;padding:10px 14px;border-radius:999px;background:rgba(7,25,38,.82);border:1px solid rgba(143,223,255,.22);color:#9ae4ff;font-size:12px;backdrop-filter:blur(18px);box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.flow-nav{position:fixed;top:62px;right:16px;z-index:12;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.flow-nav a{padding:9px 12px;border-radius:999px;background:rgba(7,25,38,.78);border:1px solid rgba(255,255,255,.09);color:rgba(239,247,251,.78);font-size:12px;backdrop-filter:blur(18px)}
 </style>
 </head>
 <body>
-
-<div class="bg-glow"></div>
+<a class="prototype-link" href="./listen_prototype_hub.html">原型总览</a>
+<div class="flow-nav">
+  <a href="./listen_page_personality_setup.html">上一页: 性格设置</a>
+  <a href="./listen_page_services.html">下一页: 服务页</a>
+</div>
 <div class="stars" id="stars"></div>
+<main class="phone">
+  <div class="status"><span id="curTime">20:52</span><span>首页</span></div>
 
-<!-- 状态栏 -->
-<div class="status-bar">
-  <span id="curTime">13:24</span>
-  <span style="letter-spacing:1px;">···</span>
-</div>
-
-<!-- 主容器 -->
-<div class="main-container">
-
-  <!-- 顶部导航 -->
   <div class="top-nav">
-    <div class="brand-logo-row">
-      <div class="brand-name">listen</div>
-      <div class="brand-sub">陪 伴</div>
-    </div>
-    <div class="top-nav-actions">
-      <div class="nav-icon-btn">
-        <!-- 搜索图标 -->
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/>
-        </svg>
-      </div>
-      <div class="nav-icon-btn">
-        <div class="badge"></div>
-        <!-- 通知图标 -->
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-      </div>
+    <div class="brand"><strong>LISTEN</strong><span>AI COMPANION ENTRY</span></div>
+    <div class="nav-actions">
+      <div class="icon-btn">⌕</div>
+      <div class="icon-btn">◌<span class="badge"></span></div>
     </div>
   </div>
 
-  <!-- 问候语 -->
-  <div class="greeting-section">
-    <div class="greeting-time" id="greetingPeriod">下午好 · 周日</div>
-    <div class="greeting-text">今天，遇见懂你的人</div>
-    <div class="greeting-sub">有 <span style="color:#4aa8c4;font-weight:500;">1,247</span> 位搭子正在等待陪伴</div>
-  </div>
+  <section class="hero">
+    <div class="hero-label">Good Evening</div>
+    <h1>今晚想被怎样陪伴？</h1>
+    <p>你可以直接说出情绪、场景或想见的人。Listen 会先理解你的状态，再帮你决定是继续聊天、去找搭子，还是先听一段声音。</p>
+  </section>
 
-  <!-- 今日状态卡 -->
-  <div class="status-card" style="width:calc(100% - 48px)">
+  <section class="status-card">
     <div class="status-left">
-      <div class="status-mood-dot">🌙</div>
-      <div class="status-info-text">
-        <div class="s-label">今日心情</div>
-        <div class="s-value">平静 · 有点想聊聊</div>
-      </div>
+      <div class="mood">☾</div>
+      <div class="status-copy"><strong>今晚偏想安静一点</strong><span>你最近常在 22:00 后打开 Listen</span></div>
     </div>
-    <div class="status-right">
-      <div class="status-weather">🌤 21°C  微风</div>
-      <div class="status-days">已陪伴 28 天</div>
-    </div>
-  </div>
+    <div class="status-side">小雨 19°C<br>已陪伴 12 天</div>
+  </section>
 
-  <!-- 快捷入口：对应5个导航功能的延伸入口 -->
-  <div class="quick-actions">
-    <div class="quick-btn" onclick="">
-      <div class="quick-btn-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#4aa8c4" stroke-width="1.8" stroke-linecap="round"/>
-          <circle cx="9" cy="7" r="4" stroke="#4aa8c4" stroke-width="1.8"/>
-          <line x1="19" y1="8" x2="19" y2="14" stroke="#4aa8c4" stroke-width="1.8" stroke-linecap="round"/>
-          <line x1="22" y1="11" x2="16" y2="11" stroke="#4aa8c4" stroke-width="1.8" stroke-linecap="round"/>
+  <section class="quick-grid">
+    <div class="quick"><div class="icon">⚡</div><span>快速加入</span></div>
+    <div class="quick"><div class="icon">✦</div><span>热门广场</span></div>
+    <div class="quick"><div class="icon">♫</div><span>治愈声音</span></div>
+    <div class="quick"><div class="icon">✉</div><span>今日话题</span></div>
+  </section>
+
+  <div class="section-title">今日陪伴</div>
+
+  <section class="breath-panel">
+    <div class="breath-area">
+      <div class="glow-ring"></div>
+      <div class="ripple"></div>
+      <div class="ripple r2"></div>
+      <div class="ripple r3"></div>
+      <div class="ripple r4"></div>
+      <div class="mid-ring"></div>
+      <div class="inner-ring"></div>
+      <div class="core">
+        <svg viewBox="0 0 90 90" fill="none">
+          <path d="M37 37 C33 41 33 49 37 53" stroke="#8bdcff" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M30 31 C24 37 24 53 30 59" stroke="#d7f3ff" stroke-width="2.3" stroke-linecap="round"/>
+          <path d="M64 62 C58 72 46 74 38 66 C28 56 28 40 36 31 C44 22 58 22 66 32 L64 36" stroke="#5dcdf7" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M64 36 C70 40 70 52 64 56" stroke="#5dcdf7" stroke-width="3" stroke-linecap="round"/>
+          <path d="M60 40 C62 50 56 60 50 62 C47 63 46 66 50 68 C53 70 57 68 57 64" stroke="#5dcdf7" stroke-width="2.7" stroke-linecap="round"/>
         </svg>
+        <small>LISTEN</small>
       </div>
-      <div class="quick-btn-label">快速加入</div>
     </div>
-    <div class="quick-btn">
-      <div class="quick-btn-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="3" stroke="#7ec8dc" stroke-width="1.8"/>
-          <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"
-                stroke="#7ec8dc" stroke-width="1.6" stroke-linecap="round"/>
-        </svg>
+    <div class="panel-copy">点击开始文字输入，长按可进入语音表达。AI 会优先承接你此刻的情绪，再决定如何往下走。</div>
+    <div class="partner">今晚在线陪伴者 324 人</div>
+  </section>
+
+  <section class="entry-card">
+    <label>文本输入</label>
+    <textarea placeholder="例如：今天加班到很晚，回家的路上突然很想找个人说说话。"></textarea>
+    <div class="action-row">
+      <button class="btn-primary">开始 AI 匹配</button>
+      <button class="btn">语音输入</button>
+      <button class="btn">高级筛选</button>
+      <button class="btn">进入 AI 对话页</button>
+    </div>
+    <div class="mini-tip">今日剩余匹配次数：4 次</div>
+  </section>
+
+  <section class="candidate-panel">
+    <h2>推荐承接区</h2>
+    <div class="candidate-list">
+      <div class="candidate">
+        <div class="candidate-top"><strong>暖心倾听师 · 小林</strong><span class="score">匹配度 93%</span></div>
+        <p>你提到下班后的孤单感，优先推荐更擅长晚间倾听和低压聊天的陪伴对象。</p>
+        <div class="candidate-actions"><button class="ghost">查看详情</button><button class="solid">发起邀约</button></div>
       </div>
-      <div class="quick-btn-label">热门广场</div>
-    </div>
-    <div class="quick-btn">
-      <div class="quick-btn-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"
-                   stroke="#aadde9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke="#aadde9" stroke-width="1.8" stroke-linecap="round"/>
-        </svg>
+      <div class="candidate">
+        <div class="candidate-top"><strong>睡前放松向导 · 阿乔</strong><span class="score">匹配度 89%</span></div>
+        <p>如果你今晚更想被安静接住，也可以先试试声音陪伴或线上短时放松聊天。</p>
+        <div class="candidate-actions"><button class="ghost">去声音页</button><button class="solid">立即聊聊</button></div>
       </div>
-      <div class="quick-btn-label">治愈声音</div>
     </div>
-    <div class="quick-btn">
-      <div class="quick-btn-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
-                stroke="rgba(180,210,225,0.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div class="quick-btn-label">今日话题</div>
-    </div>
+  </section>
+</main>
+
+<div class="bottom-sheet">
+  <div class="sheet-actions">
+    <button class="ghost">高级筛选</button>
+    <button class="primary">寻找今天的搭子</button>
   </div>
-
-  <!-- 分割线 -->
-  <div class="section-divider"></div>
-
-  <!-- 呼吸圆圈 -->
-  <div class="breath-area">
-    <div class="glow-outer"></div>
-    <div class="ripple"></div>
-    <div class="ripple"></div>
-    <div class="ripple"></div>
-    <div class="ripple"></div>
-    <div class="mid-ring"></div>
-    <div class="inner-ring"></div>
-
-    <!-- 核心圆：logo -->
-    <div class="core-circle">
-      <svg class="logo-icon" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- 左侧声波 内弧 -->
-        <path d="M37 37 C33 41 33 49 37 53"
-              stroke="#7ec8dc" stroke-width="2.6" stroke-linecap="round" fill="none"/>
-        <!-- 左侧声波 外弧 -->
-        <path d="M30 31 C24 37 24 53 30 59"
-              stroke="#aadde9" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-        <!-- 耳廓主体：开口朝右下 -->
-        <path d="M64 62
-                 C58 72 46 74 38 66
-                 C28 56 28 40 36 31
-                 C44 22 58 22 66 32
-                 L64 36"
-              stroke="#4aa8c4" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <!-- 开口小钩 -->
-        <path d="M64 36 C70 40 70 52 64 56"
-              stroke="#4aa8c4" stroke-width="3.0" stroke-linecap="round" fill="none"/>
-        <!-- 耳内螺旋 -->
-        <path d="M60 40 C62 50 56 60 50 62 C47 63 46 66 50 68 C53 70 57 68 57 64"
-              stroke="#4aa8c4" stroke-width="2.6" stroke-linecap="round" fill="none"/>
-      </svg>
-      <div class="core-sub">listen</div>
-    </div>
-  </div>
-
-  <!-- 搭子在线提示 -->
-  <div class="partner-hint">
-    <div class="partner-dot"></div>
-    <span><span class="partner-count">312</span> 位搭子正在线</span>
-  </div>
-
-  <!-- 占位空间（底部按钮占据） -->
-  <div style="height:130px;"></div>
-
 </div>
 
-<!-- 底部主操作区（悬浮） -->
-<div class="bottom-bar">
-  <button class="main-btn" onclick="this.style.opacity=0.8;setTimeout(()=>this.style.opacity=1,200)">
-    寻找今天的搭子
-  </button>
-  <button class="filter-btn">
-    <span class="filter-icon">⚙</span>
-    高级筛选
-  </button>
-</div>
-
-<!-- 底部导航栏：首页 / 加入 / 广场 / 声音 / 我的 -->
-<div class="bottom-nav">
-
-  <!-- 首页 -->
-  <div class="nav-item active" onclick="switchTab(this,'home')">
-    <div class="nav-icon-wrap">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path class="nav-svg-icon" d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
-              stroke="#4aa8c4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        <polyline class="nav-svg-icon" points="9 22 9 12 15 12 15 22"
-              stroke="#4aa8c4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
-    <div class="nav-label" style="color:#4aa8c4;">首页</div>
-  </div>
-
-  <!-- 广场 -->
-  <div class="nav-item" onclick="switchTab(this,'square')">
-    <div class="nav-icon-wrap">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <circle class="nav-svg-icon" cx="12" cy="12" r="3.5"
-                stroke="rgba(255,255,255,0.25)" stroke-width="1.8"/>
-        <path class="nav-svg-icon" d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"
-              stroke="rgba(255,255,255,0.25)" stroke-width="1.8" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div class="nav-label">广场</div>
-  </div>
-
-  <!-- 加入（中间凸起主按钮） -->
-  <div class="nav-item nav-center" onclick="switchTab(this,'join')">
-    <div class="nav-icon-wrap">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-        <path class="nav-svg-icon" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
-              stroke="#4aa8c4" stroke-width="1.8" stroke-linecap="round"/>
-        <circle class="nav-svg-icon" cx="9" cy="7" r="4"
-                stroke="#4aa8c4" stroke-width="1.8"/>
-        <path class="nav-svg-icon" d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
-              stroke="#4aa8c4" stroke-width="1.8" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div class="nav-label">加入</div>
-  </div>
-
-  <!-- 声音 -->
-  <div class="nav-item" onclick="switchTab(this,'sound')">
-    <div class="nav-icon-wrap">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <polygon class="nav-svg-icon" points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"
-                 stroke="rgba(255,255,255,0.25)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        <path class="nav-svg-icon" d="M15.54 8.46a5 5 0 0 1 0 7.07"
-              stroke="rgba(255,255,255,0.25)" stroke-width="1.8" stroke-linecap="round"/>
-        <path class="nav-svg-icon" d="M19.07 4.93a10 10 0 0 1 0 14.14"
-              stroke="rgba(255,255,255,0.25)" stroke-width="1.8" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div class="nav-label">声音</div>
-  </div>
-
-  <!-- 我的 -->
-  <div class="nav-item" onclick="switchTab(this,'profile')">
-    <div class="nav-icon-wrap">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path class="nav-svg-icon" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
-              stroke="rgba(255,255,255,0.25)" stroke-width="1.8" stroke-linecap="round"/>
-        <circle class="nav-svg-icon" cx="12" cy="7" r="4"
-                stroke="rgba(255,255,255,0.25)" stroke-width="1.8"/>
-      </svg>
-    </div>
-    <div class="nav-label">我的</div>
-  </div>
-
-</div>
+<nav class="bottom-nav">
+  <div class="nav-item active">首页</div>
+  <div class="nav-item">服务</div>
+  <div class="nav-item nav-center">AI</div>
+  <div class="nav-item">声音</div>
+  <div class="nav-item">我的</div>
+</nav>
 
 <script>
-// 生成星点
-const starsEl = document.getElementById('stars');
-for (let i = 0; i < 55; i++) {
-  const s = document.createElement('div');
-  s.className = 'star';
-  const sz = Math.random() * 1.8 + 0.5;
-  s.style.cssText = `
-    width:${sz}px; height:${sz}px;
-    left:${Math.random()*100}%;
-    top:${Math.random()*100}%;
-    --d:${3+Math.random()*5}s;
-    --delay:${Math.random()*6}s;
-    opacity:${0.1+Math.random()*0.5};
-  `;
-  starsEl.appendChild(s);
-}
-
-// 时间 & 问候
-function updateTime() {
-  const now = new Date();
-  const h = now.getHours().toString().padStart(2,'0');
-  const m = now.getMinutes().toString().padStart(2,'0');
-  document.getElementById('curTime').textContent = h + ':' + m;
-  const days = ['周日','周一','周二','周三','周四','周五','周六'];
-  let period = '早上';
-  if (now.getHours() >= 12 && now.getHours() < 18) period = '下午';
-  else if (now.getHours() >= 18) period = '晚上';
-  document.getElementById('greetingPeriod').textContent = period + '好 · ' + days[now.getDay()];
-}
-updateTime();
-setInterval(updateTime, 10000);
-
-// Tab 配置：每个 tab 对应主按钮文案 & 副文案
-const tabConfig = {
-  home:    { btn: '寻找今天的搭子',   sub: '高级筛选',  greeting: '今天，遇见懂你的人',   hint: '1,247 位搭子正在等待陪伴' },
-  join:    { btn: '立即加入陪伴圈',   sub: '查看全部圈子', greeting: '找到属于你的圈子',  hint: '238 个陪伴圈等你加入' },
-  square:  { btn: '逛逛广场',         sub: '发布动态',  greeting: '广场里有人在等你',     hint: '今日 856 条新动态' },
-  sound:   { btn: '播放治愈声音',     sub: '我的收藏',  greeting: '用声音抚慰此刻的你',   hint: '精选 120+ 条治愈音频' },
-  profile: { btn: '编辑我的资料',     sub: '设置与隐私', greeting: '你好，听说你来了',   hint: '陪伴 28 天 · 24 次连接' },
-};
-
-function switchTab(el, key) {
-  // 更新 active 状态
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.classList.remove('active');
-    item.querySelectorAll('.nav-svg-icon').forEach(p => {
-      if (!item.classList.contains('nav-center')) {
-        p.setAttribute('stroke', 'rgba(255,255,255,0.25)');
-      }
-    });
-    const lbl = item.querySelector('.nav-label');
-    if (lbl) lbl.style.color = '';
-  });
-  el.classList.add('active');
-  el.querySelectorAll('.nav-svg-icon').forEach(p => p.setAttribute('stroke', '#4aa8c4'));
-  const activeLbl = el.querySelector('.nav-label');
-  if (activeLbl) activeLbl.style.color = '#4aa8c4';
-
-  // 更新主按钮 & 问候语
-  const cfg = tabConfig[key] || tabConfig.home;
-  const mainBtn = document.querySelector('.main-btn');
-  const filterBtn = document.querySelector('.filter-btn');
-  const greetText = document.querySelector('.greeting-text');
-  const greetSub  = document.querySelector('.greeting-sub');
-
-  if (mainBtn) {
-    mainBtn.style.opacity = '0';
-    setTimeout(() => {
-      mainBtn.textContent = cfg.btn;
-      mainBtn.style.opacity = '1';
-    }, 150);
-  }
-  if (filterBtn) {
-    filterBtn.childNodes[1].textContent = ' ' + cfg.sub;
-  }
-  if (greetText) {
-    greetText.style.opacity = '0';
-    setTimeout(() => { greetText.textContent = cfg.greeting; greetText.style.opacity = '1'; }, 150);
-  }
-  if (greetSub) {
-    greetSub.style.opacity = '0';
-    setTimeout(() => {
-      greetSub.innerHTML = cfg.hint.replace(/[\d,]+/, m => `<span style="color:#4aa8c4;font-weight:500;">${m}</span>`);
-      greetSub.style.opacity = '1';
-    }, 150);
-  }
-}
-
-// 过渡动画
-document.querySelectorAll('.greeting-text, .greeting-sub, .main-btn').forEach(el => {
-  el.style.transition = 'opacity 0.25s ease';
-});
+const starsEl=document.getElementById('stars');
+for(let i=0;i<40;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*1.6+0.4;s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${3+Math.random()*5}s;--delay:${Math.random()*6}s;opacity:${0.1+Math.random()*0.4};`;starsEl.appendChild(s);} 
+const now=new Date();document.getElementById('curTime').textContent=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+function go(url){window.location.href=url;}
+document.querySelectorAll(".quick")[0]?.addEventListener("click",()=>go("./listen_page_services.html"));
+document.querySelectorAll(".quick")[1]?.addEventListener("click",()=>go("./listen_page_square.html"));
+document.querySelectorAll(".quick")[2]?.addEventListener("click",()=>go("./listen_page_sound.html"));
+document.querySelectorAll(".quick")[3]?.addEventListener("click",()=>go("./listen_page_square.html"));
+document.querySelectorAll(".action-row .btn-primary")[0]?.addEventListener("click",()=>go("./listen_page_services.html"));
+document.querySelectorAll(".action-row .btn")[0]?.addEventListener("click",()=>go("./listen_page_chat.html"));
+document.querySelectorAll(".action-row .btn")[1]?.addEventListener("click",()=>go("./listen_page_services.html"));
+document.querySelectorAll(".action-row .btn")[2]?.addEventListener("click",()=>go("./listen_page_chat.html"));
+document.querySelectorAll(".candidate-actions .ghost")[0]?.addEventListener("click",()=>go("./listen_page_provider_detail.html"));
+document.querySelectorAll(".candidate-actions .solid")[0]?.addEventListener("click",()=>go("./listen_page_provider_detail.html"));
+document.querySelectorAll(".candidate-actions .ghost")[1]?.addEventListener("click",()=>go("./listen_page_sound.html"));
+document.querySelectorAll(".candidate-actions .solid")[1]?.addEventListener("click",()=>go("./listen_page_chat.html"));
+document.querySelectorAll(".sheet-actions .ghost")[0]?.addEventListener("click",()=>go("./listen_page_services.html"));
+document.querySelectorAll(".sheet-actions .primary")[0]?.addEventListener("click",()=>go("./listen_page_services.html"));
+const homeNav=document.querySelectorAll(".bottom-nav .nav-item");
+homeNav[0]?.addEventListener("click",()=>go("./listen_home_v2_dark.html"));
+homeNav[1]?.addEventListener("click",()=>go("./listen_page_services.html"));
+homeNav[2]?.addEventListener("click",()=>go("./listen_page_chat.html"));
+homeNav[3]?.addEventListener("click",()=>go("./listen_page_sound.html"));
+homeNav[4]?.addEventListener("click",()=>go("./listen_page_me.html"));
 </script>
 </body>
 </html>
