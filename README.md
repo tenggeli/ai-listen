@@ -25,10 +25,36 @@ go run ./cmd/server
 
 默认端口 `8080`，健康检查：`GET /healthz`。
 
-后端仓储驱动：
-- 默认：`LISTEN_REPOSITORY_DRIVER=memory`
-- MySQL：`LISTEN_REPOSITORY_DRIVER=mysql`
-- DSN：`LISTEN_MYSQL_DSN`（示例默认值见 `internal/infrastructure/config/config.go`）
+后端配置读取优先级：
+- 1) `~/conf/listenbase.cof`
+- 2) 环境变量（如 `LISTEN_REPOSITORY_DRIVER`）
+- 3) 代码默认值（仅开发兜底）
+
+推荐先准备配置文件：
+
+```bash
+mkdir -p ~/conf
+cp backend/config/listenbase.example.cof ~/conf/listenbase.cof
+```
+
+关键配置项：
+- `server.port`
+- `repository.driver`（`memory/mysql`）
+- `mysql.dsn`
+- `ai.mode`（`mock/real`）
+- `mock.enable_payment_success`
+
+用户登录骨架接口（P0-02）：
+- `POST /api/v1/auth/login/sms`（验证码 mock：`123456`）
+- `POST /api/v1/auth/login/wechat/mock`
+
+用户基础资料接口（P0-03）：
+- `GET /api/v1/users/me`
+- `PUT /api/v1/users/me/profile`
+
+用户性格设置接口（P0-04）：
+- `PUT /api/v1/users/me/personality`
+- `POST /api/v1/users/me/personality/skip`
 
 ### 2) 启动用户 Web
 

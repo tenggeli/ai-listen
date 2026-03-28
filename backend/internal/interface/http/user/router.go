@@ -17,3 +17,12 @@ func RegisterAIRoutes(mux *http.ServeMux, controller AIController) {
 		controller.HandleAppendMessage(w, r)
 	})
 }
+
+func RegisterIdentityRoutes(mux *http.ServeMux, controller IdentityController) {
+	mux.HandleFunc("POST /api/v1/auth/login/sms", controller.HandleSMSLogin)
+	mux.HandleFunc("POST /api/v1/auth/login/wechat/mock", controller.HandleWechatMockLogin)
+	mux.HandleFunc("GET /api/v1/users/me", controller.HandleGetMe)
+	mux.HandleFunc("PUT /api/v1/users/me/profile", controller.HandleSaveProfile)
+	mux.HandleFunc("PUT /api/v1/users/me/personality", controller.HandleSavePersonality)
+	mux.HandleFunc("POST /api/v1/users/me/personality/skip", controller.HandleSkipPersonality)
+}

@@ -6,12 +6,13 @@ import HomeBottomNav, { type HomeNavItem } from '../../components/ai/HomeBottomN
 import HomeQuickActions from '../../components/ai/HomeQuickActions.vue'
 import MatchCandidateCard from '../../components/ai/MatchCandidateCard.vue'
 import { HomePageViewModel } from '../../application/ai/HomePageViewModel'
+import { currentUserIdOrDemo } from '../../application/identity/AuthSession'
 import { HttpAiApi } from '../../api/AiApi'
 import type { AiHomeQuickAction } from '../../domain/ai/AiHomeQuickAction'
 import { PageLoadState } from '../../domain/ai/PageLoadState'
 
 const api = new HttpAiApi(import.meta.env.VITE_AI_API_BASE_URL ?? '/api/v1')
-const vm = new HomePageViewModel(api, 'demo-user-001')
+const vm = new HomePageViewModel(api, currentUserIdOrDemo())
 const router = useRouter()
 const navItems: HomeNavItem[] = [
   { key: 'home', label: '首页', icon: 'home', active: true },

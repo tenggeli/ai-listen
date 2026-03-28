@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>listen 陪伴 · 评价投诉</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#091621;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;color:#edf7fb;overflow-x:hidden}
+body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;opacity:.5}
+body::before{width:320px;height:320px;background:#143e5f;left:-160px;top:-80px}
+body::after{width:320px;height:320px;background:#1b7d97;right:-140px;bottom:-120px}
+.phone{position:relative;z-index:1;max-width:390px;margin:0 auto;padding:52px 20px 118px;min-height:100vh}
+.status{display:flex;justify-content:space-between;color:rgba(255,255,255,.34);font-size:12px}
+.hero,.section{margin-top:16px;padding:20px;border-radius:26px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px)}
+.label{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:rgba(115,213,255,.08);color:#8fdfff;font-size:12px}.label::before{content:'';width:8px;height:8px;border-radius:50%;background:#8fdfff;box-shadow:0 0 14px rgba(143,223,255,.8)}
+.hero h1{margin-top:14px;font-size:28px;font-weight:500}
+.hero p{margin-top:10px;color:rgba(237,247,251,.62);font-size:14px;line-height:1.8}
+.section h2{font-size:16px;font-weight:500}
+.stars{display:flex;gap:10px;margin-top:14px}.star{flex:1;padding:14px 0;border-radius:18px;text-align:center;background:rgba(9,32,46,.76);border:1px solid rgba(255,255,255,.08);font-size:20px;color:#ffd87a}.star.active{border-color:rgba(255,216,122,.34);box-shadow:0 10px 24px rgba(255,216,122,.12)}
+.tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.tag{padding:10px 12px;border-radius:16px;background:rgba(9,32,46,.76);border:1px solid rgba(255,255,255,.08);font-size:12px;color:rgba(237,247,251,.7)}.tag.active{background:rgba(115,213,255,.12);border-color:rgba(115,213,255,.3);color:#8fdfff}
+.textarea{margin-top:14px;width:100%;min-height:110px;border:none;outline:none;resize:none;padding:14px 16px;border-radius:18px;background:rgba(9,32,46,.76);border:1px solid rgba(255,255,255,.08);color:#edf7fb;font-size:14px;line-height:1.7}
+.textarea::placeholder{color:rgba(255,255,255,.24)}
+.issue-list{display:grid;gap:10px;margin-top:14px}.issue{padding:14px 16px;border-radius:18px;background:rgba(9,32,46,.76);border:1px solid rgba(255,255,255,.08);font-size:13px;color:rgba(237,247,251,.68)}.issue strong{display:block;font-size:14px;color:#f5fbff}.issue span{display:block;margin-top:6px;font-size:12px;color:rgba(237,247,251,.48);line-height:1.7}
+.bar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:390px;padding:14px 20px 28px;background:rgba(7,18,28,.96);border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(24px)}
+.actions{display:flex;gap:10px}.ghost,.primary{flex:1;border:none;border-radius:18px;padding:15px 16px;font-size:14px;font-weight:700}.ghost{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(237,247,251,.74)}.primary{background:linear-gradient(135deg,#9be4ff,#5abfe8);color:#082031}
+.prototype-link,.flow-nav a{text-decoration:none}
+.prototype-link{position:fixed;top:16px;right:16px;z-index:12;padding:10px 14px;border-radius:999px;background:rgba(7,25,38,.82);border:1px solid rgba(143,223,255,.22);color:#9ae4ff;font-size:12px;backdrop-filter:blur(18px);box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.flow-nav{position:fixed;top:62px;right:16px;z-index:12;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.flow-nav a{padding:9px 12px;border-radius:999px;background:rgba(7,25,38,.78);border:1px solid rgba(255,255,255,.09);color:rgba(239,247,251,.78);font-size:12px;backdrop-filter:blur(18px)}
+</style>
+</head>
+<body>
+<a class="prototype-link" href="./listen_prototype_hub.html">原型总览</a>
+<div class="flow-nav">
+  <a href="./listen_page_order_detail.html">上一页: 订单详情</a>
+  <a href="./listen_page_me.html">下一页: 我的</a>
+</div>
+<main class="phone">
+  <div class="status"><span>20:53</span><span>评价投诉</span></div>
+
+  <section class="hero">
+    <div class="label">After Service</div>
+    <h1>把这次体验留下来，也给售后留出口</h1>
+    <p>服务结束后可以先评价，也可以在同一入口里提交投诉或异常反馈，避免用户不知道去哪里处理问题。</p>
+  </section>
+
+  <section class="section">
+    <h2>服务评价</h2>
+    <div class="stars">
+      <div class="star active">★</div>
+      <div class="star active">★</div>
+      <div class="star active">★</div>
+      <div class="star active">★</div>
+      <div class="star">★</div>
+    </div>
+    <div class="tags">
+      <div class="tag active">很会接情绪</div>
+      <div class="tag active">不尴尬</div>
+      <div class="tag">回复及时</div>
+      <div class="tag">声音舒服</div>
+      <div class="tag">节奏太快</div>
+      <div class="tag">与描述不符</div>
+    </div>
+    <textarea class="textarea" placeholder="写一点你的真实感受，帮助下一位用户，也帮助平台识别高质量服务。">整体体验很稳，没有被说教，节奏也舒服。如果能在开始前再主动确认一下状态，会更安心。</textarea>
+  </section>
+
+  <section class="section">
+    <h2>投诉 / 异常反馈</h2>
+    <div class="issue-list">
+      <div class="issue"><strong>服务未按约开始</strong><span>适用于迟到、爽约、长时间未响应等问题。</span></div>
+      <div class="issue"><strong>服务内容与描述不符</strong><span>适用于项目不一致、体验明显缩水、超出约定边界等情况。</span></div>
+      <div class="issue"><strong>需要平台介入</strong><span>适用于退款争议、沟通冲突或安全风险，需要客服处理。</span></div>
+    </div>
+  </section>
+</main>
+
+<div class="bar">
+  <div class="actions">
+    <button class="ghost">仅投诉反馈</button>
+    <button class="primary">提交并回到我的</button>
+  </div>
+</div>
+<script>
+function go(url){window.location.href=url;}
+document.querySelector('.actions .ghost')?.addEventListener('click',()=>go('./listen_page_review_complaint.html'));
+document.querySelector('.actions .primary')?.addEventListener('click',()=>go('./listen_page_me.html'));
+document.querySelectorAll('.issue').forEach((el)=>el.addEventListener('click',()=>go('./listen_page_review_complaint.html')));
+</script>
+</body>
+</html>

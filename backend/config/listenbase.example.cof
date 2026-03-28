@@ -1,0 +1,7 @@
+# listen backend main config (copy to ~/conf/listenbase.cof and edit)
+
+server.port=8080
+repository.driver=memory
+mysql.dsn=root:password@tcp(127.0.0.1:3306)/listen?parseTime=true&charset=utf8mb4&loc=Local
+ai.mode=mock
+mock.enable_payment_success=true

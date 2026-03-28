@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>listen 陪伴 · 订单详情</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#091621;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;color:#edf7fb;overflow-x:hidden}
+body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;opacity:.5}
+body::before{width:320px;height:320px;background:#143e5f;left:-160px;top:-80px}
+body::after{width:320px;height:320px;background:#1b7d97;right:-140px;bottom:-120px}
+.phone{position:relative;z-index:1;max-width:390px;margin:0 auto;padding:52px 20px 118px;min-height:100vh}
+.status{display:flex;justify-content:space-between;color:rgba(255,255,255,.34);font-size:12px}
+.hero,.section{margin-top:16px;padding:20px;border-radius:26px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px)}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:rgba(115,213,255,.1);color:#8fdfff;font-size:12px}.pill::before{content:'';width:8px;height:8px;border-radius:50%;background:#8fdfff;box-shadow:0 0 14px rgba(143,223,255,.8)}
+.hero h1{margin-top:14px;font-size:28px;font-weight:500}
+.hero p{margin-top:10px;color:rgba(237,247,251,.62);font-size:14px;line-height:1.8}
+.summary{margin-top:16px;padding:16px;border-radius:20px;background:rgba(9,32,46,.76);border:1px solid rgba(255,255,255,.06)}
+.summary strong{display:block;font-size:15px}.summary p{margin-top:8px;font-size:12px;color:rgba(237,247,251,.58);line-height:1.7}
+.section h2{font-size:16px;font-weight:500}
+.timeline{margin-top:14px;display:grid;gap:12px}
+.step{display:grid;grid-template-columns:22px 1fr;gap:12px;align-items:start}
+.dot{width:22px;height:22px;border-radius:50%;background:rgba(115,213,255,.16);border:1px solid rgba(115,213,255,.28);display:flex;align-items:center;justify-content:center;color:#8fdfff;font-size:11px}
+.copy strong{display:block;font-size:14px}.copy p{margin-top:6px;font-size:12px;color:rgba(237,247,251,.52);line-height:1.7}
+.info-list{margin-top:14px;display:grid;gap:10px}
+.info-row{display:flex;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:18px;background:rgba(9,32,46,.76);border:1px solid rgba(255,255,255,.06);font-size:13px;color:rgba(237,247,251,.68)}
+.value{text-align:right;color:#f5fbff}
+.notice{margin-top:16px;padding:14px 16px;border-radius:18px;background:rgba(10,35,48,.74);border:1px solid rgba(255,255,255,.06);font-size:12px;line-height:1.8;color:rgba(237,247,251,.58)}
+.bar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:390px;padding:14px 20px 28px;background:rgba(7,18,28,.96);border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(24px)}
+.actions{display:flex;gap:10px}.ghost,.primary{flex:1;border:none;border-radius:18px;padding:15px 16px;font-size:14px;font-weight:700}.ghost{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(237,247,251,.74)}.primary{background:linear-gradient(135deg,#9be4ff,#5abfe8);color:#082031}
+.prototype-link,.flow-nav a{text-decoration:none}
+.prototype-link{position:fixed;top:16px;right:16px;z-index:12;padding:10px 14px;border-radius:999px;background:rgba(7,25,38,.82);border:1px solid rgba(143,223,255,.22);color:#9ae4ff;font-size:12px;backdrop-filter:blur(18px);box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.flow-nav{position:fixed;top:62px;right:16px;z-index:12;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.flow-nav a{padding:9px 12px;border-radius:999px;background:rgba(7,25,38,.78);border:1px solid rgba(255,255,255,.09);color:rgba(239,247,251,.78);font-size:12px;backdrop-filter:blur(18px)}
+</style>
+</head>
+<body>
+<a class="prototype-link" href="./listen_prototype_hub.html">原型总览</a>
+<div class="flow-nav">
+  <a href="./listen_page_payment_confirm.html">上一页: 支付确认</a>
+  <a href="./listen_page_review_complaint.html">下一页: 评价投诉</a>
+</div>
+<main class="phone">
+  <div class="status"><span>20:49</span><span>订单详情</span></div>
+
+  <section class="hero">
+    <div class="pill">已支付 · 待服务方确认</div>
+    <h1>这次陪伴已经下单成功</h1>
+    <p>平台已锁定订单金额，服务方确认后即进入正式服务。若超时未确认，将自动关闭并原路退款。</p>
+    <div class="summary">
+      <strong>暖心倾听师 · 小林</strong>
+      <p>线上倾听 30 分钟 · 今天 21:00 开始 · 订单号 LISTEN20260328001</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>订单进度</h2>
+    <div class="timeline">
+      <div class="step"><div class="dot">1</div><div class="copy"><strong>支付已完成</strong><p>你已成功支付 ¥90，平台保障已生效。</p></div></div>
+      <div class="step"><div class="dot">2</div><div class="copy"><strong>等待服务方确认</strong><p>预计 10 分钟内确认是否可接单，确认后将同步通知你。</p></div></div>
+      <div class="step"><div class="dot">3</div><div class="copy"><strong>开始服务</strong><p>服务开始前 15 分钟会再次提醒，线上服务将通过站内聊天或语音承接。</p></div></div>
+      <div class="step"><div class="dot">4</div><div class="copy"><strong>服务完成后评价</strong><p>服务完成可打分、写评价，也可发起投诉或售后申诉。</p></div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>订单信息</h2>
+    <div class="info-list">
+      <div class="info-row"><span>服务项目</span><span class="value">线上倾听 30 分钟</span></div>
+      <div class="info-row"><span>服务时间</span><span class="value">03-28 21:00</span></div>
+      <div class="info-row"><span>支付方式</span><span class="value">微信支付</span></div>
+      <div class="info-row"><span>实付金额</span><span class="value">¥90</span></div>
+      <div class="info-row"><span>售后保障</span><span class="value">未开始前可申请取消</span></div>
+    </div>
+    <div class="notice">原型说明：该页承接支付完成后的状态确认、订单进度追踪、售后保障说明，并作为后续“评价 / 投诉”的入口页。</div>
+  </section>
+</main>
+
+<div class="bar">
+  <div class="actions">
+    <button class="ghost">联系服务方</button>
+    <button class="primary">去评价 / 投诉</button>
+  </div>
+</div>
+<script>
+function go(url){window.location.href=url;}
+document.querySelector('.actions .ghost')?.addEventListener('click',()=>go('./listen_page_chat.html'));
+document.querySelector('.actions .primary')?.addEventListener('click',()=>go('./listen_page_review_complaint.html'));
+</script>
+</body>
+</html>

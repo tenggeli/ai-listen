@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { currentUserIdOrDemo } from '../../application/identity/AuthSession'
 import HomeBottomNav, { type HomeNavItem } from '../../components/ai/HomeBottomNav.vue'
 import SoundCategoryTabs from '../../components/ai/SoundCategoryTabs.vue'
 import SoundNowPlayingCard from '../../components/ai/SoundNowPlayingCard.vue'
@@ -11,7 +12,7 @@ import { PageLoadState } from '../../domain/ai/PageLoadState'
 
 const useMock = import.meta.env.VITE_USE_MOCK !== 'false'
 const api = useMock ? new MockSoundApi() : new HttpSoundApi('/api/v1')
-const vm = new SoundPageViewModel(api, 'demo-user-001')
+const vm = new SoundPageViewModel(api, currentUserIdOrDemo())
 const router = useRouter()
 const headerTime = computed(() =>
   new Intl.DateTimeFormat('zh-CN', {

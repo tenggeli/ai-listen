@@ -6,10 +6,12 @@ import (
 	"strings"
 
 	aiApp "listen/backend/internal/application/ai"
+	identityApp "listen/backend/internal/application/identity"
 	providerApp "listen/backend/internal/application/provider"
 	domainAi "listen/backend/internal/domain/ai"
 	infraAi "listen/backend/internal/infrastructure/ai"
 	"listen/backend/internal/infrastructure/config"
+	infraIdentity "listen/backend/internal/infrastructure/identity"
 	memory "listen/backend/internal/infrastructure/persistence/memory"
 	mysqlInfra "listen/backend/internal/infrastructure/persistence/mysql"
 	adminHTTP "listen/backend/internal/interface/http/admin"
@@ -31,6 +33,16 @@ func NewServer() Server {
 	quotaRepo := memory.NewMatchQuotaRepository()
 	sessionRepo := memory.NewSessionRepository()
 	providerRepo := memory.NewProviderRepository()
+	identityRepo := memory.NewIdentityRepository()
+	authService := infraIdentity.NewMockAuthService()
+	identityController := user.NewIdentityController(
+		identityApp.NewLoginBySMSUseCase(identityRepo, authService, clock, idGenerator),
+		identityApp.NewLoginByWechatUseCase(identityRepo, authService, clock, idGenerator),
+		identityApp.NewGetUserProfileUseCase(identityRepo),
+		identityApp.NewSaveUserProfileUseCase(identityRepo),
+		identityApp.NewSaveUserPersonalityUseCase(identityRepo),
+		identityApp.NewSkipUserPersonalityUseCase(identityRepo),
+	)
 
 	if cfg.RepositoryDriver == "mysql" {
 		db, err := mysqlInfra.NewDB(cfg.MySQLDSN)
@@ -60,6 +72,7 @@ func NewServer() Server {
 
 			mux := http.NewServeMux()
 			user.RegisterAIRoutes(mux, aiController)
+			user.RegisterIdentityRoutes(mux, identityController)
 			adminHTTP.RegisterProviderRoutes(mux, adminController)
 			mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
@@ -91,6 +104,7 @@ func NewServer() Server {
 
 	mux := http.NewServeMux()
 	user.RegisterAIRoutes(mux, aiController)
+	user.RegisterIdentityRoutes(mux, identityController)
 	adminHTTP.RegisterProviderRoutes(mux, adminController)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)

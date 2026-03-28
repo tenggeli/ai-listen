@@ -50,7 +50,7 @@ body::after{width:300px;height:300px;background:#1b7d97;right:-140px;bottom:-120
 <a class="prototype-link" href="./listen_prototype_hub.html">原型总览</a>
 <div class="flow-nav">
   <a href="./listen_home_v2_dark.html">上一页: 首页</a>
-  <a href="./listen_prototype_hub.html">下一页: 返回总览</a>
+  <a href="./listen_page_order_detail.html">下一页: 订单详情</a>
 </div>
   <main class="phone">
     <div class="status"><span>20:41</span><span>我的</span></div>
@@ -111,6 +111,8 @@ body::after{width:300px;height:300px;background:#1b7d97;right:-140px;bottom:-120
   </nav>
 <script>
 function go(url){window.location.href=url;}
+document.querySelectorAll(".order-card")[0]?.addEventListener("click",()=>go("./listen_page_order_detail.html"));
+document.querySelectorAll(".order-card")[1]?.addEventListener("click",()=>go("./listen_page_order_detail.html"));
 document.querySelectorAll(".row")[0]?.addEventListener("click",()=>go("./listen_page_me.html"));
 document.querySelectorAll(".row")[1]?.addEventListener("click",()=>go("./listen_page_square.html"));
 document.querySelectorAll(".row")[2]?.addEventListener("click",()=>go("./listen_page_services.html"));

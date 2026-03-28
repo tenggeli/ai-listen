@@ -2,6 +2,7 @@
 import { computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ChatPageViewModel } from '../../application/ai/ChatPageViewModel'
+import { currentUserIdOrDemo } from '../../application/identity/AuthSession'
 import { HttpAiApi, MockAiApi } from '../../api/AiApi'
 import ChatMessageBubble from '../../components/ai/ChatMessageBubble.vue'
 import ChatTypingIndicator from '../../components/ai/ChatTypingIndicator.vue'
@@ -9,7 +10,7 @@ import { PageLoadState } from '../../domain/ai/PageLoadState'
 
 const useMock = import.meta.env.VITE_USE_MOCK !== 'false'
 const api = useMock ? new MockAiApi() : new HttpAiApi('/api/v1')
-const vm = new ChatPageViewModel(api, 'demo-user-001')
+const vm = new ChatPageViewModel(api, currentUserIdOrDemo())
 const headerTime = computed(() =>
   new Intl.DateTimeFormat('zh-CN', {
     hour: '2-digit',
