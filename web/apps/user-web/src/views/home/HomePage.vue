@@ -172,9 +172,9 @@ function onSelectNav(key: string) {
         </button>
         <button type="button" class="filter-btn">高级筛选</button>
       </section>
-
-      <HomeBottomNav :items="navItems" @select="onSelectNav" />
     </section>
+
+    <HomeBottomNav :items="navItems" @select="onSelectNav" />
   </main>
 </template>
 
@@ -192,7 +192,7 @@ function onSelectNav(key: string) {
   width: min(100%, 430px);
   min-height: 100vh;
   margin: 0 auto;
-  padding: 22px 20px 0;
+  padding: 22px 20px 96px;
   overflow: hidden;
 }
 
@@ -499,6 +499,7 @@ function onSelectNav(key: string) {
   padding: 20px 0 18px;
   background: linear-gradient(180deg, rgba(13, 31, 45, 0), rgba(13, 31, 45, 0.96) 32%);
   z-index: 0;
+  pointer-events: none;
 }
 
 .main-btn,
@@ -506,6 +507,7 @@ function onSelectNav(key: string) {
   border: none;
   cursor: pointer;
   font: inherit;
+  pointer-events: auto;
 }
 
 .main-btn {

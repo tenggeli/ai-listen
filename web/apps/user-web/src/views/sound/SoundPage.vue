@@ -99,9 +99,9 @@ function onSelectNav(key: string) {
           @select="vm.selectTrack"
         />
       </section>
-
-      <HomeBottomNav :items="navItems" @select="onSelectNav" />
     </section>
+
+    <HomeBottomNav :items="navItems" @select="onSelectNav" />
   </main>
 </template>
 
