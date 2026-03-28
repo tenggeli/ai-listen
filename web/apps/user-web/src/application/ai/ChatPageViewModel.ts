@@ -6,6 +6,7 @@ import { PageLoadState } from '../../domain/ai/PageLoadState'
 export interface ChatPageState {
   sessionId: string
   draft: string
+  quickReplies: string[]
   sessionState: PageLoadState
   sendState: PageLoadState
   session: AiSession | null
@@ -16,6 +17,7 @@ export class ChatPageViewModel {
   readonly state: ChatPageState = reactive({
     sessionId: '',
     draft: '',
+    quickReplies: ['工作压力太大了', '想找人说说话', '最近睡不太好'],
     sessionState: PageLoadState.Idle,
     sendState: PageLoadState.Idle,
     session: null,
@@ -68,6 +70,10 @@ export class ChatPageViewModel {
       this.state.sendState = PageLoadState.Error
       this.state.errorMessage = error instanceof Error ? error.message : '消息发送失败'
     }
+  }
+
+  useQuickReply(reply: string): void {
+    this.state.draft = reply
   }
 
   private async reloadSession(): Promise<void> {

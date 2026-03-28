@@ -134,7 +134,17 @@ export class MockAiApi implements AiApi {
   async createSession(userId: string, sceneType: string): Promise<string> {
     await sleep(180)
     const sessionId = `sess_${Date.now()}`
-    this.sessions.set(sessionId, new AiSession(sessionId, userId, sceneType, 'active', '', []))
+    const initialTime = new Date().toISOString()
+    this.sessions.set(
+      sessionId,
+      new AiSession(sessionId, userId, sceneType, 'active', initialTime, [
+        new AiMessage(
+          'assistant',
+          '一个人走在夜路上的时候，情绪会更容易被放大。\n\n如果你愿意，今晚的这段路我可以陪你一起走。',
+          initialTime
+        )
+      ])
+    )
     return sessionId
   }
 
@@ -154,11 +164,17 @@ export class MockAiApi implements AiApi {
       throw new Error('session not found')
     }
 
-    const now = new Date().toISOString()
-    const nextMessages = [...session.messages, new AiMessage(senderType, content, now)]
+    const now = new Date()
+    const userTime = now.toISOString()
+    const replyTime = new Date(now.getTime() + 1200).toISOString()
+    const nextMessages = [
+      ...session.messages,
+      new AiMessage(senderType, content, userTime),
+      new AiMessage('assistant', buildAssistantReply(content), replyTime)
+    ]
     this.sessions.set(
       sessionId,
-      new AiSession(session.id, session.userId, session.sceneType, session.status, now, nextMessages)
+      new AiSession(session.id, session.userId, session.sceneType, session.status, replyTime, nextMessages)
     )
   }
 }
@@ -197,6 +213,19 @@ function buildQuickActions(): AiHomeQuickAction[] {
     new AiHomeQuickAction('voice', '治愈声音', 'voice', '/home', '我想听一点能让我放松下来的声音'),
     new AiHomeQuickAction('topic', '今日话题', 'topic', '/home', '给我一个今晚适合开启聊天的话题')
   ]
+}
+
+function buildAssistantReply(content: string): string {
+  if (content.includes('压力') || content.includes('累')) {
+    return '听起来你已经撑了很久。\n\n现在不用急着把事情想清楚，我们先把那股压着你的劲慢慢放下来，好吗？'
+  }
+  if (content.includes('睡')) {
+    return '睡不好的时候，白天那些没来得及安放的情绪，常常会在夜里一起涌上来。\n\n要不要先和我说说，最近最让你停不下来的那件事？'
+  }
+  if (content.includes('说说话') || content.includes('孤单')) {
+    return '那种突然很想找个人说话的时刻，往往不是脆弱，而是你已经很努力了。\n\n我在，你可以慢慢说。'
+  }
+  return '我听见你了。\n\n不用急着组织语言，想到哪儿说到哪儿就好，我会一直接着你。'
 }
 
 function sleep(ms: number): Promise<void> {

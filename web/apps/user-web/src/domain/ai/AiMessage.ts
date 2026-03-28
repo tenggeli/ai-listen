@@ -4,4 +4,21 @@ export class AiMessage {
     public readonly content: string,
     public readonly createdAt: string
   ) {}
+
+  isUser(): boolean {
+    return this.senderType === 'user'
+  }
+
+  displayTime(): string {
+    const parsed = new Date(this.createdAt)
+    if (Number.isNaN(parsed.getTime())) {
+      return this.createdAt
+    }
+
+    return new Intl.DateTimeFormat('zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(parsed)
+  }
 }
