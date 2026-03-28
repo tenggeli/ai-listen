@@ -20,6 +20,14 @@ type GetRemainingMatchInput struct {
 	UserID string
 }
 
+type GetHomeOverviewInput struct {
+	UserID string
+}
+
+type GetHomeOverviewOutput struct {
+	Overview domain.HomeOverview
+}
+
 type GetRemainingMatchOutput struct {
 	Remaining int
 }
@@ -66,8 +74,17 @@ type GetRemainingMatchUseCase struct {
 	clock     Clock
 }
 
+type GetAiHomeUseCase struct {
+	quotaRepo domain.MatchQuotaRepository
+	clock     Clock
+}
+
 func NewGetRemainingMatchUseCase(quotaRepo domain.MatchQuotaRepository, clock Clock) GetRemainingMatchUseCase {
 	return GetRemainingMatchUseCase{quotaRepo: quotaRepo, clock: clock}
+}
+
+func NewGetAiHomeUseCase(quotaRepo domain.MatchQuotaRepository, clock Clock) GetAiHomeUseCase {
+	return GetAiHomeUseCase{quotaRepo: quotaRepo, clock: clock}
 }
 
 func (u GetRemainingMatchUseCase) Execute(ctx context.Context, input GetRemainingMatchInput) (GetRemainingMatchOutput, error) {
@@ -79,6 +96,38 @@ func (u GetRemainingMatchUseCase) Execute(ctx context.Context, input GetRemainin
 		return GetRemainingMatchOutput{}, err
 	}
 	return GetRemainingMatchOutput{Remaining: quota.Remaining()}, nil
+}
+
+func (u GetAiHomeUseCase) Execute(ctx context.Context, input GetHomeOverviewInput) (GetHomeOverviewOutput, error) {
+	if input.UserID == "" {
+		return GetHomeOverviewOutput{}, domain.ErrInvalidInput
+	}
+
+	now := u.clock.Now()
+	quota, err := u.quotaRepo.GetByUserAndDate(ctx, input.UserID, dateKey(now))
+	if err != nil {
+		return GetHomeOverviewOutput{}, err
+	}
+
+	overview := domain.HomeOverview{
+		GreetingPeriod: greetingPeriod(now),
+		GreetingText:   "今晚，遇见懂你的人",
+		GreetingSub:    "有 1,247 位搭子正在等待陪伴",
+		MoodEmoji:      "🌙",
+		MoodText:       "平静 · 有点想聊聊",
+		WeatherText:    "上海 21°C 微风",
+		CompanionDays:  28,
+		OnlineCount:    1247,
+		WaitingCount:   312,
+		Remaining:      quota.Remaining(),
+		QuickActions: []domain.HomeQuickAction{
+			{Key: "quick-join", Label: "快速加入", Icon: "join", Route: "/chat", Prompt: "想快速加入一个轻松的聊天陪伴场景"},
+			{Key: "square", Label: "热门广场", Icon: "square", Route: "/home", Prompt: "想看看大家最近都在聊什么"},
+			{Key: "voice", Label: "治愈声音", Icon: "voice", Route: "/home", Prompt: "我想听一点能让我放松下来的声音"},
+			{Key: "topic", Label: "今日话题", Icon: "topic", Route: "/home", Prompt: "给我一个今晚适合开启聊天的话题"},
+		},
+	}
+	return GetHomeOverviewOutput{Overview: overview}, nil
 }
 
 type SubmitMatchUseCase struct {
@@ -203,4 +252,19 @@ func (g TimestampIDGenerator) NewID(prefix string) string {
 
 func dateKey(now time.Time) string {
 	return now.Format("2006-01-02")
+}
+
+func greetingPeriod(now time.Time) string {
+	period := "晚上好"
+	switch hour := now.Hour(); {
+	case hour < 11:
+		period = "早上好"
+	case hour < 14:
+		period = "中午好"
+	case hour < 18:
+		period = "下午好"
+	}
+
+	weekdays := []string{"周日", "周一", "周二", "周三", "周四", "周五", "周六"}
+	return period + " · " + weekdays[int(now.Weekday())]
 }

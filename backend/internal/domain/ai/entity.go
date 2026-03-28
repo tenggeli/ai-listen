@@ -20,6 +20,32 @@ type MatchCandidate struct {
 	Score       float64
 }
 
+type HomeQuickAction struct {
+	Key    string
+	Label  string
+	Icon   string
+	Route  string
+	Prompt string
+}
+
+type HomeOverview struct {
+	GreetingPeriod string
+	GreetingText   string
+	GreetingSub    string
+	MoodEmoji      string
+	MoodText       string
+	WeatherText    string
+	CompanionDays  int
+	OnlineCount    int
+	WaitingCount   int
+	Remaining      int
+	QuickActions   []HomeQuickAction
+}
+
+func (o HomeOverview) IsEmpty() bool {
+	return o.GreetingText == "" && len(o.QuickActions) == 0
+}
+
 type MatchResult struct {
 	Candidates []MatchCandidate
 }

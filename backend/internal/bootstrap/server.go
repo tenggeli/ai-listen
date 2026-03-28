@@ -44,6 +44,7 @@ func NewServer() Server {
 			mysqlProviderRepo := mysqlInfra.NewProviderRepository(db)
 
 			aiController := user.NewAIController(
+				aiApp.NewGetAiHomeUseCase(mysqlQuotaRepo, clock),
 				aiApp.NewGetRemainingMatchUseCase(mysqlQuotaRepo, clock),
 				aiApp.NewSubmitMatchUseCase(mysqlQuotaRepo, matchService, clock),
 				aiApp.NewCreateAiSessionUseCase(mysqlSessionRepo, idGenerator),
@@ -74,6 +75,7 @@ func NewServer() Server {
 	}
 
 	aiController := user.NewAIController(
+		aiApp.NewGetAiHomeUseCase(quotaRepo, clock),
 		aiApp.NewGetRemainingMatchUseCase(quotaRepo, clock),
 		aiApp.NewSubmitMatchUseCase(quotaRepo, matchService, clock),
 		aiApp.NewCreateAiSessionUseCase(sessionRepo, idGenerator),

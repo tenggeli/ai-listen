@@ -1,8 +1,8 @@
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
-  background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
-  color: #0f172a;
+  background: #08131f;
+  color: #e2e8f0;
 }
 
 * {
@@ -11,4 +11,11 @@
 
 body {
   margin: 0;
+  min-width: 320px;
+  background: #08131f;
+}
+
+button,
+textarea {
+  font: inherit;
 }

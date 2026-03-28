@@ -12,6 +12,7 @@ import (
 )
 
 type AIController struct {
+	getHome      app.GetAiHomeUseCase
 	getRemaining app.GetRemainingMatchUseCase
 	submitMatch  app.SubmitMatchUseCase
 	createSess   app.CreateAiSessionUseCase
@@ -20,6 +21,7 @@ type AIController struct {
 }
 
 func NewAIController(
+	getHome app.GetAiHomeUseCase,
 	getRemaining app.GetRemainingMatchUseCase,
 	submitMatch app.SubmitMatchUseCase,
 	createSess app.CreateAiSessionUseCase,
@@ -27,12 +29,47 @@ func NewAIController(
 	appendMsg app.AppendAiMessageUseCase,
 ) AIController {
 	return AIController{
+		getHome:      getHome,
 		getRemaining: getRemaining,
 		submitMatch:  submitMatch,
 		createSess:   createSess,
 		getSess:      getSess,
 		appendMsg:    appendMsg,
 	}
+}
+
+func (c AIController) HandleGetHome(w http.ResponseWriter, r *http.Request) {
+	userID := r.URL.Query().Get("user_id")
+	output, err := c.getHome.Execute(r.Context(), app.GetHomeOverviewInput{UserID: userID})
+	if err != nil {
+		writeDomainError(w, err)
+		return
+	}
+
+	actions := make([]map[string]any, 0, len(output.Overview.QuickActions))
+	for _, item := range output.Overview.QuickActions {
+		actions = append(actions, map[string]any{
+			"key":    item.Key,
+			"label":  item.Label,
+			"icon":   item.Icon,
+			"route":  item.Route,
+			"prompt": item.Prompt,
+		})
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"greeting_period":   output.Overview.GreetingPeriod,
+		"greeting_text":     output.Overview.GreetingText,
+		"greeting_sub_text": output.Overview.GreetingSub,
+		"mood_emoji":        output.Overview.MoodEmoji,
+		"mood_text":         output.Overview.MoodText,
+		"weather_text":      output.Overview.WeatherText,
+		"companion_days":    output.Overview.CompanionDays,
+		"online_count":      output.Overview.OnlineCount,
+		"waiting_count":     output.Overview.WaitingCount,
+		"remaining":         output.Overview.Remaining,
+		"quick_actions":     actions,
+	})
 }
 
 func (c AIController) HandleGetRemaining(w http.ResponseWriter, r *http.Request) {

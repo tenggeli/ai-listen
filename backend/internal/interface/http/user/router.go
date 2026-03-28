@@ -3,6 +3,7 @@ package user
 import "net/http"
 
 func RegisterAIRoutes(mux *http.ServeMux, controller AIController) {
+	mux.HandleFunc("GET /api/v1/ai/home", controller.HandleGetHome)
 	mux.HandleFunc("GET /api/v1/ai/match/remaining", controller.HandleGetRemaining)
 	mux.HandleFunc("POST /api/v1/ai/match", controller.HandleMatch)
 	mux.HandleFunc("POST /api/v1/ai/sessions", controller.HandleCreateSession)

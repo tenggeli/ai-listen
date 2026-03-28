@@ -1,10 +1,13 @@
 import { reactive } from 'vue'
 import type { AiApi } from '../../api/AiApi'
+import type { AiHomeDashboard } from '../../domain/ai/AiHomeDashboard'
 import { PageLoadState } from '../../domain/ai/PageLoadState'
 import type { MatchCandidate } from '../../domain/ai/MatchCandidate'
 
 export interface HomePageState {
+  homeState: PageLoadState
   query: string
+  overview: AiHomeDashboard | null
   remaining: number
   remainingState: PageLoadState
   matchState: PageLoadState
@@ -14,7 +17,9 @@ export interface HomePageState {
 
 export class HomePageViewModel {
   readonly state: HomePageState = reactive({
+    homeState: PageLoadState.Idle,
     query: '',
+    overview: null,
     remaining: 0,
     remainingState: PageLoadState.Idle,
     matchState: PageLoadState.Idle,
@@ -25,15 +30,24 @@ export class HomePageViewModel {
   constructor(private readonly api: AiApi, private readonly userId: string) {}
 
   async initialize(): Promise<void> {
+    this.state.homeState = PageLoadState.Loading
     this.state.remainingState = PageLoadState.Loading
     this.state.errorMessage = ''
     try {
-      this.state.remaining = await this.api.getRemaining(this.userId)
+      const overview = await this.api.getHomeDashboard(this.userId)
+      this.state.overview = overview
+      this.state.remaining = overview.remainingCount
+      this.state.homeState = overview.hasContent() ? PageLoadState.Success : PageLoadState.Empty
       this.state.remainingState = PageLoadState.Success
     } catch (error) {
+      this.state.homeState = PageLoadState.Error
       this.state.remainingState = PageLoadState.Error
       this.state.errorMessage = error instanceof Error ? error.message : '加载剩余次数失败'
     }
+  }
+
+  applyQuickAction(prompt: string): void {
+    this.state.query = prompt
   }
 
   async submitMatch(): Promise<void> {
@@ -42,6 +56,9 @@ export class HomePageViewModel {
     try {
       const result = await this.api.match(this.userId, this.state.query)
       this.state.remaining = result.remainingCount
+      if (this.state.overview) {
+        this.state.overview = this.state.overview.withRemainingCount(result.remainingCount)
+      }
       this.state.candidates = result.candidates
       this.state.matchState = result.hasCandidates() ? PageLoadState.Success : PageLoadState.Empty
     } catch (error) {

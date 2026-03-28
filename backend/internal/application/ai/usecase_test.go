@@ -64,6 +64,25 @@ func TestGetRemainingMatchUseCase_DefaultFive(t *testing.T) {
 	}
 }
 
+func TestGetAiHomeUseCase_BuildOverview(t *testing.T) {
+	repo := memory.NewMatchQuotaRepository()
+	uc := NewGetAiHomeUseCase(repo, fixedClock{})
+
+	output, err := uc.Execute(context.Background(), GetHomeOverviewInput{UserID: "u1"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if output.Overview.GreetingPeriod != "早上好 · 周六" {
+		t.Fatalf("unexpected greeting period: %s", output.Overview.GreetingPeriod)
+	}
+	if output.Overview.Remaining != domain.DailyMatchLimit {
+		t.Fatalf("unexpected remaining: %d", output.Overview.Remaining)
+	}
+	if len(output.Overview.QuickActions) != 4 {
+		t.Fatalf("unexpected quick action count: %d", len(output.Overview.QuickActions))
+	}
+}
+
 func TestAiSessionUseCases_CreateAppendAndGet(t *testing.T) {
 	repo := memory.NewSessionRepository()
 	create := NewCreateAiSessionUseCase(repo, fixedIDGenerator{})

@@ -1,9 +1,12 @@
+import { AiHomeDashboard } from '../domain/ai/AiHomeDashboard'
 import { AiHomeAggregate } from '../domain/ai/AiHomeAggregate'
+import { AiHomeQuickAction } from '../domain/ai/AiHomeQuickAction'
 import { AiMessage } from '../domain/ai/AiMessage'
 import { AiSession } from '../domain/ai/AiSession'
 import { MatchCandidate } from '../domain/ai/MatchCandidate'
 
 export interface AiApi {
+  getHomeDashboard(userId: string): Promise<AiHomeDashboard>
   getRemaining(userId: string): Promise<number>
   match(userId: string, inputText: string): Promise<AiHomeAggregate>
   createSession(userId: string, sceneType: string): Promise<string>
@@ -13,6 +16,15 @@ export interface AiApi {
 
 export class HttpAiApi implements AiApi {
   constructor(private readonly baseUrl = '/api/v1') {}
+
+  async getHomeDashboard(userId: string): Promise<AiHomeDashboard> {
+    const response = await fetch(`${this.baseUrl}/ai/home?user_id=${encodeURIComponent(userId)}`)
+    const payload = await response.json()
+    if (!response.ok || payload.code !== 0) {
+      throw new Error(payload.message || 'load home failed')
+    }
+    return buildHomeDashboard(payload.data)
+  }
 
   async getRemaining(userId: string): Promise<number> {
     const response = await fetch(`${this.baseUrl}/ai/match/remaining?user_id=${encodeURIComponent(userId)}`)
@@ -79,6 +91,23 @@ export class HttpAiApi implements AiApi {
 export class MockAiApi implements AiApi {
   private readonly sessions = new Map<string, AiSession>()
 
+  async getHomeDashboard(_userId: string): Promise<AiHomeDashboard> {
+    await sleep(220)
+    return new AiHomeDashboard(
+      '晚上好 · 周六',
+      '今晚，遇见懂你的人',
+      '有 1,247 位搭子正在等待陪伴',
+      '🌙',
+      '平静 · 有点想聊聊',
+      '上海 21°C 微风',
+      28,
+      1247,
+      312,
+      5,
+      buildQuickActions()
+    )
+  }
+
   async getRemaining(): Promise<number> {
     await sleep(240)
     return 5
@@ -139,6 +168,35 @@ function buildSession(payload: any): AiSession {
     (item) => new AiMessage(item.sender_type, item.content, item.created_at)
   )
   return new AiSession(payload.id, payload.user_id, payload.scene_type, payload.status, payload.last_message_at, messages)
+}
+
+function buildHomeDashboard(payload: any): AiHomeDashboard {
+  const quickActions = (payload.quick_actions as any[]).map(
+    (item) => new AiHomeQuickAction(item.key, item.label, item.icon, item.route, item.prompt)
+  )
+
+  return new AiHomeDashboard(
+    payload.greeting_period,
+    payload.greeting_text,
+    payload.greeting_sub_text,
+    payload.mood_emoji,
+    payload.mood_text,
+    payload.weather_text,
+    payload.companion_days,
+    payload.online_count,
+    payload.waiting_count,
+    payload.remaining,
+    quickActions
+  )
+}
+
+function buildQuickActions(): AiHomeQuickAction[] {
+  return [
+    new AiHomeQuickAction('quick-join', '快速加入', 'join', '/chat', '想快速加入一个轻松的聊天陪伴场景'),
+    new AiHomeQuickAction('square', '热门广场', 'square', '/home', '想看看大家最近都在聊什么'),
+    new AiHomeQuickAction('voice', '治愈声音', 'voice', '/home', '我想听一点能让我放松下来的声音'),
+    new AiHomeQuickAction('topic', '今日话题', 'topic', '/home', '给我一个今晚适合开启聊天的话题')
+  ]
 }
 
 function sleep(ms: number): Promise<void> {
