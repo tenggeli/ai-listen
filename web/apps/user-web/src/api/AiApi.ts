@@ -210,7 +210,7 @@ function buildQuickActions(): AiHomeQuickAction[] {
   return [
     new AiHomeQuickAction('quick-join', '快速加入', 'join', '/chat', '想快速加入一个轻松的聊天陪伴场景'),
     new AiHomeQuickAction('square', '热门广场', 'square', '/home', '想看看大家最近都在聊什么'),
-    new AiHomeQuickAction('voice', '治愈声音', 'voice', '/home', '我想听一点能让我放松下来的声音'),
+    new AiHomeQuickAction('voice', '治愈声音', 'voice', '/sound', '我想听一点能让我放松下来的声音'),
     new AiHomeQuickAction('topic', '今日话题', 'topic', '/home', '给我一个今晚适合开启聊天的话题')
   ]
 }

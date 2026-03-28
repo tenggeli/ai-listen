@@ -32,8 +32,8 @@ function onSubmit() {
 
 function onSelectQuickAction(action: AiHomeQuickAction) {
   vm.applyQuickAction(action.prompt)
-  if (action.route === '/chat') {
-    void router.push('/chat')
+  if (action.route === '/chat' || action.route === '/sound') {
+    void router.push(action.route)
   }
 }
 
@@ -44,6 +44,10 @@ function onSelectNav(key: string) {
   }
   if (key === 'home') {
     void router.push('/home')
+    return
+  }
+  if (key === 'voice') {
+    void router.push('/sound')
   }
 }
 </script>

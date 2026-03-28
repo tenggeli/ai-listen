@@ -19,10 +19,24 @@ npm ci
 npm run build
 
 echo "[3/4] Deploy dist files (requires sudo)"
-sudo rm -rf "${ADMIN_TARGET}"
-sudo rm -rf "${USER_TARGET}"
-sudo mv "${ADMIN_WEB_DIR}/dist/*" "${ADMIN_TARGET}"
-sudo mv "${USER_WEB_DIR}/dist/*" "${USER_TARGET}"
+if [[ ! -d "${ADMIN_WEB_DIR}/dist" ]]; then
+  echo "admin-web dist not found: ${ADMIN_WEB_DIR}/dist"
+  exit 1
+fi
+if [[ ! -d "${USER_WEB_DIR}/dist" ]]; then
+  echo "user-web dist not found: ${USER_WEB_DIR}/dist"
+  exit 1
+fi
+
+echo mkdir -p "${ADMIN_TARGET}"
+sudo mkdir -p "${ADMIN_TARGET}"
+sudo mkdir -p "${USER_TARGET}"
+echo rm -rf "${ADMIN_TARGET:?}/"*
+sudo rm -rf "${ADMIN_TARGET:?}/"*
+sudo rm -rf "${USER_TARGET:?}/"*
+echo cp -a "${ADMIN_WEB_DIR}/dist/." "${ADMIN_TARGET}/"
+sudo cp -a "${ADMIN_WEB_DIR}/dist/." "${ADMIN_TARGET}/"
+sudo cp -a "${USER_WEB_DIR}/dist/." "${USER_TARGET}/"
 
 echo "[4/4] Validate and reload nginx"
 sudo nginx -t
