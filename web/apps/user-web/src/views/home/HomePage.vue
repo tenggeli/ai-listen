@@ -498,6 +498,7 @@ function onSelectNav(key: string) {
   gap: 10px;
   padding: 20px 0 18px;
   background: linear-gradient(180deg, rgba(13, 31, 45, 0), rgba(13, 31, 45, 0.96) 32%);
+  z-index: 0;
 }
 
 .main-btn,

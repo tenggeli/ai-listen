@@ -48,16 +48,20 @@ function iconPath(icon: string): string {
 
 <style scoped>
 .bottom-nav {
-  position: sticky;
+  position: fixed;
   bottom: 0;
+  left: 50%;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-around;
+  width: min(100%, 430px);
   gap: 8px;
   padding: 8px 12px calc(16px + env(safe-area-inset-bottom));
   border-top: 1px solid rgba(74, 168, 196, 0.12);
   background: rgba(10, 22, 34, 0.96);
   backdrop-filter: blur(24px);
+  transform: translateX(-50%);
 }
 
 .nav-item {

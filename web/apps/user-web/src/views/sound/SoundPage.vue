@@ -145,7 +145,7 @@ function onSelectNav(key: string) {
   width: min(100%, 430px);
   min-height: 100vh;
   margin: 0 auto;
-  padding: 52px 24px 0;
+  padding: 52px 24px 96px;
 }
 
 .page-header {
