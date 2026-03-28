@@ -28,7 +28,7 @@ func TestLoginBySMSUseCase_NewUser(t *testing.T) {
 
 	output, err := uc.Execute(context.Background(), LoginBySMSInput{
 		Phone:             "13800000000",
-		VerifyCode:        "123456",
+		VerifyCode:        "123",
 		AgreementAccepted: true,
 	})
 	if err != nil {
@@ -52,7 +52,7 @@ func TestLoginBySMSUseCase_ExistingUser(t *testing.T) {
 
 	_, err := uc.Execute(context.Background(), LoginBySMSInput{
 		Phone:             "13800000000",
-		VerifyCode:        "123456",
+		VerifyCode:        "123",
 		AgreementAccepted: true,
 	})
 	if err != nil {
@@ -61,7 +61,7 @@ func TestLoginBySMSUseCase_ExistingUser(t *testing.T) {
 
 	output, err := uc.Execute(context.Background(), LoginBySMSInput{
 		Phone:             "13800000000",
-		VerifyCode:        "123456",
+		VerifyCode:        "123",
 		AgreementAccepted: true,
 	})
 	if err != nil {

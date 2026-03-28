@@ -51,10 +51,10 @@ async function onWechatLogin() {
         <div class="divider">或使用手机号登录</div>
 
         <label class="label" for="phone">手机号</label>
-        <input id="phone" v-model="vm.state.phone" class="input" placeholder="13800138000" />
+        <input id="phone" v-model="vm.state.phone" class="input" placeholder="13800113800" />
 
         <label class="label" for="code">验证码</label>
-        <input id="code" v-model="vm.state.verifyCode" class="input" placeholder="输入 123456" />
+        <input id="code" v-model="vm.state.verifyCode" class="input" placeholder="输入 123" />
 
         <label class="agree" @click="vm.toggleAgreement">
           <span class="checkbox" :class="{ checked: vm.state.agreementAccepted }">{{ vm.state.agreementAccepted ? '✓' : '' }}</span>
@@ -224,4 +224,3 @@ h1 {
   font-size: 12px;
 }
 </style>
-

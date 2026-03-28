@@ -16,8 +16,8 @@ export interface LoginPageState {
 export class LoginPageViewModel {
   readonly state: LoginPageState = reactive({
     mode: 'wechat',
-    phone: '',
-    verifyCode: '',
+    phone: '13800113800',
+    verifyCode: '123',
     agreementAccepted: false,
     submitting: false,
     errorMessage: ''
@@ -75,4 +75,3 @@ export class LoginPageViewModel {
     }
   }
 }
-

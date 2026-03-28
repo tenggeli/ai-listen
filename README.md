@@ -45,7 +45,7 @@ cp backend/config/listenbase.example.cof ~/conf/listenbase.cof
 - `mock.enable_payment_success`
 
 用户登录骨架接口（P0-02）：
-- `POST /api/v1/auth/login/sms`（验证码 mock：`123456`）
+- `POST /api/v1/auth/login/sms`（验证码 mock：`123`）
 - `POST /api/v1/auth/login/wechat/mock`
 
 用户基础资料接口（P0-03）：

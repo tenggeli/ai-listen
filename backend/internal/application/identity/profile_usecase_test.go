@@ -18,7 +18,7 @@ func TestSaveUserProfileUseCase_CompleteProfile(t *testing.T) {
 
 	loginOutput, err := loginUC.Execute(context.Background(), LoginBySMSInput{
 		Phone:             "13800000001",
-		VerifyCode:        "123456",
+		VerifyCode:        "123",
 		AgreementAccepted: true,
 	})
 	if err != nil {
@@ -62,7 +62,7 @@ func TestSaveUserProfileUseCase_GenderChangeNeedsConfirmation(t *testing.T) {
 
 	loginOutput, err := loginUC.Execute(context.Background(), LoginBySMSInput{
 		Phone:             "13800000002",
-		VerifyCode:        "123456",
+		VerifyCode:        "123",
 		AgreementAccepted: true,
 	})
 	if err != nil {

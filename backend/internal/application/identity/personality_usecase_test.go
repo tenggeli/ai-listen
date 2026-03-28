@@ -18,7 +18,7 @@ func TestSaveUserPersonalityUseCase_Update(t *testing.T) {
 
 	loginOutput, err := loginUC.Execute(context.Background(), LoginBySMSInput{
 		Phone:             "13800000003",
-		VerifyCode:        "123456",
+		VerifyCode:        "123",
 		AgreementAccepted: true,
 	})
 	if err != nil {
@@ -58,7 +58,7 @@ func TestSkipUserPersonalityUseCase(t *testing.T) {
 
 	loginOutput, err := loginUC.Execute(context.Background(), LoginBySMSInput{
 		Phone:             "13800000004",
-		VerifyCode:        "123456",
+		VerifyCode:        "123",
 		AgreementAccepted: true,
 	})
 	if err != nil {

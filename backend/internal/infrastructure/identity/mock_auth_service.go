@@ -12,7 +12,7 @@ func NewMockAuthService() MockAuthService {
 }
 
 func (MockAuthService) VerifySMSCode(_ context.Context, _ string, code string) (bool, error) {
-	return strings.TrimSpace(code) == "123456", nil
+	return strings.TrimSpace(code) == "123", nil
 }
 
 func (MockAuthService) ResolveWechatOpenID(_ context.Context, authCode string) (string, error) {
