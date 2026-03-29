@@ -3,9 +3,13 @@ import { loadSession, nextOnboardingRoute } from '../application/identity/AuthSe
 import AuthEntryPage from '../views/auth/AuthEntryPage.vue'
 import ChatPage from '../views/chat/ChatPage.vue'
 import HomePage from '../views/home/HomePage.vue'
+import OrderDetailPage from '../views/order/OrderDetailPage.vue'
+import PaymentConfirmPage from '../views/payment/PaymentConfirmPage.vue'
 import PersonalitySetupPage from '../views/profile/PersonalitySetupPage.vue'
 import ProfileSetupPage from '../views/profile/ProfileSetupPage.vue'
 import SoundPage from '../views/sound/SoundPage.vue'
+import ProviderDetailPage from '../views/services/ProviderDetailPage.vue'
+import ServicesPage from '../views/services/ServicesPage.vue'
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -15,6 +19,10 @@ export const router = createRouter({
     { path: '/profile/setup', component: ProfileSetupPage },
     { path: '/personality/setup', component: PersonalitySetupPage },
     { path: '/home', component: HomePage },
+    { path: '/services', component: ServicesPage },
+    { path: '/providers/:id', component: ProviderDetailPage },
+    { path: '/payment/confirm', component: PaymentConfirmPage },
+    { path: '/orders/:id', component: OrderDetailPage },
     { path: '/chat', component: ChatPage },
     { path: '/sound', component: SoundPage }
   ]

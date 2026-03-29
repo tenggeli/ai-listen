@@ -16,7 +16,7 @@ const vm = new HomePageViewModel(api, currentUserIdOrDemo())
 const router = useRouter()
 const navItems: HomeNavItem[] = [
   { key: 'home', label: '首页', icon: 'home', active: true },
-  { key: 'square', label: '广场', icon: 'square' },
+  { key: 'service', label: '服务', icon: 'square' },
   { key: 'join', label: '加入', icon: 'join' },
   { key: 'voice', label: '声音', icon: 'voice' },
   { key: 'profile', label: '我的', icon: 'profile' }
@@ -44,6 +44,10 @@ function onSelectNav(key: string) {
   }
   if (key === 'home') {
     void router.push('/home')
+    return
+  }
+  if (key === 'service') {
+    void router.push('/services')
     return
   }
   if (key === 'voice') {
