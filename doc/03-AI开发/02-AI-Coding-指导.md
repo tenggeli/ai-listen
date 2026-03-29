@@ -1,4 +1,4 @@
-# Listen AI Coding 指导文档（按当前仓库状态）
+# Listen AI Coding 指导文档（按 2026-03-29 当前仓库状态）
 
 ## 0. 文档定位
 
@@ -19,26 +19,33 @@
    - `web/apps/user-web/src/router/index.ts`
    - `backend/internal/interface/http/user/router.go`
    - `backend/internal/interface/http/admin/router.go`
+   - `doc/05-管理后台原型/*.html`
 4. 再开始编码
 
 若文档与代码冲突：以代码现状为准，并回写文档。
 
-## 2. 当前优先级（2026-03-28 代码快照）
+## 2. 当前优先级（2026-03-29 代码快照）
 
 高优先：
 
-1. 用户 Web 服务页 + 服务方详情页
-2. Go 后端服务浏览模块（service_discovery）
-3. Go 后端声音模块（audio_content），打通 `/api/v1/sounds`
-4. 用户 Web 我的页
-5. 订单/支付确认（mock-success）/订单详情/评价投诉
-6. 管理后台登录鉴权骨架 + 运营模块扩展
+1. Go 后端订单模块（order + payment mock）
+2. 用户 Web 订单列表/订单详情接真实后端接口
+3. 评价/投诉最小闭环
+4. 设置页从占位升级为真实设置能力
+5. 平台管理后台登录鉴权骨架 + 运营模块扩展
+6. 服务方管理后台前端工程骨架与工作台
+
+中优先：
+
+- AI 对话自动回复后端化
+- 声音页数据从 mock service 逐步迁移为可配置内容源
 
 低优先：
 
 - 真实 AI 网关
 - 真实短信与微信授权
 - 真实支付、结算、提现、VIP
+- 用户 App 页面化
 
 ## 3. 必须遵守的代码组织
 
@@ -50,14 +57,19 @@
 backend/internal/
   application/
     ai/
+    audio/
     identity/
     provider/
+    service_discovery/
   domain/
     ai/
+    audio/
     identity/
     provider/
+    service_discovery/
   infrastructure/
     ai/
+    audio/
     config/
     identity/
     persistence/
@@ -70,6 +82,23 @@ backend/internal/
 
 新增模块必须继续按 `interface/application/domain/infrastructure` 分层。
 
+后端架构约束：
+
+- 后端保持一个统一接口服务，不按前端后台数量拆成多个后端项目
+- 可按路由分组拆 controller，例如 `user`、`admin`、`provider`
+- 管理侧和服务方侧共享领域能力时，优先共享 application/domain，而不是复制一份后端
+
+接口命名强制规则：
+
+- 用户侧前缀固定：`/api/v1/...`
+- 服务方侧前缀固定：`/api/v1/provider/...`
+- 平台管理侧前缀固定：`/api/v1/admin/...`
+- 不要把服务方接口写进 `/api/v1/admin/...`
+- 不要把平台管理接口写成普通用户侧 `/api/v1/...`
+- 不要使用 `get/list/create/update` 这类动词作为一级路径
+- 动作型接口统一放在资源详情后，例如 `/orders/{id}/accept`
+- 资源路径统一用小写英文复数名词，segment 之间用短横线
+
 强制要求：
 
 - Controller 不直连数据库
@@ -77,6 +106,7 @@ backend/internal/
 - 状态流转放到 Entity 或 DomainService
 - 每个接口都定义请求/响应 DTO
 - 配置读取统一走 `infrastructure/config`
+- 新增接口前先确认其归属端，再决定是否落在 `user/admin/provider` 路由组
 
 ### 3.2 Vue 前端
 
@@ -87,8 +117,19 @@ backend/internal/
 - `views/home`
 - `views/chat`
 - `views/sound`
+- `views/services`
+- `views/me`
+- `views/payment`
+- `views/order`
+- `views/settings`
 
 新增页面保持：`views / components / application / domain / api`。
+
+双后台约束：
+
+- 平台管理后台与服务方管理后台是两个独立前端，不共用一个页面壳
+- 当前 `web/apps/admin-web` 视为“平台管理后台”
+- 服务方管理后台落地时应新建独立前端工程，优先参考 `doc/05-管理后台原型`
 
 强制要求：
 
@@ -113,12 +154,14 @@ backend/internal/
 - `LoginPageViewModel`
 - `ProfileSetupViewModel`
 - `PersonalitySetupViewModel`
+- `MyPageViewModel`
 - `AuthSession`
 
 注意：
 
 - 登录默认值保持 `13800113800 / 123`
 - 路由守卫依赖 session 的 `profileCompleted`、`personalityCompleted`
+- identity 已支持 MySQL 仓储，不要再按“仅 memory”假设开发
 
 ### 4.2 用户 AI 模块（已落地）
 
@@ -129,7 +172,23 @@ backend/internal/
 - `ChatPageViewModel`
 - `PageLoadState`
 
-### 4.3 声音模块（前端已落地，后端未打通）
+### 4.3 服务浏览模块（已落地）
+
+续写优先复用：
+
+- `ServiceDiscoveryApi`
+- `ServicesPageViewModel`
+- `ProviderDetailPageViewModel`
+- `ServiceCategory`
+- `ProviderPublicProfile`
+- `ServiceItem`
+
+注意：
+
+- 服务链路 HTTP 契约已存在，优先兼容现有接口，不要重命名路由
+- 当前服务详情页已把下单入口指向 `/payment/confirm`
+
+### 4.4 声音模块（前后端已打通）
 
 续写优先复用：
 
@@ -140,9 +199,22 @@ backend/internal/
 注意：
 
 - 现有 `HttpSoundApi` 请求 `GET /api/v1/sounds?page=home&user_id=...`
-- 后端暂未提供该接口，补后端时不要改动前端已用契约
+- 后端目前只支持 `page=home`
+- 若扩展声音内容来源，优先保持既有响应结构稳定
 
-### 4.4 管理后台审核模块（已落地）
+### 4.5 支付与订单链路（前端 Mock 中）
+
+续写优先复用：
+
+- `PaymentConfirmPage`
+- `MockOrderStore`
+
+注意：
+
+- 当前支付确认页只做本地 mock-success
+- 真正补订单后端时，应逐步替换 `MockOrderStore`，不要先改坏现有前端演示链路
+
+### 4.6 平台管理后台审核模块（已落地）
 
 续写优先复用：
 
@@ -150,6 +222,18 @@ backend/internal/
 - `ProviderReviewViewModel`
 - `ProviderReviewStatus`
 - `ProviderSummary` / `ProviderDetail`
+
+### 4.7 服务方管理后台（待落地）
+
+实现时优先参考：
+
+- `doc/02-PRD/服务方端PRD.md`
+- `doc/05-管理后台原型/listen_provider_console.html`
+
+注意：
+
+- 服务方管理后台是独立前端，不要直接在 `web/apps/admin-web` 里混做
+- 后端接口仍放在同一个 Go 服务内，通过独立路由分组承接
 
 ## 5. 配置、数据库、Mock 规则
 
@@ -161,9 +245,9 @@ backend/internal/
 
 ### 5.2 数据库
 
-- `ai/provider` 已有 migration + mysql repository
-- `identity` 目前仍是 memory repository，若做 mysql 落地需补 migration/repository
-- 新模块（service/audio/order/feedback/payment）默认按 MySQL 读取设计
+- `ai/provider/service_discovery/identity` 已有 migration + mysql repository
+- 新模块（order/feedback/payment）默认按 MySQL 设计
+- 开发 mysql 模式时，应优先复用现有 `mysql.NewDB(...)` 与仓储注册方式
 
 ### 5.3 第三方交互
 
@@ -183,14 +267,15 @@ backend/internal/
 
 合格任务示例：
 
-- “实现服务页 + 服务列表接口（含 DTO 与 ViewModel）”
-- “实现声音首页接口 `/api/v1/sounds` 并打通 `HttpSoundApi`”
 - “实现订单实体状态机 + 创建订单接口 + 单测”
+- “将订单详情页从 `MockOrderStore` 切到真实 `/api/v1/orders/{id}`”
+- “实现评价/投诉最小接口与前端提交页”
 
 不合格任务示例：
 
 - “把整个项目都做完”
 - “登录、订单、支付一次性全部完成”
+- “把服务方后台和平台管理后台混在一个前端里一起做”
 
 ## 7. 提交前检查清单
 
@@ -201,3 +286,4 @@ backend/internal/
 5. 是否遵守 `~/conf/listenbase.cof` 规则
 6. 是否把第三方交互隔离在 mock adapter/gateway
 7. 是否说明了验证方式与剩余未完成项
+8. 若改动服务/声音/身份接口，是否兼容当前已上线前端契约

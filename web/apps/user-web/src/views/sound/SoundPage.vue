@@ -48,6 +48,10 @@ function onSelectNav(key: string) {
   }
   if (key === 'voice') {
     void router.push('/sound')
+    return
+  }
+  if (key === 'profile') {
+    void router.push('/me')
   }
 }
 </script>

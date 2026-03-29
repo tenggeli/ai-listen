@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Listen 后台原型总览</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;background:#081521;color:#eef6fb;min-height:100vh;overflow-x:hidden}
+body::before,body::after{content:"";position:fixed;border-radius:50%;filter:blur(88px);opacity:.42;pointer-events:none}
+body::before{width:340px;height:340px;left:-120px;top:-100px;background:#1f6d8d}
+body::after{width:360px;height:360px;right:-140px;bottom:-120px;background:#153b5d}
+.main{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:56px 20px 80px}
+.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:20px}
+.panel{background:rgba(255,255,255,.05);border:1px solid rgba(148,217,255,.14);backdrop-filter:blur(18px);border-radius:28px}
+.hero-copy,.hero-map{padding:32px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(106,201,255,.08);color:#8bd7ff;font-size:12px;letter-spacing:1px}
+.eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:#73d5ff;box-shadow:0 0 16px rgba(115,213,255,.8)}
+h1{margin-top:18px;font-size:42px;line-height:1.1;font-weight:500}
+p{color:rgba(238,246,251,.72);line-height:1.8}
+.hero-copy p{margin-top:14px;max-width:680px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:28px}
+.stat{padding:16px;border-radius:20px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)}
+.stat-label{font-size:11px;color:rgba(255,255,255,.42);letter-spacing:1px;text-transform:uppercase}
+.stat-value{margin-top:8px;font-size:18px;color:#f5fbff}
+.hero-map h2,.section h2{font-size:18px;font-weight:500}
+.flow{display:grid;gap:12px;margin-top:18px}
+.flow-item{padding:14px 16px;border-radius:20px;background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08)}
+.flow-item strong{display:block;font-size:14px}
+.flow-item span{display:block;margin-top:6px;color:rgba(255,255,255,.62);font-size:13px;line-height:1.7}
+.section{margin-top:28px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.card{display:block;padding:24px;border-radius:24px;background:rgba(255,255,255,.045);border:1px solid rgba(148,217,255,.12);text-decoration:none;color:inherit;transition:.24s transform,.24s border-color,.24s background}
+.card:hover{transform:translateY(-4px);border-color:rgba(115,213,255,.4);background:rgba(115,213,255,.08)}
+.card-type{font-size:11px;color:#84d8ff;letter-spacing:1px;text-transform:uppercase}
+.card h3{margin-top:10px;font-size:24px;font-weight:500}
+.card p{margin-top:12px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.tag{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);font-size:12px;color:rgba(255,255,255,.62)}
+.checklist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+.list{padding:22px;border-radius:24px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.list h3{font-size:16px;font-weight:500}
+.list ul{margin-top:14px;list-style:none;display:grid;gap:10px}
+.list li{padding-left:16px;position:relative;color:rgba(238,246,251,.72);line-height:1.7}
+.list li::before{content:"";position:absolute;left:0;top:10px;width:6px;height:6px;border-radius:50%;background:#73d5ff}
+.note{margin-top:24px;padding:18px 20px;border-radius:24px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+@media (max-width:960px){.hero,.grid,.checklist{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr 1fr}h1{font-size:34px}}
+@media (max-width:640px){.main{padding:24px 14px 60px}.stats{grid-template-columns:1fr}.hero-copy,.hero-map{padding:22px}h1{font-size:28px}}
+</style>
+</head>
+<body>
+  <main class="main">
+    <section class="hero">
+      <div class="panel hero-copy">
+        <div class="eyebrow">Listen Admin Prototype</div>
+        <h1>服务方后台 + 平台管理后台 双后台原型总览</h1>
+        <p>本轮原型基于 <code>doc/02-PRD/服务方端PRD.md</code> 拆出两套后台。服务方后台聚焦入驻、履约、收益与经营；平台管理后台聚焦审核、风控、订单调度、资金与平台配置，形成平台供给侧完整管理闭环。</p>
+        <div class="stats">
+          <div class="stat"><div class="stat-label">后台数量</div><div class="stat-value">2 套</div></div>
+          <div class="stat"><div class="stat-label">核心页面</div><div class="stat-value">15+</div></div>
+          <div class="stat"><div class="stat-label">原型风格</div><div class="stat-value">后台线框高保真</div></div>
+        </div>
+      </div>
+      <div class="panel hero-map">
+        <h2>拆分原则</h2>
+        <div class="flow">
+          <div class="flow-item"><strong>服务方后台</strong><span>覆盖服务方从入驻审核、资料维护、接单履约、动态经营到收益提现的日常操作面板。</span></div>
+          <div class="flow-item"><strong>平台管理后台</strong><span>覆盖服务方审核、订单监管、风控处罚、内容审核、结算提现、基础配置与经营总览。</span></div>
+          <div class="flow-item"><strong>画布建议</strong><span>后续进入 Figma 时可直接按“首页总览 + 列表页 + 详情抽屉 + 处理弹窗”的分层方式建 Frame。</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>后台原型入口</h2>
+      <div class="grid">
+        <a class="card" href="./listen_provider_console.html">
+          <div class="card-type">Console A</div>
+          <h3>服务方后台原型</h3>
+          <p>聚焦服务方日常运营效率，突出状态切换、待处理订单、服务项目、信用评分、收益结算和内容经营等高频任务。</p>
+          <div class="tags">
+            <span class="tag">工作台</span>
+            <span class="tag">订单履约</span>
+            <span class="tag">收益提现</span>
+            <span class="tag">资料管理</span>
+          </div>
+        </a>
+        <a class="card" href="./listen_platform_admin_console.html">
+          <div class="card-type">Console B</div>
+          <h3>平台管理后台原型</h3>
+          <p>面向运营、审核、客服与财务角色，统一处理服务方准入、订单异常、投诉仲裁、资金放款、规则配置与经营概览。</p>
+          <div class="tags">
+            <span class="tag">审核中心</span>
+            <span class="tag">风控中心</span>
+            <span class="tag">资金结算</span>
+            <span class="tag">平台配置</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>页面清单</h2>
+      <div class="checklist">
+        <div class="list">
+          <h3>服务方后台</h3>
+          <ul>
+            <li>工作台总览</li>
+            <li>入驻申请 / 审核状态</li>
+            <li>资料管理</li>
+            <li>服务项目与价格</li>
+            <li>订单列表 / 订单详情 / 履约操作</li>
+            <li>主动邀约 / 用户线索池</li>
+            <li>收益结算 / 提现</li>
+            <li>信用评分 / 评价 / 圈子动态</li>
+          </ul>
+        </div>
+        <div class="list">
+          <h3>平台管理后台</h3>
+          <ul>
+            <li>经营总览看板</li>
+            <li>服务方审核中心</li>
+            <li>订单监管与状态流转</li>
+            <li>投诉仲裁 / 风控预警</li>
+            <li>内容审核中心</li>
+            <li>资金结算 / 提现审核</li>
+            <li>积分信用规则</li>
+            <li>服务类目 / 价格 / 推送配置</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="note">
+      当前已先在仓库中完成双后台的本地原型页，目录为 <code>doc/05-管理后台原型</code>。如果稍后 Figma 插件连通，可按这两页的结构直接生成对应画布，并将“平台管理后台”页面放到名为“05-管理后台原型”的 Figma Page 中。
+    </div>
+  </main>
+</body>
+</html>

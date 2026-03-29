@@ -6,11 +6,13 @@ import (
 	"strings"
 
 	aiApp "listen/backend/internal/application/ai"
+	audioApp "listen/backend/internal/application/audio"
 	identityApp "listen/backend/internal/application/identity"
 	providerApp "listen/backend/internal/application/provider"
 	serviceDiscoveryApp "listen/backend/internal/application/service_discovery"
 	domainAi "listen/backend/internal/domain/ai"
 	infraAi "listen/backend/internal/infrastructure/ai"
+	infraAudio "listen/backend/internal/infrastructure/audio"
 	"listen/backend/internal/infrastructure/config"
 	infraIdentity "listen/backend/internal/infrastructure/identity"
 	memory "listen/backend/internal/infrastructure/persistence/memory"
@@ -31,20 +33,13 @@ func NewServer() Server {
 	idGenerator := aiApp.NewTimestampIDGenerator(clock)
 	homeOverviewService := infraAi.NewMockHomeOverviewService()
 	matchService := infraAi.NewMockMatchService()
+	soundPageService := infraAudio.NewMockSoundPageService()
 	quotaRepo := memory.NewMatchQuotaRepository()
 	sessionRepo := memory.NewSessionRepository()
 	providerRepo := memory.NewProviderRepository()
 	serviceDiscoveryRepo := memory.NewServiceDiscoveryRepository()
 	identityRepo := memory.NewIdentityRepository()
 	authService := infraIdentity.NewMockAuthService()
-	identityController := user.NewIdentityController(
-		identityApp.NewLoginBySMSUseCase(identityRepo, authService, clock, idGenerator),
-		identityApp.NewLoginByWechatUseCase(identityRepo, authService, clock, idGenerator),
-		identityApp.NewGetUserProfileUseCase(identityRepo),
-		identityApp.NewSaveUserProfileUseCase(identityRepo),
-		identityApp.NewSaveUserPersonalityUseCase(identityRepo),
-		identityApp.NewSkipUserPersonalityUseCase(identityRepo),
-	)
 
 	if cfg.RepositoryDriver == "mysql" {
 		db, err := mysqlInfra.NewDB(cfg.MySQLDSN)
@@ -59,6 +54,7 @@ func NewServer() Server {
 			mysqlSessionRepo := mysqlInfra.NewSessionRepository(db)
 			mysqlProviderRepo := mysqlInfra.NewProviderRepository(db)
 			mysqlServiceDiscoveryRepo := mysqlInfra.NewServiceDiscoveryRepository(db)
+			mysqlIdentityRepo := mysqlInfra.NewIdentityRepository(db)
 
 			aiController := user.NewAIController(
 				aiApp.NewGetAiHomeUseCase(mysqlQuotaRepo, homeOverviewService, clock),
@@ -79,11 +75,23 @@ func NewServer() Server {
 				serviceDiscoveryApp.NewGetPublicProviderUseCase(mysqlServiceDiscoveryRepo),
 				serviceDiscoveryApp.NewListProviderServiceItemsUseCase(mysqlServiceDiscoveryRepo),
 			)
+			soundController := user.NewSoundController(
+				audioApp.NewGetSoundPageUseCase(soundPageService),
+			)
+			identityController := user.NewIdentityController(
+				identityApp.NewLoginBySMSUseCase(mysqlIdentityRepo, authService, clock, idGenerator),
+				identityApp.NewLoginByWechatUseCase(mysqlIdentityRepo, authService, clock, idGenerator),
+				identityApp.NewGetUserProfileUseCase(mysqlIdentityRepo),
+				identityApp.NewSaveUserProfileUseCase(mysqlIdentityRepo),
+				identityApp.NewSaveUserPersonalityUseCase(mysqlIdentityRepo),
+				identityApp.NewSkipUserPersonalityUseCase(mysqlIdentityRepo),
+			)
 
 			mux := http.NewServeMux()
 			user.RegisterAIRoutes(mux, aiController)
 			user.RegisterIdentityRoutes(mux, identityController)
 			user.RegisterServiceDiscoveryRoutes(mux, serviceDiscoveryController)
+			user.RegisterSoundRoutes(mux, soundController)
 			adminHTTP.RegisterProviderRoutes(mux, adminController)
 			mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
@@ -118,11 +126,23 @@ func NewServer() Server {
 		serviceDiscoveryApp.NewGetPublicProviderUseCase(serviceDiscoveryRepo),
 		serviceDiscoveryApp.NewListProviderServiceItemsUseCase(serviceDiscoveryRepo),
 	)
+	soundController := user.NewSoundController(
+		audioApp.NewGetSoundPageUseCase(soundPageService),
+	)
+	identityController := user.NewIdentityController(
+		identityApp.NewLoginBySMSUseCase(identityRepo, authService, clock, idGenerator),
+		identityApp.NewLoginByWechatUseCase(identityRepo, authService, clock, idGenerator),
+		identityApp.NewGetUserProfileUseCase(identityRepo),
+		identityApp.NewSaveUserProfileUseCase(identityRepo),
+		identityApp.NewSaveUserPersonalityUseCase(identityRepo),
+		identityApp.NewSkipUserPersonalityUseCase(identityRepo),
+	)
 
 	mux := http.NewServeMux()
 	user.RegisterAIRoutes(mux, aiController)
 	user.RegisterIdentityRoutes(mux, identityController)
 	user.RegisterServiceDiscoveryRoutes(mux, serviceDiscoveryController)
+	user.RegisterSoundRoutes(mux, soundController)
 	adminHTTP.RegisterProviderRoutes(mux, adminController)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)

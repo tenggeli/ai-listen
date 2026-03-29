@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>平台管理后台原型</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;background:#07131d;color:#edf7fb}
+.layout{display:grid;grid-template-columns:272px 1fr;min-height:100vh}
+.sidebar{padding:28px 20px;border-right:1px solid rgba(148,217,255,.1);background:linear-gradient(180deg,#07131d,#0a1d2c)}
+.brand{padding:16px 18px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(148,217,255,.14)}
+.brand strong{display:block;font-size:18px;font-weight:600}
+.brand span{display:block;margin-top:6px;color:rgba(237,247,251,.62);font-size:13px;line-height:1.6}
+.menu{margin-top:24px;display:grid;gap:10px}
+.menu-item,.menu-item-active{padding:14px 16px;border-radius:18px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:rgba(237,247,251,.72)}
+.menu-item-active{background:rgba(115,213,255,.12);border-color:rgba(115,213,255,.28);color:#fff}
+.content{padding:28px 24px 48px;background:
+radial-gradient(circle at top left,rgba(31,109,141,.2),transparent 28%),
+radial-gradient(circle at bottom right,rgba(21,59,93,.24),transparent 26%),
+#07131d}
+.topbar{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.topbar h1{font-size:30px;font-weight:500}
+.sub{margin-top:8px;color:rgba(237,247,251,.66);line-height:1.7}
+.alert{padding:18px 20px;border-radius:22px;background:rgba(255,189,89,.08);border:1px solid rgba(255,189,89,.2);min-width:320px}
+.alert strong{display:block}
+.metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-top:22px}
+.metric{padding:18px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(148,217,255,.12)}
+.metric small{display:block;color:rgba(237,247,251,.48);font-size:11px;letter-spacing:1px;text-transform:uppercase}
+.metric strong{display:block;margin-top:10px;font-size:22px;font-weight:500}
+.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:20px}
+.section{padding:22px;border-radius:24px;background:rgba(255,255,255,.045);border:1px solid rgba(148,217,255,.12)}
+.section h2{font-size:18px;font-weight:500}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.pill,.pill-risk,.pill-soft{display:inline-flex;justify-content:center;padding:6px 10px;border-radius:999px;font-size:12px}
+.pill{background:rgba(91,212,154,.12);color:#7df0bc}
+.pill-risk{background:rgba(255,118,118,.12);color:#ff9f9f}
+.pill-soft{background:rgba(115,213,255,.12);color:#8bd7ff}
+.table{margin-top:16px;display:grid;gap:10px}
+.row,.row-head{display:grid;grid-template-columns:1.3fr .9fr .9fr .9fr .8fr;gap:12px;align-items:center;padding:14px 16px;border-radius:18px}
+.row-head{background:rgba(255,255,255,.04);color:rgba(237,247,251,.48);font-size:12px}
+.row{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.list{margin-top:16px;display:grid;gap:12px}
+.item{padding:16px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.item strong{display:block;font-size:14px}
+.item span{display:block;margin-top:8px;color:rgba(237,247,251,.64);line-height:1.7;font-size:13px}
+.double{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}
+@media (max-width:1160px){.layout{grid-template-columns:1fr}.sidebar{display:none}.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.grid,.double{grid-template-columns:1fr}}
+@media (max-width:720px){.topbar{display:block}.alert{margin-top:16px;min-width:0}.metrics{grid-template-columns:1fr}.row-head,.row{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <strong>Listen 平台管理后台</strong>
+        <span>面向运营、审核、客服、财务与风控角色的统一后台原型，强调“看板总览 + 列表处理 + 详情抽屉 + 规则配置”。</span>
+      </div>
+      <div class="menu">
+        <div class="menu-item-active">经营总览</div>
+        <div class="menu-item">服务方审核中心</div>
+        <div class="menu-item">订单监管</div>
+        <div class="menu-item">投诉仲裁</div>
+        <div class="menu-item">风控预警</div>
+        <div class="menu-item">内容审核</div>
+        <div class="menu-item">资金结算 / 提现审核</div>
+        <div class="menu-item">积分信用规则</div>
+        <div class="menu-item">服务类目 / 价格规则</div>
+        <div class="menu-item">消息与推送配置</div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="topbar">
+        <div>
+          <h1>平台经营总览</h1>
+          <div class="sub">平台后台首页承接多个角色的高优先事项：准入审核、异常订单、投诉仲裁、提现审核、内容下架与风控处罚。首页首屏应先给出风险和积压，再给出经营规模。</div>
+        </div>
+        <div class="alert">
+          <strong>今日待处理风险</strong>
+          <div class="sub">服务方审核待处理 18 个，异常提现 4 笔，投诉仲裁 7 单，高风险账号复审 3 个。</div>
+        </div>
+      </section>
+
+      <section class="metrics">
+        <div class="metric"><small>服务方总数</small><strong>1,286</strong></div>
+        <div class="metric"><small>在线可接单</small><strong>368</strong></div>
+        <div class="metric"><small>今日订单量</small><strong>542</strong></div>
+        <div class="metric"><small>待审核入驻</small><strong>18</strong></div>
+        <div class="metric"><small>投诉处理中</small><strong>7</strong></div>
+        <div class="metric"><small>待放款金额</small><strong>¥ 86,420</strong></div>
+      </section>
+
+      <section class="grid">
+        <div class="section">
+          <div class="section-head">
+            <h2>服务方审核中心</h2>
+            <span class="pill-soft">准入 + 复审</span>
+          </div>
+          <div class="table">
+            <div class="row-head"><div>申请人</div><div>城市 / 类目</div><div>提交时间</div><div>状态</div><div>动作</div></div>
+            <div class="row"><div><strong>陈星 · 实名完成</strong></div><div>上海 / 心理疏导</div><div>09:40</div><div><span class="pill-soft">审核中</span></div><div>查看资料</div></div>
+            <div class="row"><div><strong>Yuki · 资料补充</strong></div><div>杭州 / 陪伴服务</div><div>10:15</div><div><span class="pill-risk">待补件</span></div><div>催补资料</div></div>
+            <div class="row"><div><strong>阿泽 · 高频投诉复审</strong></div><div>深圳 / 电影陪伴</div><div>11:00</div><div><span class="pill-risk">复审中</span></div><div>冻结接单</div></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h2>风控与处罚</h2>
+            <span class="pill-risk">高风险优先</span>
+          </div>
+          <div class="list">
+            <div class="item"><strong>高频取消预警</strong><span>近 7 日取消超过阈值的服务方 5 人，建议触发降权并进入人工复审。</span></div>
+            <div class="item"><strong>投诉成立待处罚</strong><span>2 笔订单需执行扣分和暂停接单处罚，并同步影响推荐排序。</span></div>
+            <div class="item"><strong>异常邀约行为</strong><span>同一账号短时间重复邀约 23 次，建议关闭邀约权限 72 小时。</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="double">
+        <div class="section">
+          <div class="section-head">
+            <h2>订单监管与投诉仲裁</h2>
+            <span class="pill-soft">状态机追踪</span>
+          </div>
+          <div class="list">
+            <div class="item"><strong>订单状态流转监控</strong><span>按待接单、待出发、待到达、服务中、待完单、已完成、已取消、投诉处理中进行筛选与卡点定位。</span></div>
+            <div class="item"><strong>异常订单详情抽屉</strong><span>展示双方信息、定位与时间轴、聊天记录摘要、结算金额和仲裁建议。</span></div>
+            <div class="item"><strong>仲裁动作</strong><span>支持判责、延迟结算、扣分、申诉记录留档和客服回访结果沉淀。</span></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h2>资金结算与提现审核</h2>
+            <span class="pill">财务正常</span>
+          </div>
+          <div class="list">
+            <div class="item"><strong>结算池</strong><span>展示可放款、冻结中、仲裁中订单金额，按风险状态决定 2 小时或 24 小时后的结算动作。</span></div>
+            <div class="item"><strong>提现审核</strong><span>对超额、异常频次、账户信息不一致的提现申请进行拦截与人工复核。</span></div>
+            <div class="item"><strong>财务留痕</strong><span>记录审核人、审核意见、打款状态、失败原因和重试处理链路。</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="double">
+        <div class="section">
+          <div class="section-head">
+            <h2>内容审核中心</h2>
+            <span class="pill-soft">资料 / 动态 / 评价</span>
+          </div>
+          <div class="list">
+            <div class="item"><strong>资料审核</strong><span>头像、昵称、自我介绍、照片与服务说明统一进入审核队列，违规内容直接拦截或退回。</span></div>
+            <div class="item"><strong>动态审核</strong><span>圈子内容支持机器预筛 + 人工复核，下架后同步处罚分并记录原因。</span></div>
+            <div class="item"><strong>评价审核</strong><span>识别辱骂、引流、虚假评价等内容，为双向信用体系提供有效数据。</span></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h2>平台配置中心</h2>
+            <span class="pill-soft">规则引擎</span>
+          </div>
+          <div class="list">
+            <div class="item"><strong>服务类目 / 价格上下限</strong><span>维护可选服务类型、最低定价、价格上限、起订时长和审核条件。</span></div>
+            <div class="item"><strong>积分信用规则</strong><span>配置完单加分、高评分加分、取消扣分、投诉成立扣分与等级阈值。</span></div>
+            <div class="item"><strong>消息推送与派单策略</strong><span>设置新订单响应时限、提醒模板、推荐优先级和派单分发规则。</span></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

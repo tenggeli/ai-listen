@@ -33,3 +33,7 @@ func RegisterServiceDiscoveryRoutes(mux *http.ServeMux, controller ServiceDiscov
 	mux.HandleFunc("GET /api/v1/providers/public/{id}", controller.HandleGetPublicProvider)
 	mux.HandleFunc("GET /api/v1/providers/public/{id}/service-items", controller.HandleListProviderServiceItems)
 }
+
+func RegisterSoundRoutes(mux *http.ServeMux, controller SoundController) {
+	mux.HandleFunc("GET /api/v1/sounds", controller.HandleGetSounds)
+}

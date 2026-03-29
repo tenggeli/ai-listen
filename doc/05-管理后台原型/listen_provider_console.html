@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>服务方后台原型</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;background:#06111b;color:#eaf6fb}
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.sidebar{padding:28px 20px;border-right:1px solid rgba(148,217,255,.1);background:linear-gradient(180deg,#081521,#0b1b2a)}
+.brand{padding:16px 18px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(148,217,255,.14)}
+.brand strong{display:block;font-size:18px;font-weight:600}
+.brand span{display:block;margin-top:6px;color:rgba(234,246,251,.62);font-size:13px;line-height:1.6}
+.menu{margin-top:24px;display:grid;gap:10px}
+.menu-item,.menu-item-active{padding:14px 16px;border-radius:18px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:rgba(234,246,251,.72)}
+.menu-item-active{background:rgba(115,213,255,.12);border-color:rgba(115,213,255,.28);color:#fff}
+.content{padding:28px 24px 48px;background:
+radial-gradient(circle at top left,rgba(31,109,141,.22),transparent 28%),
+radial-gradient(circle at bottom right,rgba(21,59,93,.24),transparent 26%),
+#06111b}
+.topbar{display:flex;justify-content:space-between;gap:16px;align-items:center}
+.topbar h1{font-size:30px;font-weight:500}
+.sub{margin-top:8px;color:rgba(234,246,251,.66);line-height:1.7}
+.status-card{padding:18px 20px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(148,217,255,.12);min-width:280px}
+.status-head{display:flex;justify-content:space-between;align-items:center}
+.pill{padding:8px 12px;border-radius:999px;background:rgba(91,212,154,.12);color:#7df0bc;font-size:12px}
+.meta{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-top:22px}
+.card{padding:18px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(148,217,255,.12)}
+.card small{display:block;color:rgba(234,246,251,.48);font-size:11px;letter-spacing:1px;text-transform:uppercase}
+.card strong{display:block;margin-top:10px;font-size:24px;font-weight:500}
+.grid{display:grid;grid-template-columns:1.4fr .9fr;gap:18px;margin-top:20px}
+.section{padding:22px;border-radius:24px;background:rgba(255,255,255,.045);border:1px solid rgba(148,217,255,.12)}
+.section h2{font-size:18px;font-weight:500}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.table{margin-top:16px;display:grid;gap:10px}
+.row,.row-head{display:grid;grid-template-columns:1.2fr 1.1fr .9fr .8fr .8fr;gap:12px;align-items:center;padding:14px 16px;border-radius:18px}
+.row-head{background:rgba(255,255,255,.04);color:rgba(234,246,251,.48);font-size:12px}
+.row{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.badge,.badge-warn,.badge-soft{display:inline-flex;justify-content:center;padding:6px 10px;border-radius:999px;font-size:12px}
+.badge{background:rgba(91,212,154,.12);color:#7df0bc}
+.badge-warn{background:rgba(255,189,89,.14);color:#ffd278}
+.badge-soft{background:rgba(115,213,255,.12);color:#8bd7ff}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.action{padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);min-width:calc(50% - 4px)}
+.action strong{display:block;font-size:14px}
+.action span{display:block;margin-top:6px;color:rgba(234,246,251,.62);font-size:13px;line-height:1.6}
+.list{margin-top:16px;display:grid;gap:12px}
+.item{padding:16px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.item strong{display:block;font-size:14px}
+.item span{display:block;margin-top:8px;color:rgba(234,246,251,.64);line-height:1.7;font-size:13px}
+.double{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}
+@media (max-width:1080px){.layout{grid-template-columns:1fr}.sidebar{display:none}.meta{grid-template-columns:repeat(2,minmax(0,1fr))}.grid,.double{grid-template-columns:1fr}}
+@media (max-width:720px){.topbar{display:block}.status-card{margin-top:16px;min-width:0}.meta{grid-template-columns:1fr}.row-head,.row{grid-template-columns:1fr 1fr}.action{min-width:100%}}
+</style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <strong>Listen 服务方后台</strong>
+        <span>围绕状态管理、接单履约、经营成长与收益结算设计的服务方控制台原型。</span>
+      </div>
+      <div class="menu">
+        <div class="menu-item-active">工作台总览</div>
+        <div class="menu-item">入驻申请 / 审核状态</div>
+        <div class="menu-item">资料管理</div>
+        <div class="menu-item">服务项目与价格</div>
+        <div class="menu-item">订单列表</div>
+        <div class="menu-item">主动邀约</div>
+        <div class="menu-item">圈子动态</div>
+        <div class="menu-item">收益与提现</div>
+        <div class="menu-item">评价与信用</div>
+        <div class="menu-item">设置中心</div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="topbar">
+        <div>
+          <h1>服务方工作台</h1>
+          <div class="sub">首页强调“当前状态 + 待处理任务 + 今日收益 + 快捷履约动作”。用户进入后应在一屏内完成接单、出发、到达、开始服务、完单等关键行为。</div>
+        </div>
+        <div class="status-card">
+          <div class="status-head">
+            <strong>当前工作状态</strong>
+            <span class="pill">空闲中，可接新单</span>
+          </div>
+          <div class="sub">认证状态：已通过 ｜ 信用等级：A ｜ 当前评分：9.4 ｜ 近 30 天取消率：1.2%</div>
+        </div>
+      </section>
+
+      <section class="meta">
+        <div class="card"><small>今日接单</small><strong>6 单</strong></div>
+        <div class="card"><small>今日完成</small><strong>4 单</strong></div>
+        <div class="card"><small>今日预估收入</small><strong>¥ 1,280</strong></div>
+        <div class="card"><small>当前积分</small><strong>2,460</strong></div>
+        <div class="card"><small>待处理任务</small><strong>5 项</strong></div>
+      </section>
+
+      <section class="grid">
+        <div class="section">
+          <div class="section-head">
+            <h2>待处理订单</h2>
+            <span class="badge-soft">按履约优先级排序</span>
+          </div>
+          <div class="table">
+            <div class="row-head"><div>订单 / 用户</div><div>服务项目</div><div>预约时间</div><div>状态</div><div>操作</div></div>
+            <div class="row"><div><strong>#A23019 · 轻松陪聊</strong></div><div>心理疏导 2 小时</div><div>14:30</div><div><span class="badge-warn">待接单</span></div><div>确认接单</div></div>
+            <div class="row"><div><strong>#A23018 · 小麦</strong></div><div>陪吃饭 1.5 小时</div><div>15:10</div><div><span class="badge-soft">待出发</span></div><div>立即出发</div></div>
+            <div class="row"><div><strong>#A23016 · Echo</strong></div><div>电影陪伴 3 小时</div><div>正在进行</div><div><span class="badge">服务中</span></div><div>结束订单</div></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h2>快捷入口</h2>
+            <span class="badge-soft">高频操作</span>
+          </div>
+          <div class="actions">
+            <div class="action"><strong>管理服务项目</strong><span>新增项目、修改价格、设置上下架和审核状态。</span></div>
+            <div class="action"><strong>发布圈子动态</strong><span>经营个人内容，补充服务氛围与吸引力。</span></div>
+            <div class="action"><strong>查看收益</strong><span>查看余额、冻结金额、近 7 日趋势和提现记录。</span></div>
+            <div class="action"><strong>查看评价</strong><span>追踪好评、投诉、信用变化和等级提升建议。</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="double">
+        <div class="section">
+          <div class="section-head">
+            <h2>服务项目与价格</h2>
+            <span class="badge-soft">待审核变更 1 项</span>
+          </div>
+          <div class="list">
+            <div class="item"><strong>陪吃饭 · ¥100 / 小时</strong><span>最低 2 小时，晚间档可接单，当前状态：已上架。</span></div>
+            <div class="item"><strong>心理疏导 · ¥200 / 小时</strong><span>服务说明已更新，提交后进入“待审核”状态，变更生效前保留旧版本。</span></div>
+            <div class="item"><strong>电影陪伴 · ¥120 / 小时</strong><span>支持按次补充加价说明，周末可服务时间已扩展。</span></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h2>收益与提现</h2>
+            <span class="badge">放款正常</span>
+          </div>
+          <div class="list">
+            <div class="item"><strong>可提现余额：¥8,420</strong><span>无争议订单预计 2 小时内到账，异常单据进入冻结金额。</span></div>
+            <div class="item"><strong>冻结中金额：¥1,260</strong><span>1 笔订单待平台仲裁，预计 24 小时内给出结算结论。</span></div>
+            <div class="item"><strong>最新提现申请：¥2,000</strong><span>到账方式：支付宝，状态：处理中，预计 T+1 到账。</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="double">
+        <div class="section">
+          <div class="section-head">
+            <h2>入驻与资料状态</h2>
+            <span class="badge">已认证</span>
+          </div>
+          <div class="list">
+            <div class="item"><strong>实名与资质</strong><span>身份证、人脸认证、免责条款签署全部完成，当前状态：审核通过。</span></div>
+            <div class="item"><strong>资料完整度 92%</strong><span>仍建议补充职业标签、个人照片和服务经历，提高转化率。</span></div>
+            <div class="item"><strong>敏感字段修改</strong><span>性别、身份证信息等高约束字段变更需二次确认并进入审核。</span></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h2>信用评分与提醒</h2>
+            <span class="badge-soft">近 30 天趋势</span>
+          </div>
+          <div class="list">
+            <div class="item"><strong>评分 9.4 / 10</strong><span>主要来自用户评分、完单率与投诉率，保持当前水平可获得更高推荐优先级。</span></div>
+            <div class="item"><strong>积分 2,460</strong><span>本周因高评分订单增加 80 分，无违规扣分记录。</span></div>
+            <div class="item"><strong>系统提醒</strong><span>今晚 20:00 后有 2 个预约单；连续取消预警阈值为近 7 日 3 次。</span></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

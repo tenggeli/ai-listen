@@ -4,7 +4,15 @@
 
 ## 1. 当前项目状态（以仓库代码为准）
 
-当前仓库处于 `P0 持续推进阶段`，已经从“仅 AI 首页 + 审核”扩展到“用户登录与引导链路可运行”。
+当前仓库处于 `P0 向 P1 过渡阶段`，已经从“仅 AI 首页 + 审核”扩展到“用户引导、AI 主入口、服务浏览、声音页、我的页与支付 Mock 链路可运行”。
+
+当前端形态统一按以下口径理解：
+
+- 用户 Web：面向 C 端用户
+- 服务方管理后台：面向服务提供方的经营与履约后台
+- 平台管理后台：面向平台运营/审核/客服/财务的后台
+- 用户 App：后续移动端承接
+- Go 后端：统一接口服务，后端不拆成多个独立服务
 
 已落地模块：
 
@@ -13,17 +21,26 @@
 - 用户 Web：`/personality/setup` 性格设置页（兴趣 + MBTI + 跳过）
 - 用户 Web：`/home` AI 主入口页
 - 用户 Web：`/chat` AI 对话页
-- 用户 Web：`/sound` 声音页（当前默认 MockSoundApi，可切 HTTP）
-- 管理后台 Web：`/admin/dashboard`、`/admin/providers/review`
-- Go 后端：AI 会话/匹配接口 + 身份登录/资料/性格接口 + 管理端服务方审核接口
+- 用户 Web：`/sound` 声音页，支持 `MockSoundApi` 与 HTTP `GET /api/v1/sounds`
+- 用户 Web：`/services` 服务页
+- 用户 Web：`/providers/:id` 服务方详情页
+- 用户 Web：`/me` 我的页，可读取 `/api/v1/users/me`
+- 用户 Web：`/payment/confirm` 支付确认页，当前走前端 mock-success
+- 用户 Web：`/orders/:id` 订单详情占位页，读取本地 `MockOrderStore`
+- 用户 Web：`/orders` 订单列表占位页
+- 用户 Web：`/settings` 设置入口占位页
+- 平台管理后台 Web：当前仓库为 `web/apps/admin-web`，已实现 `platform admin` 口径的 `/admin/dashboard`、`/admin/providers/review`
+- 服务方管理后台：当前已有 `doc/05-管理后台原型`，前端工程尚未正式落地
+- Go 后端：统一单体接口服务，当前已包含用户侧接口与平台管理侧服务方审核接口，后续在同一服务内继续扩展服务方侧接口
 - 配置：后端优先读取 `~/conf/listenbase.cof`
-- MySQL：AI 与服务方审核相关迁移及仓储；支持 `memory/mysql` 切换（身份模块当前仍使用 memory 仓储）
+- MySQL：AI、服务浏览、服务方审核、identity 均具备 migration / mysql repository，可在 `memory/mysql` 间切换
 
 仍未落地或仅占位：
 
-- 用户 Web：服务页、服务方详情页、我的页、支付确认页、订单详情页、评价投诉页
-- Go 后端：服务浏览、声音内容、订单、评价投诉、支付 mock 接口
-- 管理后台：登录鉴权、服务项目管理、声音内容管理、订单/投诉管理
+- 用户 Web：订单真实列表/详情接口接入、评价投诉页
+- Go 后端：订单、评价投诉、支付 mock 接口
+- 服务方管理后台：工程骨架、登录鉴权、履约/经营/结算页面
+- 平台管理后台：登录鉴权、服务项目管理、声音内容管理、订单/投诉管理
 - 用户 App：仍为骨架，仅 `/home`
 - 第三方真实对接：AI 网关、短信、微信真实授权、真实支付
 
@@ -36,7 +53,8 @@
 5. `web/apps/user-web/src/router/index.ts`
 6. `backend/internal/interface/http/user/router.go`
 7. `backend/internal/interface/http/admin/router.go`
-8. 相关原型：`doc/04-原型素材/*.html`
+8. `doc/05-管理后台原型/*.html`
+9. 相关原型：`doc/04-原型素材/*.html`
 
 ## 3. 当前裁决规则
 
@@ -44,13 +62,37 @@
 
 1. 已有代码与路由现状优先
 2. AI 主入口优先于传统信息流
-3. 用户 Web 优先于管理后台，管理后台优先于用户 App
+3. 用户 Web 优先于双后台，平台管理后台优先于服务方管理后台，双后台优先于用户 App
 4. 配置统一按 `~/conf/listenbase.cof` 规则
 5. 数据结构优先面向 MySQL 设计，允许阶段性 mock/memory 验证
 6. 所有第三方交互先 mock，暂不接真实 SDK
-7. 支付能力放在后续阶段，当前可先 mock-success
+7. 支付能力当前仍允许先 mock-success，但订单后端应尽快补齐
 
 ## 4. 配置与环境约束
+
+### 4.0 接口命名规范
+
+后端接口统一使用 REST 风格与小写复数资源名，按端分组如下：
+
+- 用户侧：`/api/v1/...`
+- 服务方侧：`/api/v1/provider/...`
+- 平台管理侧：`/api/v1/admin/...`
+
+命名要求：
+
+- 路径统一使用小写英文与短横线风格，避免驼峰、拼音、下划线混用
+- 资源名优先使用复数名词，例如 `orders`、`providers`、`service-items`
+- 列表查询使用 `GET /resources`
+- 详情查询使用 `GET /resources/{id}`
+- 创建使用 `POST /resources`
+- 更新优先使用 `PUT /resources/{id}`
+- 动作型接口使用 `POST /resources/{id}/action`
+
+推荐示例：
+
+- 用户侧：`GET /api/v1/orders`
+- 服务方侧：`POST /api/v1/provider/orders/{id}/accept`
+- 平台管理侧：`POST /api/v1/admin/providers/{id}/approve`
 
 ### 4.1 配置文件来源
 
@@ -64,9 +106,9 @@
 
 ### 4.2 数据库约束
 
-- 已有 MySQL 表：AI 会话/消息/匹配、每日配额、服务方审核相关
-- 新增业务（identity/service/audio/order/feedback/payment）应优先按 MySQL 可落地结构设计
-- 当前身份模块仓储为 memory；若切 mysql，需补 identity 的 migration 与 mysql repository
+- 已有 MySQL 表：AI 会话/消息/匹配、每日配额、服务方审核、服务浏览、identity 用户账户
+- 新增业务（order/feedback/payment/admin 配置）应继续按 MySQL 可落地结构设计
+- 当前 `repository.driver` 可切 `memory/mysql`
 
 ### 4.3 第三方交互约束
 
@@ -88,44 +130,51 @@
 
 ```text
 web/apps/user-web      用户 Web（Vue + Vite）
-web/apps/admin-web     管理后台 Web（Vue + Vite）
+web/apps/admin-web     平台管理后台 Web（Vue + Vite，当前已落地）
+doc/05-管理后台原型      服务方管理后台 / 平台管理后台 原型输入
 app/user-app           用户 App 骨架（Vue + Vite）
-backend                Go API 服务
+backend                Go 统一接口服务
 backend/migrations     MySQL 迁移脚本
 ```
 
 后端已落地模块：
 
 - `application/ai`
+- `application/audio`
 - `application/identity`
 - `application/provider`
+- `application/service_discovery`
 - `domain/ai`
+- `domain/audio`
 - `domain/identity`
 - `domain/provider`
+- `domain/service_discovery`
 
 ## 6. 当前推荐推进顺序
 
-1. 服务页 + 服务方详情页（用户 Web）
-2. 服务浏览后端模块（service_discovery）
-3. 声音内容后端模块（audio_content）并对齐 `/sound` HTTP 接口
-4. 我的页（用户 Web）
-5. 订单模块（后端 + 支付确认页 + 订单详情页）
-6. 评价/投诉模块（后端 + 页面）
-7. 管理后台登录鉴权骨架
-8. 管理后台服务项目/声音内容/订单投诉管理
-9. 用户 App 页面化
+1. 订单后端模块（order + payment mock）
+2. 用户 Web 订单列表/订单详情接真实接口
+3. 评价/投诉模块（后端 + 页面）
+4. 设置页从占位升级为真实偏好与账号设置
+5. 平台管理后台登录鉴权骨架
+6. 服务方管理后台前端工程骨架
+7. 双后台各自运营模块扩展
+8. 用户 App 页面化
 
 ## 7. 当前最重要的业务边界
 
 P0/P1 聚焦：
 
-- 用户引导链路（已可运行，继续稳态）
+- 用户引导链路稳态
 - 首页 AI 主入口
 - AI 对话页
-- 服务浏览与服务方详情（下一优先）
-- 声音页（前端已落地，后端待补）
-- 订单、评价投诉（待建设）
-- 后台服务方审核（已落地，继续补运营能力）
+- 服务浏览与服务方详情
+- 声音页与后端接口
+- 我的页与用户资料读取
+- 支付确认 Mock 链路
+- 订单、评价投诉后端补齐
+- 平台管理后台服务方审核稳态 + 继续补运营能力
+- 服务方管理后台后续承接入驻、接单、履约、收益结算
 
 当前可保留占位但不做深实现：
 
