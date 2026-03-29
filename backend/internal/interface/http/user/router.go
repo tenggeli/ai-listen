@@ -26,3 +26,10 @@ func RegisterIdentityRoutes(mux *http.ServeMux, controller IdentityController) {
 	mux.HandleFunc("PUT /api/v1/users/me/personality", controller.HandleSavePersonality)
 	mux.HandleFunc("POST /api/v1/users/me/personality/skip", controller.HandleSkipPersonality)
 }
+
+func RegisterServiceDiscoveryRoutes(mux *http.ServeMux, controller ServiceDiscoveryController) {
+	mux.HandleFunc("GET /api/v1/services/categories", controller.HandleListCategories)
+	mux.HandleFunc("GET /api/v1/providers/public", controller.HandleListPublicProviders)
+	mux.HandleFunc("GET /api/v1/providers/public/{id}", controller.HandleGetPublicProvider)
+	mux.HandleFunc("GET /api/v1/providers/public/{id}/service-items", controller.HandleListProviderServiceItems)
+}

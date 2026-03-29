@@ -8,6 +8,7 @@ import (
 	aiApp "listen/backend/internal/application/ai"
 	identityApp "listen/backend/internal/application/identity"
 	providerApp "listen/backend/internal/application/provider"
+	serviceDiscoveryApp "listen/backend/internal/application/service_discovery"
 	domainAi "listen/backend/internal/domain/ai"
 	infraAi "listen/backend/internal/infrastructure/ai"
 	"listen/backend/internal/infrastructure/config"
@@ -33,6 +34,7 @@ func NewServer() Server {
 	quotaRepo := memory.NewMatchQuotaRepository()
 	sessionRepo := memory.NewSessionRepository()
 	providerRepo := memory.NewProviderRepository()
+	serviceDiscoveryRepo := memory.NewServiceDiscoveryRepository()
 	identityRepo := memory.NewIdentityRepository()
 	authService := infraIdentity.NewMockAuthService()
 	identityController := user.NewIdentityController(
@@ -52,9 +54,11 @@ func NewServer() Server {
 			quotaRepo = nil
 			sessionRepo = nil
 			providerRepo = nil
+			serviceDiscoveryRepo = nil
 			mysqlQuotaRepo := mysqlInfra.NewMatchQuotaRepository(db)
 			mysqlSessionRepo := mysqlInfra.NewSessionRepository(db)
 			mysqlProviderRepo := mysqlInfra.NewProviderRepository(db)
+			mysqlServiceDiscoveryRepo := mysqlInfra.NewServiceDiscoveryRepository(db)
 
 			aiController := user.NewAIController(
 				aiApp.NewGetAiHomeUseCase(mysqlQuotaRepo, homeOverviewService, clock),
@@ -69,10 +73,17 @@ func NewServer() Server {
 				providerApp.NewGetProviderDetailUseCase(mysqlProviderRepo),
 				providerApp.NewReviewProviderUseCase(mysqlProviderRepo),
 			)
+			serviceDiscoveryController := user.NewServiceDiscoveryController(
+				serviceDiscoveryApp.NewListServiceCategoriesUseCase(mysqlServiceDiscoveryRepo),
+				serviceDiscoveryApp.NewListPublicProvidersUseCase(mysqlServiceDiscoveryRepo),
+				serviceDiscoveryApp.NewGetPublicProviderUseCase(mysqlServiceDiscoveryRepo),
+				serviceDiscoveryApp.NewListProviderServiceItemsUseCase(mysqlServiceDiscoveryRepo),
+			)
 
 			mux := http.NewServeMux()
 			user.RegisterAIRoutes(mux, aiController)
 			user.RegisterIdentityRoutes(mux, identityController)
+			user.RegisterServiceDiscoveryRoutes(mux, serviceDiscoveryController)
 			adminHTTP.RegisterProviderRoutes(mux, adminController)
 			mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
@@ -101,10 +112,17 @@ func NewServer() Server {
 		providerApp.NewGetProviderDetailUseCase(providerRepo),
 		providerApp.NewReviewProviderUseCase(providerRepo),
 	)
+	serviceDiscoveryController := user.NewServiceDiscoveryController(
+		serviceDiscoveryApp.NewListServiceCategoriesUseCase(serviceDiscoveryRepo),
+		serviceDiscoveryApp.NewListPublicProvidersUseCase(serviceDiscoveryRepo),
+		serviceDiscoveryApp.NewGetPublicProviderUseCase(serviceDiscoveryRepo),
+		serviceDiscoveryApp.NewListProviderServiceItemsUseCase(serviceDiscoveryRepo),
+	)
 
 	mux := http.NewServeMux()
 	user.RegisterAIRoutes(mux, aiController)
 	user.RegisterIdentityRoutes(mux, identityController)
+	user.RegisterServiceDiscoveryRoutes(mux, serviceDiscoveryController)
 	adminHTTP.RegisterProviderRoutes(mux, adminController)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
