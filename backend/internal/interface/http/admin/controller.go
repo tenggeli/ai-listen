@@ -96,7 +96,7 @@ func (c ProviderController) handleAction(w http.ResponseWriter, r *http.Request,
 	output, err := c.reviewUC.Execute(r.Context(), app.ReviewActionInput{
 		ProviderID: providerID,
 		Action:     action,
-		Operator:   "admin_demo",
+		Operator:   currentAdminID(r),
 		Reason:     body.Reason,
 	})
 	if err != nil {

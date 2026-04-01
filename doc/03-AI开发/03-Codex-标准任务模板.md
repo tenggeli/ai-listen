@@ -41,7 +41,7 @@
 8. 涉及数据按 MySQL 可落地结构设计
 9. 若修改接口，说明前后端契约变更点
 10. 登录相关默认值保持 13800113800 / 123
-11. 若涉及订单链路，说明如何与现有 MockOrderStore 兼容或替换
+11. 若涉及订单链路，说明如何与现有 `HttpOrderApi` / `HttpFeedbackApi` 契约兼容
 12. 新增接口时遵循分组规范：用户 `/api/v1/...`，服务方 `/api/v1/provider/...`，平台管理 `/api/v1/admin/...`
 
 交付要求：
@@ -173,17 +173,17 @@
 - doc/02-PRD/用户端PRD.md
 
 任务目标：
-在现有代码基础上实现 Go 后端订单模块最小闭环，并让用户 Web 订单详情页接入真实后端接口。
+在现有代码基础上实现设置页后端持久化最小闭环，并让用户 Web 设置页从本地存储切到真实后端接口。
 
 任务范围：
 - 端：Go 后端 + 用户 Web
-- 模块：订单创建、订单详情、支付 mock-success 回写
-- 只做：订单实体状态机、创建接口、详情接口、前端替换 MockOrderStore 读取详情
-- 不做：真实支付、退款、投诉、评价
+- 模块：设置读取、设置保存、前端 settings API 适配
+- 只做：偏好/通知/隐私设置最小实体、接口、页面接入
+- 不做：真实消息推送、复杂风控、后台配置台
 
 实现要求：
 1. Go 后端按 interface/application/domain/infrastructure 分层
-2. 用户 Web 复用现有 payment/order 页面结构
+2. 用户 Web 复用现有 settings 页面结构
 3. 数据结构面向 MySQL 设计，补 migration
 4. 至少补核心单测
 5. 页面状态覆盖 idle/loading/success/empty/error

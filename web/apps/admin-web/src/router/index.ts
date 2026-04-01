@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { authService } from '../application/auth'
+import LoginPage from '../views/auth/LoginPage.vue'
 import DashboardPage from '../views/dashboard/DashboardPage.vue'
 import ProviderReviewPage from '../views/providers/ProviderReviewPage.vue'
 
@@ -6,7 +8,22 @@ export const router = createRouter({
   history: createWebHistory('/admin/'),
   routes: [
     { path: '/', redirect: '/dashboard' },
-    { path: '/dashboard', component: DashboardPage },
-    { path: '/providers/review', component: ProviderReviewPage }
+    { path: '/login', component: LoginPage },
+    { path: '/dashboard', component: DashboardPage, meta: { requiresAuth: true } },
+    { path: '/providers/review', component: ProviderReviewPage, meta: { requiresAuth: true } }
   ]
+})
+
+router.beforeEach(async (to) => {
+  const isAuthed = await authService.ensureSession()
+  if (to.meta.requiresAuth && !isAuthed) {
+    return {
+      path: '/login',
+      query: { redirect: to.fullPath }
+    }
+  }
+  if (to.path === '/login' && isAuthed) {
+    return { path: '/dashboard' }
+  }
+  return true
 })

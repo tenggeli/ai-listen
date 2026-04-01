@@ -5,11 +5,15 @@ import (
 	"net/http"
 	"strings"
 
+	adminAuthApp "listen/backend/internal/application/admin_auth"
 	aiApp "listen/backend/internal/application/ai"
 	audioApp "listen/backend/internal/application/audio"
+	feedbackApp "listen/backend/internal/application/feedback"
 	identityApp "listen/backend/internal/application/identity"
+	orderApp "listen/backend/internal/application/order"
 	providerApp "listen/backend/internal/application/provider"
 	serviceDiscoveryApp "listen/backend/internal/application/service_discovery"
+	adminAuthDomain "listen/backend/internal/domain/admin_auth"
 	domainAi "listen/backend/internal/domain/ai"
 	infraAi "listen/backend/internal/infrastructure/ai"
 	infraAudio "listen/backend/internal/infrastructure/audio"
@@ -39,7 +43,27 @@ func NewServer() Server {
 	providerRepo := memory.NewProviderRepository()
 	serviceDiscoveryRepo := memory.NewServiceDiscoveryRepository()
 	identityRepo := memory.NewIdentityRepository()
+	orderRepo := memory.NewOrderRepository()
+	feedbackRepo := memory.NewFeedbackRepository()
 	authService := infraIdentity.NewMockAuthService()
+	adminAuthRepo := adminAuthApp.NewInMemoryRepository([]adminAuthDomain.AdminAccount{
+		{
+			AdminID:     "admin_001",
+			Account:     "admin",
+			Password:    "admin123",
+			Role:        "super_admin",
+			DisplayName: "平台管理员",
+			Status:      "active",
+		},
+		{
+			AdminID:     "admin_002",
+			Account:     "reviewer",
+			Password:    "reviewer123",
+			Role:        "reviewer",
+			DisplayName: "审核专员",
+			Status:      "active",
+		},
+	})
 
 	if cfg.RepositoryDriver == "mysql" {
 		db, err := mysqlInfra.NewDB(cfg.MySQLDSN)
@@ -55,6 +79,8 @@ func NewServer() Server {
 			mysqlProviderRepo := mysqlInfra.NewProviderRepository(db)
 			mysqlServiceDiscoveryRepo := mysqlInfra.NewServiceDiscoveryRepository(db)
 			mysqlIdentityRepo := mysqlInfra.NewIdentityRepository(db)
+			mysqlOrderRepo := mysqlInfra.NewOrderRepository(db)
+			mysqlFeedbackRepo := mysqlInfra.NewFeedbackRepository(db)
 
 			aiController := user.NewAIController(
 				aiApp.NewGetAiHomeUseCase(mysqlQuotaRepo, homeOverviewService, clock),
@@ -68,6 +94,10 @@ func NewServer() Server {
 				providerApp.NewListReviewProvidersUseCase(mysqlProviderRepo),
 				providerApp.NewGetProviderDetailUseCase(mysqlProviderRepo),
 				providerApp.NewReviewProviderUseCase(mysqlProviderRepo),
+			)
+			adminAuthController := adminHTTP.NewAuthController(
+				adminAuthApp.NewLoginMockUseCase(adminAuthRepo, clock),
+				adminAuthApp.NewGetCurrentAdminUseCase(adminAuthRepo),
 			)
 			serviceDiscoveryController := user.NewServiceDiscoveryController(
 				serviceDiscoveryApp.NewListServiceCategoriesUseCase(mysqlServiceDiscoveryRepo),
@@ -86,12 +116,25 @@ func NewServer() Server {
 				identityApp.NewSaveUserPersonalityUseCase(mysqlIdentityRepo),
 				identityApp.NewSkipUserPersonalityUseCase(mysqlIdentityRepo),
 			)
+			orderController := user.NewOrderController(
+				orderApp.NewCreateOrderUseCase(mysqlOrderRepo, idGenerator, clock),
+				orderApp.NewListOrdersUseCase(mysqlOrderRepo),
+				orderApp.NewGetOrderUseCase(mysqlOrderRepo),
+				orderApp.NewPayOrderMockSuccessUseCase(mysqlOrderRepo, clock),
+			)
+			feedbackController := user.NewFeedbackController(
+				feedbackApp.NewSubmitOrderFeedbackUseCase(mysqlFeedbackRepo, mysqlOrderRepo, idGenerator, clock),
+				feedbackApp.NewGetOrderFeedbackUseCase(mysqlFeedbackRepo, mysqlOrderRepo),
+			)
 
 			mux := http.NewServeMux()
 			user.RegisterAIRoutes(mux, aiController)
 			user.RegisterIdentityRoutes(mux, identityController)
 			user.RegisterServiceDiscoveryRoutes(mux, serviceDiscoveryController)
 			user.RegisterSoundRoutes(mux, soundController)
+			user.RegisterOrderRoutes(mux, orderController)
+			user.RegisterFeedbackRoutes(mux, feedbackController)
+			adminHTTP.RegisterAuthRoutes(mux, adminAuthController)
 			adminHTTP.RegisterProviderRoutes(mux, adminController)
 			mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
@@ -120,6 +163,10 @@ func NewServer() Server {
 		providerApp.NewGetProviderDetailUseCase(providerRepo),
 		providerApp.NewReviewProviderUseCase(providerRepo),
 	)
+	adminAuthController := adminHTTP.NewAuthController(
+		adminAuthApp.NewLoginMockUseCase(adminAuthRepo, clock),
+		adminAuthApp.NewGetCurrentAdminUseCase(adminAuthRepo),
+	)
 	serviceDiscoveryController := user.NewServiceDiscoveryController(
 		serviceDiscoveryApp.NewListServiceCategoriesUseCase(serviceDiscoveryRepo),
 		serviceDiscoveryApp.NewListPublicProvidersUseCase(serviceDiscoveryRepo),
@@ -137,12 +184,25 @@ func NewServer() Server {
 		identityApp.NewSaveUserPersonalityUseCase(identityRepo),
 		identityApp.NewSkipUserPersonalityUseCase(identityRepo),
 	)
+	orderController := user.NewOrderController(
+		orderApp.NewCreateOrderUseCase(orderRepo, idGenerator, clock),
+		orderApp.NewListOrdersUseCase(orderRepo),
+		orderApp.NewGetOrderUseCase(orderRepo),
+		orderApp.NewPayOrderMockSuccessUseCase(orderRepo, clock),
+	)
+	feedbackController := user.NewFeedbackController(
+		feedbackApp.NewSubmitOrderFeedbackUseCase(feedbackRepo, orderRepo, idGenerator, clock),
+		feedbackApp.NewGetOrderFeedbackUseCase(feedbackRepo, orderRepo),
+	)
 
 	mux := http.NewServeMux()
 	user.RegisterAIRoutes(mux, aiController)
 	user.RegisterIdentityRoutes(mux, identityController)
 	user.RegisterServiceDiscoveryRoutes(mux, serviceDiscoveryController)
 	user.RegisterSoundRoutes(mux, soundController)
+	user.RegisterOrderRoutes(mux, orderController)
+	user.RegisterFeedbackRoutes(mux, feedbackController)
+	adminHTTP.RegisterAuthRoutes(mux, adminAuthController)
 	adminHTTP.RegisterProviderRoutes(mux, adminController)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)

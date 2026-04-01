@@ -1,7 +1,35 @@
+<script setup lang="ts">
+import { useRouter } from 'vue-router'
+import { authService } from '../../application/auth'
+
+const router = useRouter()
+
+function logout(): void {
+  authService.logout()
+  void router.replace('/login')
+}
+</script>
+
 <template>
-  <main style="padding: 24px">
+  <main class="page">
+    <div class="top-nav">
+      <span>欢迎进入后台</span>
+      <button @click="logout">退出登录</button>
+    </div>
     <h1>管理后台骨架</h1>
     <p>当前已接入 P0 服务方审核模块。</p>
-    <p><a href="/admin/providers/review">进入服务方审核</a></p>
+    <p><RouterLink to="/providers/review">进入服务方审核</RouterLink></p>
   </main>
 </template>
+
+<style scoped>
+.page {
+  padding: 24px;
+}
+
+.top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+</style>

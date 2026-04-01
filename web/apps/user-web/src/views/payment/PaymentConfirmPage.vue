@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { onMounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { HttpOrderApi } from '../../api/OrderApi'
 import { HttpServiceDiscoveryApi, MockServiceDiscoveryApi } from '../../api/ServiceDiscoveryApi'
+import { loadSession } from '../../application/identity/AuthSession'
 import { PageLoadState } from '../../domain/ai/PageLoadState'
 import type { ProviderPublicProfile } from '../../domain/service/ProviderPublicProfile'
 import type { ServiceItem } from '../../domain/service/ServiceItem'
-import { createPaidOrder } from '../../application/order/MockOrderStore'
 
 interface PaymentConfirmState {
   pageState: PageLoadState
   provider: ProviderPublicProfile | null
   serviceItem: ServiceItem | null
+  submitting: boolean
   errorMessage: string
 }
 
@@ -18,10 +20,12 @@ const route = useRoute()
 const router = useRouter()
 const useMock = import.meta.env.VITE_USE_MOCK === 'true'
 const api = useMock ? new MockServiceDiscoveryApi() : new HttpServiceDiscoveryApi('/api/v1')
+const orderApi = new HttpOrderApi('/api/v1')
 const state: PaymentConfirmState = reactive({
   pageState: PageLoadState.Idle,
   provider: null,
   serviceItem: null,
+  submitting: false,
   errorMessage: ''
 })
 
@@ -57,19 +61,34 @@ async function initialize(): Promise<void> {
   }
 }
 
-function confirmPay(): void {
+async function confirmPay(): Promise<void> {
   if (!state.provider || !state.serviceItem) {
     return
   }
-  const order = createPaidOrder({
-    providerId: state.provider.id,
-    providerName: state.provider.displayName,
-    serviceItemId: state.serviceItem.id,
-    serviceItemTitle: state.serviceItem.title,
-    amount: state.serviceItem.priceAmount,
-    currency: 'CNY'
-  })
-  void router.push(`/orders/${order.id}`)
+  const session = loadSession()
+  if (!session) {
+    await router.push('/auth')
+    return
+  }
+
+  state.submitting = true
+  state.errorMessage = ''
+  try {
+    const created = await orderApi.createOrder(session.accessToken, {
+      providerId: state.provider.id,
+      providerName: state.provider.displayName,
+      serviceItemId: state.serviceItem.id,
+      serviceItemTitle: state.serviceItem.title,
+      amount: state.serviceItem.priceAmount,
+      currency: 'CNY'
+    })
+    const paid = await orderApi.payOrderMockSuccess(session.accessToken, created.id)
+    await router.push(`/orders/${paid.id}`)
+  } catch (error) {
+    state.errorMessage = error instanceof Error ? error.message : '创建订单失败，请稍后重试。'
+  } finally {
+    state.submitting = false
+  }
 }
 </script>
 
@@ -98,8 +117,11 @@ function confirmPay(): void {
 
         <section class="actions">
           <button type="button" class="ghost" @click="router.push(`/providers/${state.provider.id}`)">返回修改</button>
-          <button type="button" class="primary" @click="confirmPay">确认支付（Mock Success）</button>
+          <button type="button" class="primary" :disabled="state.submitting" @click="confirmPay">
+            {{ state.submitting ? '正在处理...' : '确认支付（Mock Success）' }}
+          </button>
         </section>
+        <p v-if="state.errorMessage" class="submit-error">{{ state.errorMessage }}</p>
       </template>
     </section>
   </main>
@@ -206,7 +228,17 @@ function confirmPay(): void {
   color: #082132;
 }
 
+.actions .primary:disabled {
+  opacity: 0.65;
+}
+
 .error {
   color: #fca5a5;
+}
+
+.submit-error {
+  margin-top: 12px;
+  color: #fca5a5;
+  font-size: 13px;
 }
 </style>

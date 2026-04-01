@@ -37,3 +37,15 @@ func RegisterServiceDiscoveryRoutes(mux *http.ServeMux, controller ServiceDiscov
 func RegisterSoundRoutes(mux *http.ServeMux, controller SoundController) {
 	mux.HandleFunc("GET /api/v1/sounds", controller.HandleGetSounds)
 }
+
+func RegisterOrderRoutes(mux *http.ServeMux, controller OrderController) {
+	mux.HandleFunc("POST /api/v1/orders", controller.HandleCreateOrder)
+	mux.HandleFunc("GET /api/v1/orders", controller.HandleListOrders)
+	mux.HandleFunc("GET /api/v1/orders/{id}", controller.HandleGetOrder)
+	mux.HandleFunc("POST /api/v1/orders/{id}/pay/mock-success", controller.HandlePayMockSuccess)
+}
+
+func RegisterFeedbackRoutes(mux *http.ServeMux, controller FeedbackController) {
+	mux.HandleFunc("GET /api/v1/orders/{id}/feedback", controller.HandleGetFeedback)
+	mux.HandleFunc("POST /api/v1/orders/{id}/feedback", controller.HandleSubmitFeedback)
+}

@@ -25,20 +25,21 @@
 - 用户 Web：`/services` 服务页
 - 用户 Web：`/providers/:id` 服务方详情页
 - 用户 Web：`/me` 我的页，可读取 `/api/v1/users/me`
-- 用户 Web：`/payment/confirm` 支付确认页，当前走前端 mock-success
-- 用户 Web：`/orders/:id` 订单详情占位页，读取本地 `MockOrderStore`
-- 用户 Web：`/orders` 订单列表占位页
-- 用户 Web：`/settings` 设置入口占位页
+- 用户 Web：`/payment/confirm` 支付确认页，当前调用后端创建订单并执行 mock-success 支付
+- 用户 Web：`/orders/:id` 订单详情页，读取真实后端订单详情
+- 用户 Web：`/orders` 订单列表页，读取真实后端订单列表
+- 用户 Web：`/orders/:id/feedback` 评价/投诉页，读取与提交真实后端反馈
+- 用户 Web：`/settings` 设置页，支持账号资料查看、本地偏好/通知/隐私设置保存、退出登录
 - 平台管理后台 Web：当前仓库为 `web/apps/admin-web`，已实现 `platform admin` 口径的 `/admin/dashboard`、`/admin/providers/review`
 - 服务方管理后台：当前已有 `doc/05-管理后台原型`，前端工程尚未正式落地
-- Go 后端：统一单体接口服务，当前已包含用户侧接口与平台管理侧服务方审核接口，后续在同一服务内继续扩展服务方侧接口
+- Go 后端：统一单体接口服务，当前已包含 AI、identity、service discovery、sound、order、feedback 与平台管理侧服务方审核接口
 - 配置：后端优先读取 `~/conf/listenbase.cof`
-- MySQL：AI、服务浏览、服务方审核、identity 均具备 migration / mysql repository，可在 `memory/mysql` 间切换
+- MySQL：AI、服务浏览、服务方审核、identity、order、feedback 均具备 migration / mysql repository，可在 `memory/mysql` 间切换
 
 仍未落地或仅占位：
 
-- 用户 Web：订单真实列表/详情接口接入、评价投诉页
-- Go 后端：订单、评价投诉、支付 mock 接口
+- 用户 Web：设置页后端持久化、更多订单生命周期页面
+- Go 后端：真实支付模块、服务方侧接口
 - 服务方管理后台：工程骨架、登录鉴权、履约/经营/结算页面
 - 平台管理后台：登录鉴权、服务项目管理、声音内容管理、订单/投诉管理
 - 用户 App：仍为骨架，仅 `/home`
@@ -66,19 +67,19 @@
 4. 配置统一按 `~/conf/listenbase.cof` 规则
 5. 数据结构优先面向 MySQL 设计，允许阶段性 mock/memory 验证
 6. 所有第三方交互先 mock，暂不接真实 SDK
-7. 支付能力当前仍允许先 mock-success，但订单后端应尽快补齐
+7. 支付能力当前仍允许先 mock-success，但真实支付仍暂不落地
 
 ## 4. 配置与环境约束
 
 ### 4.0 接口命名规范
 
-后端接口统一使用 REST 风格与小写复数资源名，按端分组如下：
+后端接口按端分组如下：
 
 - 用户侧：`/api/v1/...`
 - 服务方侧：`/api/v1/provider/...`
 - 平台管理侧：`/api/v1/admin/...`
 
-命名要求：
+新增接口命名要求：
 
 - 路径统一使用小写英文与短横线风格，避免驼峰、拼音、下划线混用
 - 资源名优先使用复数名词，例如 `orders`、`providers`、`service-items`
@@ -87,6 +88,12 @@
 - 创建使用 `POST /resources`
 - 更新优先使用 `PUT /resources/{id}`
 - 动作型接口使用 `POST /resources/{id}/action`
+
+历史接口说明：
+
+- 现有已落地接口不因本规范回溯重命名
+- 当前历史接口例外包括：`/api/v1/auth/login/*`、`/api/v1/users/me/*`、`/api/v1/ai/match/remaining`
+- `GET /healthz` 属于基础设施健康检查接口，不属于用户侧/服务方侧/平台管理侧业务分组
 
 推荐示例：
 
@@ -106,8 +113,8 @@
 
 ### 4.2 数据库约束
 
-- 已有 MySQL 表：AI 会话/消息/匹配、每日配额、服务方审核、服务浏览、identity 用户账户
-- 新增业务（order/feedback/payment/admin 配置）应继续按 MySQL 可落地结构设计
+- 已有 MySQL 表：AI 会话/消息/匹配、每日配额、服务方审核、服务浏览、identity 用户账户、订单、订单反馈
+- 新增业务（payment/admin 配置等）应继续按 MySQL 可落地结构设计
 - 当前 `repository.driver` 可切 `memory/mysql`
 
 ### 4.3 第三方交互约束
@@ -141,25 +148,28 @@ backend/migrations     MySQL 迁移脚本
 
 - `application/ai`
 - `application/audio`
+- `application/feedback`
 - `application/identity`
+- `application/order`
 - `application/provider`
 - `application/service_discovery`
 - `domain/ai`
 - `domain/audio`
+- `domain/feedback`
 - `domain/identity`
+- `domain/order`
 - `domain/provider`
 - `domain/service_discovery`
 
 ## 6. 当前推荐推进顺序
 
-1. 订单后端模块（order + payment mock）
-2. 用户 Web 订单列表/订单详情接真实接口
-3. 评价/投诉模块（后端 + 页面）
-4. 设置页从占位升级为真实偏好与账号设置
-5. 平台管理后台登录鉴权骨架
-6. 服务方管理后台前端工程骨架
-7. 双后台各自运营模块扩展
-8. 用户 App 页面化
+1. 设置页后端持久化
+2. 平台管理后台登录鉴权骨架
+3. 服务方管理后台前端工程骨架
+4. 双后台各自运营模块扩展
+5. AI 对话自动回复后端化
+6. 声音内容数据化
+7. 用户 App 页面化
 
 ## 7. 当前最重要的业务边界
 
@@ -172,7 +182,7 @@ P0/P1 聚焦：
 - 声音页与后端接口
 - 我的页与用户资料读取
 - 支付确认 Mock 链路
-- 订单、评价投诉后端补齐
+- 订单与评价投诉最小闭环稳态
 - 平台管理后台服务方审核稳态 + 继续补运营能力
 - 服务方管理后台后续承接入驻、接单、履约、收益结算
 

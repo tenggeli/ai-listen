@@ -14,11 +14,16 @@ export interface ProviderAdminApi {
 }
 
 export class HttpProviderAdminApi implements ProviderAdminApi {
-  constructor(private readonly baseUrl = '/api/v1/admin') {}
+  constructor(
+    private readonly baseUrl = '/api/v1/admin',
+    private readonly getAccessToken: () => string = () => ''
+  ) {}
 
   async listProviders(reviewStatus: string): Promise<ListProvidersResult> {
     const query = reviewStatus ? `?review_status=${encodeURIComponent(reviewStatus)}` : ''
-    const response = await fetch(`${this.baseUrl}/providers${query}`)
+    const response = await fetch(`${this.baseUrl}/providers${query}`, {
+      headers: this.buildAuthHeaders()
+    })
     const payload = await response.json()
     if (!response.ok || payload.code !== 0) {
       throw new Error(payload.message || 'load providers failed')
@@ -32,7 +37,9 @@ export class HttpProviderAdminApi implements ProviderAdminApi {
   }
 
   async getProviderDetail(providerId: string): Promise<ProviderDetail> {
-    const response = await fetch(`${this.baseUrl}/providers/${providerId}`)
+    const response = await fetch(`${this.baseUrl}/providers/${providerId}`, {
+      headers: this.buildAuthHeaders()
+    })
     const payload = await response.json()
     if (!response.ok || payload.code !== 0) {
       throw new Error(payload.message || 'load provider detail failed')
@@ -44,7 +51,10 @@ export class HttpProviderAdminApi implements ProviderAdminApi {
   async review(providerId: string, action: 'approve' | 'reject' | 'require-supplement', reason: string): Promise<ProviderReviewStatus> {
     const response = await fetch(`${this.baseUrl}/providers/${providerId}/${action}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        ...this.buildAuthHeaders(),
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ reason })
     })
     const payload = await response.json()
@@ -52,6 +62,14 @@ export class HttpProviderAdminApi implements ProviderAdminApi {
       throw new Error(payload.message || 'review failed')
     }
     return payload.data.review_status
+  }
+
+  private buildAuthHeaders(): Record<string, string> {
+    const accessToken = this.getAccessToken()
+    if (!accessToken) {
+      return {}
+    }
+    return { Authorization: `Bearer ${accessToken}` }
   }
 }
 

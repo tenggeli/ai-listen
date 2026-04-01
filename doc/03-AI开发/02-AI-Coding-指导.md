@@ -1,4 +1,4 @@
-# Listen AI Coding 指导文档（按 2026-03-29 当前仓库状态）
+# Listen AI Coding 指导文档（按 2026-04-02 当前仓库状态）
 
 ## 0. 文档定位
 
@@ -24,21 +24,20 @@
 
 若文档与代码冲突：以代码现状为准，并回写文档。
 
-## 2. 当前优先级（2026-03-29 代码快照）
+## 2. 当前优先级（2026-04-02 代码快照）
 
 高优先：
 
-1. Go 后端订单模块（order + payment mock）
-2. 用户 Web 订单列表/订单详情接真实后端接口
-3. 评价/投诉最小闭环
-4. 设置页从占位升级为真实设置能力
-5. 平台管理后台登录鉴权骨架 + 运营模块扩展
-6. 服务方管理后台前端工程骨架与工作台
+1. 设置页偏好能力后端持久化
+2. 平台管理后台登录鉴权骨架 + 运营模块扩展
+3. 服务方管理后台前端工程骨架与工作台
+4. AI 对话自动回复后端化
+5. 声音页数据从 mock service 逐步迁移为可配置内容源
 
 中优先：
 
-- AI 对话自动回复后端化
-- 声音页数据从 mock service 逐步迁移为可配置内容源
+- 订单状态流转扩展（接单、履约、完成、售后）
+- 平台侧订单/投诉运营管理
 
 低优先：
 
@@ -58,13 +57,17 @@ backend/internal/
   application/
     ai/
     audio/
+    feedback/
     identity/
+    order/
     provider/
     service_discovery/
   domain/
     ai/
     audio/
+    feedback/
     identity/
+    order/
     provider/
     service_discovery/
   infrastructure/
@@ -88,7 +91,7 @@ backend/internal/
 - 可按路由分组拆 controller，例如 `user`、`admin`、`provider`
 - 管理侧和服务方侧共享领域能力时，优先共享 application/domain，而不是复制一份后端
 
-接口命名强制规则：
+新增接口命名强制规则：
 
 - 用户侧前缀固定：`/api/v1/...`
 - 服务方侧前缀固定：`/api/v1/provider/...`
@@ -98,6 +101,13 @@ backend/internal/
 - 不要使用 `get/list/create/update` 这类动词作为一级路径
 - 动作型接口统一放在资源详情后，例如 `/orders/{id}/accept`
 - 资源路径统一用小写英文复数名词，segment 之间用短横线
+- 单例资源允许使用单数名词，例如 `profile`
+
+历史接口例外：
+
+- 当前已落地接口不要求按本规范回溯重命名
+- 重点例外包括：`/api/v1/auth/login/*`、`/api/v1/users/me/*`、`/api/v1/ai/match/remaining`
+- `GET /healthz` 视为基础设施接口，不纳入业务路由分组
 
 强制要求：
 
@@ -202,17 +212,19 @@ backend/internal/
 - 后端目前只支持 `page=home`
 - 若扩展声音内容来源，优先保持既有响应结构稳定
 
-### 4.5 支付与订单链路（前端 Mock 中）
+### 4.5 支付、订单与评价链路（前后端已打通最小闭环）
 
 续写优先复用：
 
 - `PaymentConfirmPage`
-- `MockOrderStore`
+- `HttpOrderApi`
+- `HttpFeedbackApi`
 
 注意：
 
-- 当前支付确认页只做本地 mock-success
-- 真正补订单后端时，应逐步替换 `MockOrderStore`，不要先改坏现有前端演示链路
+- 当前支付确认页会先创建真实订单，再调用 `/api/v1/orders/{id}/pay/mock-success`
+- 订单列表、订单详情、评价/投诉页已接真实后端接口
+- 支付仍是 mock-success，扩展真实支付时优先保持订单接口与页面流程稳定
 
 ### 4.6 平台管理后台审核模块（已落地）
 
@@ -245,8 +257,8 @@ backend/internal/
 
 ### 5.2 数据库
 
-- `ai/provider/service_discovery/identity` 已有 migration + mysql repository
-- 新模块（order/feedback/payment）默认按 MySQL 设计
+- `ai/provider/service_discovery/identity/order/feedback` 已有 migration + mysql repository
+- 新模块（payment、后台配置等）默认按 MySQL 设计
 - 开发 mysql 模式时，应优先复用现有 `mysql.NewDB(...)` 与仓储注册方式
 
 ### 5.3 第三方交互
@@ -268,7 +280,7 @@ backend/internal/
 合格任务示例：
 
 - “实现订单实体状态机 + 创建订单接口 + 单测”
-- “将订单详情页从 `MockOrderStore` 切到真实 `/api/v1/orders/{id}`”
+- “为设置页补后端持久化，并让前端切到真实接口”
 - “实现评价/投诉最小接口与前端提交页”
 
 不合格任务示例：

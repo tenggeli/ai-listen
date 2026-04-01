@@ -1,21 +1,36 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { authService } from '../../application/auth'
 import ProviderTable from '../../components/providers/ProviderTable.vue'
 import { ProviderReviewViewModel } from '../../application/provider/ProviderReviewViewModel'
 import { HttpProviderAdminApi, MockProviderAdminApi } from '../../api/ProviderAdminApi'
 import { PageLoadState } from '../../domain/provider/PageLoadState'
 
-const useMock = import.meta.env.VITE_USE_MOCK !== 'false'
-const api = useMock ? new MockProviderAdminApi() : new HttpProviderAdminApi('/api/v1/admin')
+const router = useRouter()
+const useMock = import.meta.env.VITE_USE_MOCK === 'true'
+const api = useMock
+  ? new MockProviderAdminApi()
+  : new HttpProviderAdminApi('/api/v1/admin', () => authService.getAccessToken())
 const vm = new ProviderReviewViewModel(api)
 
 onMounted(() => {
   void vm.initialize()
 })
+
+function logout(): void {
+  authService.logout()
+  void router.replace('/login')
+}
 </script>
 
 <template>
   <main class="page">
+    <nav class="top-nav">
+      <RouterLink to="/dashboard">返回仪表盘</RouterLink>
+      <button @click="logout">退出登录</button>
+    </nav>
+
     <header>
       <h1>服务方审核</h1>
       <p>管理后台 P0 模块：列表、详情、审核动作最小闭环。</p>
@@ -58,6 +73,13 @@ onMounted(() => {
 <style scoped>
 .page {
   padding: 20px;
+}
+
+.top-nav {
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 h1 {

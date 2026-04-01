@@ -4,6 +4,7 @@ import AuthEntryPage from '../views/auth/AuthEntryPage.vue'
 import ChatPage from '../views/chat/ChatPage.vue'
 import HomePage from '../views/home/HomePage.vue'
 import OrderDetailPage from '../views/order/OrderDetailPage.vue'
+import OrderFeedbackPage from '../views/order/OrderFeedbackPage.vue'
 import OrderListPage from '../views/order/OrderListPage.vue'
 import PaymentConfirmPage from '../views/payment/PaymentConfirmPage.vue'
 import MyPage from '../views/me/MyPage.vue'
@@ -28,6 +29,7 @@ export const router = createRouter({
     { path: '/orders', component: OrderListPage },
     { path: '/payment/confirm', component: PaymentConfirmPage },
     { path: '/orders/:id', component: OrderDetailPage },
+    { path: '/orders/:id/feedback', component: OrderFeedbackPage },
     { path: '/settings', component: SettingsPage },
     { path: '/chat', component: ChatPage },
     { path: '/sound', component: SoundPage }

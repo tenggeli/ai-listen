@@ -50,10 +50,15 @@ cp backend/config/listenbase.example.cof ~/conf/listenbase.cof
 - 服务方侧：`/api/v1/provider/...`
 - 平台管理侧：`/api/v1/admin/...`
 
-接口命名约束：
+新增接口命名约束：
 - 路径使用小写英文
 - 资源名优先复数，如 `orders`、`providers`
 - 动作型接口放在资源详情后，如 `/orders/{id}/accept`
+- 单例资源允许使用单数，如 `profile`
+
+历史接口说明：
+- 现有已实现接口不因该规范回溯重命名
+- `GET /healthz` 属于基础设施健康检查接口
 
 用户登录骨架接口（P0-02）：
 - `POST /api/v1/auth/login/sms`（验证码 mock：`123`）
