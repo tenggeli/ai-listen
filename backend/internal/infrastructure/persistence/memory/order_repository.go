@@ -3,6 +3,7 @@ package memory
 import (
 	"context"
 	"sort"
+	"strings"
 	"sync"
 
 	domain "listen/backend/internal/domain/order"
@@ -12,12 +13,14 @@ type OrderRepository struct {
 	mu     sync.RWMutex
 	byID   map[string]domain.Order
 	byUser map[string][]string
+	byProv map[string][]string
 }
 
 func NewOrderRepository() *OrderRepository {
 	return &OrderRepository{
 		byID:   make(map[string]domain.Order),
 		byUser: make(map[string][]string),
+		byProv: make(map[string][]string),
 	}
 }
 
@@ -27,6 +30,7 @@ func (r *OrderRepository) Create(_ context.Context, order domain.Order) error {
 
 	r.byID[order.ID] = cloneOrder(order)
 	r.byUser[order.UserID] = append([]string{order.ID}, r.byUser[order.UserID]...)
+	r.byProv[order.ProviderID] = append([]string{order.ID}, r.byProv[order.ProviderID]...)
 	return nil
 }
 
@@ -80,6 +84,71 @@ func (r *OrderRepository) Save(_ context.Context, order domain.Order) error {
 	}
 	r.byID[order.ID] = cloneOrder(order)
 	return nil
+}
+
+func (r *OrderRepository) ListByProvider(_ context.Context, query domain.ProviderListQuery) ([]domain.Order, int, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	ids := r.byProv[query.ProviderID]
+	all := make([]domain.Order, 0, len(ids))
+	for _, orderID := range ids {
+		item, ok := r.byID[orderID]
+		if !ok {
+			continue
+		}
+		all = append(all, cloneOrder(item))
+	}
+
+	sort.Slice(all, func(i, j int) bool {
+		return all[i].CreatedAt.After(all[j].CreatedAt)
+	})
+
+	total := len(all)
+	start := (query.Page - 1) * query.PageSize
+	if start >= total {
+		return []domain.Order{}, total, nil
+	}
+	end := start + query.PageSize
+	if end > total {
+		end = total
+	}
+	return all[start:end], total, nil
+}
+
+func (r *OrderRepository) ListAll(_ context.Context, query domain.AdminListQuery) ([]domain.Order, int, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	all := make([]domain.Order, 0, len(r.byID))
+	keyword := strings.ToLower(strings.TrimSpace(query.Keyword))
+	for _, item := range r.byID {
+		if query.Status != "" && item.Status != query.Status {
+			continue
+		}
+		if keyword != "" {
+			target := strings.ToLower(item.ProviderName + " " + item.ServiceItemTitle + " " + item.UserID + " " + item.ID)
+			if !strings.Contains(target, keyword) {
+				continue
+			}
+		}
+		all = append(all, cloneOrder(item))
+	}
+
+	sort.Slice(all, func(i, j int) bool {
+		return all[i].CreatedAt.After(all[j].CreatedAt)
+	})
+
+	total := len(all)
+	start := (query.Page - 1) * query.PageSize
+	if start >= total {
+		return []domain.Order{}, total, nil
+	}
+	end := start + query.PageSize
+	if end > total {
+		end = total
+	}
+	return all[start:end], total, nil
 }
 
 func cloneOrder(item domain.Order) domain.Order {

@@ -21,3 +21,17 @@ func RegisterServiceItemRoutes(mux *http.ServeMux, controller ServiceItemControl
 	mux.HandleFunc("POST /api/v1/admin/service-items/{id}/activate", requireAdminAuth(controller.HandleActivate))
 	mux.HandleFunc("POST /api/v1/admin/service-items/{id}/deactivate", requireAdminAuth(controller.HandleDeactivate))
 }
+
+func RegisterOrderRoutes(mux *http.ServeMux, controller OrderController) {
+	mux.HandleFunc("GET /api/v1/admin/orders", requireAdminAuth(controller.HandleListOrders))
+	mux.HandleFunc("GET /api/v1/admin/orders/{id}", requireAdminAuth(controller.HandleGetOrderDetail))
+	mux.HandleFunc("POST /api/v1/admin/orders/{id}/intervene", requireAdminAuth(controller.HandleInterveneOrder))
+	mux.HandleFunc("POST /api/v1/admin/orders/{id}/close", requireAdminAuth(controller.HandleCloseOrder))
+}
+
+func RegisterComplaintRoutes(mux *http.ServeMux, controller OrderController) {
+	mux.HandleFunc("GET /api/v1/admin/complaints", requireAdminAuth(controller.HandleListComplaints))
+	mux.HandleFunc("GET /api/v1/admin/complaints/{id}", requireAdminAuth(controller.HandleGetComplaintDetail))
+	mux.HandleFunc("POST /api/v1/admin/complaints/{id}/intervene", requireAdminAuth(controller.HandleInterveneComplaint))
+	mux.HandleFunc("POST /api/v1/admin/complaints/{id}/resolve", requireAdminAuth(controller.HandleResolveComplaint))
+}

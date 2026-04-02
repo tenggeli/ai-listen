@@ -30,7 +30,26 @@ const statusText = computed(() => {
   if (!state.order) {
     return ''
   }
-  return state.order.status === 'paid' ? '已支付' : '待支付'
+  switch (state.order.status) {
+    case 'paid':
+      return '待服务方接单'
+    case 'accepted':
+      return '已接单'
+    case 'on_the_way':
+      return '服务方出发中'
+    case 'arrived':
+      return '服务方已到达'
+    case 'in_service':
+      return '服务中'
+    case 'completed':
+      return '已完成'
+    case 'after_sale_processing':
+      return '售后处理中'
+    case 'closed':
+      return '已关闭'
+    default:
+      return '待支付'
+  }
 })
 
 async function loadOrder(): Promise<void> {
@@ -76,7 +95,7 @@ async function loadOrder(): Promise<void> {
       </section>
 
       <section v-else-if="state.order" class="card">
-        <h1>{{ state.order.status === 'paid' ? '支付成功' : '订单详情' }}</h1>
+        <h1>{{ state.order.status === 'completed' ? '订单已完成' : state.order.status === 'paid' ? '支付成功' : '订单详情' }}</h1>
         <p class="sub">当前订单已接入真实订单接口。</p>
         <div class="line"><span>订单号</span><strong>{{ state.order.id }}</strong></div>
         <div class="line"><span>状态</span><strong>{{ statusText }}</strong></div>

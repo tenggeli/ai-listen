@@ -6,17 +6,20 @@ import (
 	"strings"
 
 	adminAuthApp "listen/backend/internal/application/admin_auth"
+	adminOrderApp "listen/backend/internal/application/admin_order"
 	aiApp "listen/backend/internal/application/ai"
 	audioApp "listen/backend/internal/application/audio"
 	feedbackApp "listen/backend/internal/application/feedback"
 	identityApp "listen/backend/internal/application/identity"
 	orderApp "listen/backend/internal/application/order"
 	providerApp "listen/backend/internal/application/provider"
+	providerAuthApp "listen/backend/internal/application/provider_auth"
 	serviceDiscoveryApp "listen/backend/internal/application/service_discovery"
 	adminServiceItemApp "listen/backend/internal/application/service_item_admin"
 	userSettingsApp "listen/backend/internal/application/user_settings"
 	adminAuthDomain "listen/backend/internal/domain/admin_auth"
 	domainAi "listen/backend/internal/domain/ai"
+	providerAuthDomain "listen/backend/internal/domain/provider_auth"
 	serviceItemDomain "listen/backend/internal/domain/service_item_admin"
 	userSettingsDomain "listen/backend/internal/domain/user_settings"
 	infraAi "listen/backend/internal/infrastructure/ai"
@@ -26,6 +29,7 @@ import (
 	memory "listen/backend/internal/infrastructure/persistence/memory"
 	mysqlInfra "listen/backend/internal/infrastructure/persistence/mysql"
 	adminHTTP "listen/backend/internal/interface/http/admin"
+	providerHTTP "listen/backend/internal/interface/http/provider"
 	"listen/backend/internal/interface/http/user"
 )
 
@@ -70,6 +74,24 @@ func NewServer() Server {
 			Status:      "active",
 		},
 	})
+	providerAuthRepo := providerAuthApp.NewInMemoryRepository([]providerAuthDomain.ProviderAccount{
+		{
+			ProviderID:  "p_pub_001",
+			Account:     "provider",
+			Password:    "provider123",
+			DisplayName: "暖心倾听师 · 小林",
+			Status:      "active",
+			CityCode:    "310000",
+		},
+		{
+			ProviderID:  "p_pub_002",
+			Account:     "listener2",
+			Password:    "listener123",
+			DisplayName: "倾听师 · 安安",
+			Status:      "active",
+			CityCode:    "110000",
+		},
+	})
 
 	if cfg.RepositoryDriver == "mysql" {
 		db, err := mysqlInfra.NewDB(cfg.MySQLDSN)
@@ -89,6 +111,7 @@ func NewServer() Server {
 			mysqlOrderRepo := mysqlInfra.NewOrderRepository(db)
 			mysqlFeedbackRepo := mysqlInfra.NewFeedbackRepository(db)
 			mysqlServiceItemRepo := mysqlInfra.NewServiceItemAdminRepository(db)
+			mysqlOrderActionRepo := mysqlInfra.NewOrderAdminActionRepository(db)
 
 			aiController := user.NewAIController(
 				aiApp.NewGetAiHomeUseCase(mysqlQuotaRepo, homeOverviewService, clock),
@@ -143,6 +166,18 @@ func NewServer() Server {
 				adminServiceItemApp.NewGetServiceItemDetailUseCase(mysqlServiceItemRepo),
 				adminServiceItemApp.NewUpdateServiceItemStatusUseCase(mysqlServiceItemRepo),
 			)
+			orderAdminController := adminHTTP.NewOrderController(
+				adminOrderApp.NewUseCase(mysqlOrderRepo, mysqlFeedbackRepo, mysqlOrderActionRepo, idGenerator, clock),
+			)
+			providerAuthController := providerHTTP.NewAuthController(
+				providerAuthApp.NewLoginMockUseCase(providerAuthRepo, clock),
+				providerAuthApp.NewGetCurrentProviderUseCase(providerAuthRepo),
+			)
+			providerOrderController := providerHTTP.NewOrderController(
+				orderApp.NewProviderListOrdersUseCase(mysqlOrderRepo),
+				orderApp.NewProviderGetOrderUseCase(mysqlOrderRepo),
+				orderApp.NewProviderOperateOrderUseCase(mysqlOrderRepo),
+			)
 
 			mux := http.NewServeMux()
 			user.RegisterAIRoutes(mux, aiController)
@@ -155,6 +190,10 @@ func NewServer() Server {
 			adminHTTP.RegisterAuthRoutes(mux, adminAuthController)
 			adminHTTP.RegisterProviderRoutes(mux, adminController)
 			adminHTTP.RegisterServiceItemRoutes(mux, serviceItemController)
+			adminHTTP.RegisterOrderRoutes(mux, orderAdminController)
+			adminHTTP.RegisterComplaintRoutes(mux, orderAdminController)
+			providerHTTP.RegisterAuthRoutes(mux, providerAuthController)
+			providerHTTP.RegisterOrderRoutes(mux, providerOrderController)
 			mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte("ok"))
@@ -222,6 +261,19 @@ func NewServer() Server {
 		adminServiceItemApp.NewGetServiceItemDetailUseCase(serviceItemRepo),
 		adminServiceItemApp.NewUpdateServiceItemStatusUseCase(serviceItemRepo),
 	)
+	orderActionRepo := memory.NewOrderAdminActionRepository()
+	orderAdminController := adminHTTP.NewOrderController(
+		adminOrderApp.NewUseCase(orderRepo, feedbackRepo, orderActionRepo, idGenerator, clock),
+	)
+	providerAuthController := providerHTTP.NewAuthController(
+		providerAuthApp.NewLoginMockUseCase(providerAuthRepo, clock),
+		providerAuthApp.NewGetCurrentProviderUseCase(providerAuthRepo),
+	)
+	providerOrderController := providerHTTP.NewOrderController(
+		orderApp.NewProviderListOrdersUseCase(orderRepo),
+		orderApp.NewProviderGetOrderUseCase(orderRepo),
+		orderApp.NewProviderOperateOrderUseCase(orderRepo),
+	)
 
 	mux := http.NewServeMux()
 	user.RegisterAIRoutes(mux, aiController)
@@ -234,6 +286,10 @@ func NewServer() Server {
 	adminHTTP.RegisterAuthRoutes(mux, adminAuthController)
 	adminHTTP.RegisterProviderRoutes(mux, adminController)
 	adminHTTP.RegisterServiceItemRoutes(mux, serviceItemController)
+	adminHTTP.RegisterOrderRoutes(mux, orderAdminController)
+	adminHTTP.RegisterComplaintRoutes(mux, orderAdminController)
+	providerHTTP.RegisterAuthRoutes(mux, providerAuthController)
+	providerHTTP.RegisterOrderRoutes(mux, providerOrderController)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))

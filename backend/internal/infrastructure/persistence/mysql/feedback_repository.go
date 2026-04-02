@@ -87,6 +87,59 @@ INSERT INTO order_feedback_records(
 	return err
 }
 
+func (r FeedbackRepository) ListComplaints(ctx context.Context, query domain.ComplaintListQuery) ([]domain.OrderFeedback, int, error) {
+	const countSQL = `SELECT COUNT(1) FROM order_feedback_records WHERE has_complaint = 1`
+
+	var total int
+	if err := r.db.QueryRowContext(ctx, countSQL).Scan(&total); err != nil {
+		return nil, 0, err
+	}
+
+	const listSQL = `
+SELECT feedback_id, order_id, user_id, rating_score, review_tags_json, review_content,
+       has_complaint, complaint_reason, complaint_content, created_at
+FROM order_feedback_records
+WHERE has_complaint = 1
+ORDER BY created_at DESC, id DESC
+LIMIT ? OFFSET ?`
+
+	offset := (query.Page - 1) * query.PageSize
+	rows, err := r.db.QueryContext(ctx, listSQL, query.PageSize, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	items := make([]domain.OrderFeedback, 0)
+	for rows.Next() {
+		var item domain.OrderFeedback
+		var tagsJSON string
+		var hasComplaint int
+		if err := rows.Scan(
+			&item.ID,
+			&item.OrderID,
+			&item.UserID,
+			&item.RatingScore,
+			&tagsJSON,
+			&item.ReviewContent,
+			&hasComplaint,
+			&item.ComplaintReason,
+			&item.ComplaintContent,
+			&item.CreatedAt,
+		); err != nil {
+			return nil, 0, err
+		}
+		item.ReviewTags = parseFeedbackTags(tagsJSON)
+		item.HasComplaint = hasComplaint == 1
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	return items, total, nil
+}
+
 func parseFeedbackTags(raw string) []string {
 	if raw == "" {
 		return []string{}

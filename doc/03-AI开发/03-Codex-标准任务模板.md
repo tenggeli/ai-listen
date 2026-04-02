@@ -173,18 +173,18 @@
 - doc/02-PRD/用户端PRD.md
 
 任务目标：
-在现有代码基础上实现设置页后端持久化最小闭环，并让用户 Web 设置页从本地存储切到真实后端接口。
+在现有代码基础上实现 AI 对话自动回复后端化最小闭环，并让用户 Web 对话页在发送消息后展示后端生成回复。
 
 任务范围：
 - 端：Go 后端 + 用户 Web
-- 模块：设置读取、设置保存、前端 settings API 适配
-- 只做：偏好/通知/隐私设置最小实体、接口、页面接入
-- 不做：真实消息推送、复杂风控、后台配置台
+- 模块：消息追加、自动回复生成、会话刷新
+- 只做：固定策略回复（mock AI 生成）、接口契约稳定、前端列表刷新
+- 不做：真实大模型网关、流式输出、上下文检索增强
 
 实现要求：
 1. Go 后端按 interface/application/domain/infrastructure 分层
-2. 用户 Web 复用现有 settings 页面结构
-3. 数据结构面向 MySQL 设计，补 migration
+2. 用户 Web 复用现有 `ChatPageViewModel` 与 `HttpAiApi` 契约
+3. 数据结构面向 MySQL 设计，必要时补 migration
 4. 至少补核心单测
 5. 页面状态覆盖 idle/loading/success/empty/error
 6. 输出修改文件、验证步骤、剩余待办

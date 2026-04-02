@@ -10,6 +10,7 @@
 
 - `web/apps/user-web` 用户 Web（Vue）
 - `web/apps/admin-web` 平台管理后台（已实现服务方审核模块）
+- `web/apps/provider-web` 服务方管理后台（登录 / 工作台 / 订单履约 / 资料页）
 - `doc/05-管理后台原型` 服务方管理后台 + 平台管理后台原型输入
 - `app/user-app` 用户 App（Vue 骨架）
 - `backend` Go 统一接口服务（`interface/application/domain/infrastructure`）
@@ -110,3 +111,17 @@ npm run dev
 ```
 
 默认端口 `5175`。
+
+### 5) 启动服务方管理后台
+
+```bash
+cd web/apps/provider-web
+npm install
+npm run dev
+```
+
+默认端口 `5176`。
+
+- 登录接口：`POST /api/v1/provider/auth/login/mock`
+- 默认测试账号：`provider / provider123`
+- 可用页面：`/provider/dashboard`、`/provider/orders`、`/provider/profile`

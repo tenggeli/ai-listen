@@ -59,6 +59,36 @@ type PayOrderMockSuccessOutput struct {
 	Order domain.Order
 }
 
+type ProviderListOrdersInput struct {
+	ProviderID string
+	Page       int
+	PageSize   int
+}
+
+type ProviderListOrdersOutput struct {
+	Items []domain.Order
+	Total int
+}
+
+type ProviderOperateOrderInput struct {
+	ProviderID string
+	OrderID    string
+	Action     string
+}
+
+type ProviderOperateOrderOutput struct {
+	Order domain.Order
+}
+
+type ProviderGetOrderInput struct {
+	ProviderID string
+	OrderID    string
+}
+
+type ProviderGetOrderOutput struct {
+	Order domain.Order
+}
+
 type CreateOrderUseCase struct {
 	repo        domain.Repository
 	idGenerator IDGenerator
@@ -185,4 +215,109 @@ func (u PayOrderMockSuccessUseCase) Execute(ctx context.Context, input PayOrderM
 		return PayOrderMockSuccessOutput{}, err
 	}
 	return PayOrderMockSuccessOutput{Order: item}, nil
+}
+
+type ProviderListOrdersUseCase struct {
+	repo domain.Repository
+}
+
+func NewProviderListOrdersUseCase(repo domain.Repository) ProviderListOrdersUseCase {
+	return ProviderListOrdersUseCase{repo: repo}
+}
+
+func (u ProviderListOrdersUseCase) Execute(ctx context.Context, input ProviderListOrdersInput) (ProviderListOrdersOutput, error) {
+	providerID := strings.TrimSpace(input.ProviderID)
+	if providerID == "" {
+		return ProviderListOrdersOutput{}, domain.ErrInvalidInput
+	}
+	page := input.Page
+	if page <= 0 {
+		page = 1
+	}
+	pageSize := input.PageSize
+	if pageSize <= 0 || pageSize > 50 {
+		pageSize = 10
+	}
+
+	items, total, err := u.repo.ListByProvider(ctx, domain.ProviderListQuery{
+		ProviderID: providerID,
+		Page:       page,
+		PageSize:   pageSize,
+	})
+	if err != nil {
+		return ProviderListOrdersOutput{}, err
+	}
+	return ProviderListOrdersOutput{Items: items, Total: total}, nil
+}
+
+type ProviderGetOrderUseCase struct {
+	repo domain.Repository
+}
+
+func NewProviderGetOrderUseCase(repo domain.Repository) ProviderGetOrderUseCase {
+	return ProviderGetOrderUseCase{repo: repo}
+}
+
+func (u ProviderGetOrderUseCase) Execute(ctx context.Context, input ProviderGetOrderInput) (ProviderGetOrderOutput, error) {
+	providerID := strings.TrimSpace(input.ProviderID)
+	orderID := strings.TrimSpace(input.OrderID)
+	if providerID == "" || orderID == "" {
+		return ProviderGetOrderOutput{}, domain.ErrInvalidInput
+	}
+
+	item, err := u.repo.GetByID(ctx, orderID)
+	if err != nil {
+		return ProviderGetOrderOutput{}, err
+	}
+	if item.ProviderID != providerID {
+		return ProviderGetOrderOutput{}, domain.ErrOrderForbidden
+	}
+	return ProviderGetOrderOutput{Order: item}, nil
+}
+
+type ProviderOperateOrderUseCase struct {
+	repo domain.Repository
+}
+
+func NewProviderOperateOrderUseCase(repo domain.Repository) ProviderOperateOrderUseCase {
+	return ProviderOperateOrderUseCase{repo: repo}
+}
+
+func (u ProviderOperateOrderUseCase) Execute(ctx context.Context, input ProviderOperateOrderInput) (ProviderOperateOrderOutput, error) {
+	providerID := strings.TrimSpace(input.ProviderID)
+	orderID := strings.TrimSpace(input.OrderID)
+	action := strings.TrimSpace(input.Action)
+	if providerID == "" || orderID == "" || action == "" {
+		return ProviderOperateOrderOutput{}, domain.ErrInvalidInput
+	}
+
+	item, err := u.repo.GetByID(ctx, orderID)
+	if err != nil {
+		return ProviderOperateOrderOutput{}, err
+	}
+	if item.ProviderID != providerID {
+		return ProviderOperateOrderOutput{}, domain.ErrOrderForbidden
+	}
+
+	switch action {
+	case "accept":
+		err = item.MarkAccepted()
+	case "depart":
+		err = item.MarkOnTheWay()
+	case "arrive":
+		err = item.MarkArrived()
+	case "start":
+		err = item.MarkInService()
+	case "complete":
+		err = item.MarkCompleted()
+	default:
+		return ProviderOperateOrderOutput{}, domain.ErrInvalidInput
+	}
+	if err != nil {
+		return ProviderOperateOrderOutput{}, err
+	}
+	if err := u.repo.Save(ctx, item); err != nil {
+		return ProviderOperateOrderOutput{}, err
+	}
+	return ProviderOperateOrderOutput{Order: item}, nil
 }

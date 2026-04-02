@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strings"
 	"time"
 
@@ -81,6 +82,93 @@ LIMIT ? OFFSET ?`
 
 	offset := (query.Page - 1) * query.PageSize
 	rows, err := r.db.QueryContext(ctx, listSQL, query.UserID, query.PageSize, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	items := make([]domain.Order, 0)
+	for rows.Next() {
+		item, err := scanOrder(rows)
+		if err != nil {
+			return nil, 0, err
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+	return items, total, nil
+}
+
+func (r OrderRepository) ListByProvider(ctx context.Context, query domain.ProviderListQuery) ([]domain.Order, int, error) {
+	const countSQL = `SELECT COUNT(1) FROM order_records WHERE provider_id = ?`
+
+	var total int
+	if err := r.db.QueryRowContext(ctx, countSQL, query.ProviderID).Scan(&total); err != nil {
+		return nil, 0, err
+	}
+
+	const listSQL = `
+SELECT order_id, user_id, provider_id, provider_name, service_item_id, service_item_title,
+       amount, currency, status, created_at, paid_at
+FROM order_records
+WHERE provider_id = ?
+ORDER BY created_at DESC, id DESC
+LIMIT ? OFFSET ?`
+
+	offset := (query.Page - 1) * query.PageSize
+	rows, err := r.db.QueryContext(ctx, listSQL, query.ProviderID, query.PageSize, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	items := make([]domain.Order, 0)
+	for rows.Next() {
+		item, err := scanOrder(rows)
+		if err != nil {
+			return nil, 0, err
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+	return items, total, nil
+}
+
+func (r OrderRepository) ListAll(ctx context.Context, query domain.AdminListQuery) ([]domain.Order, int, error) {
+	where := "WHERE 1=1"
+	args := make([]any, 0)
+
+	if status := strings.TrimSpace(query.Status); status != "" {
+		where += " AND status = ?"
+		args = append(args, status)
+	}
+	if keyword := strings.TrimSpace(query.Keyword); keyword != "" {
+		where += " AND (order_id LIKE ? OR user_id LIKE ? OR provider_name LIKE ? OR service_item_title LIKE ?)"
+		pattern := "%" + keyword + "%"
+		args = append(args, pattern, pattern, pattern, pattern)
+	}
+
+	countSQL := fmt.Sprintf("SELECT COUNT(1) FROM order_records %s", where)
+	var total int
+	if err := r.db.QueryRowContext(ctx, countSQL, args...).Scan(&total); err != nil {
+		return nil, 0, err
+	}
+
+	listSQL := fmt.Sprintf(`
+SELECT order_id, user_id, provider_id, provider_name, service_item_id, service_item_title,
+       amount, currency, status, created_at, paid_at
+FROM order_records
+%s
+ORDER BY created_at DESC, id DESC
+LIMIT ? OFFSET ?`, where)
+
+	offset := (query.Page - 1) * query.PageSize
+	listArgs := append(append([]any{}, args...), query.PageSize, offset)
+	rows, err := r.db.QueryContext(ctx, listSQL, listArgs...)
 	if err != nil {
 		return nil, 0, err
 	}

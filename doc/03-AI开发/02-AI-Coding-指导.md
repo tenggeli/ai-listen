@@ -28,16 +28,16 @@
 
 高优先：
 
-1. 设置页偏好能力后端持久化
-2. 平台管理后台登录鉴权骨架 + 运营模块扩展
-3. 服务方管理后台前端工程骨架与工作台
-4. AI 对话自动回复后端化
-5. 声音页数据从 mock service 逐步迁移为可配置内容源
+1. 服务方管理后台前端工程骨架与工作台
+2. 平台管理后台运营模块扩展（声音内容、订单、投诉）
+3. AI 对话自动回复后端化
+4. 声音页数据从 mock service 逐步迁移为可配置内容源
+5. 订单状态流转扩展（接单、履约、完成、售后）
 
 中优先：
 
-- 订单状态流转扩展（接单、履约、完成、售后）
-- 平台侧订单/投诉运营管理
+- 平台与服务方双后台数据联动与运营指标
+- 用户 App 页面化（优先首页/对话/声音）
 
 低优先：
 
@@ -55,6 +55,7 @@
 ```text
 backend/internal/
   application/
+    admin_auth/
     ai/
     audio/
     feedback/
@@ -62,7 +63,10 @@ backend/internal/
     order/
     provider/
     service_discovery/
+    service_item_admin/
+    user_settings/
   domain/
+    admin_auth/
     ai/
     audio/
     feedback/
@@ -70,6 +74,8 @@ backend/internal/
     order/
     provider/
     service_discovery/
+    service_item_admin/
+    user_settings/
   infrastructure/
     ai/
     audio/
@@ -247,6 +253,33 @@ backend/internal/
 - 服务方管理后台是独立前端，不要直接在 `web/apps/admin-web` 里混做
 - 后端接口仍放在同一个 Go 服务内，通过独立路由分组承接
 
+### 4.8 用户设置模块（已落地）
+
+续写优先复用：
+
+- `HttpSettingsApi`
+- `SettingsPage`
+- `user_settings` 相关 UseCase/Repository
+
+注意：
+
+- 用户设置接口已落地：`GET/PUT /api/v1/users/me/settings`
+- mysql 模式走后端持久化，memory 模式由后端返回 `501`，前端本地兜底
+
+### 4.9 平台管理后台鉴权与服务项目管理（已落地）
+
+续写优先复用：
+
+- `HttpAdminAuthApi`
+- `AuthService` / `AuthSessionStore`
+- `HttpServiceItemAdminApi`
+- `ServiceItemManageViewModel`
+
+注意：
+
+- 鉴权接口：`POST /api/v1/admin/auth/login/mock`、`GET /api/v1/admin/auth/me`
+- 服务项目接口：`GET /api/v1/admin/service-items`、`GET /api/v1/admin/service-items/{id}`、`POST /api/v1/admin/service-items/{id}/activate|deactivate`
+
 ## 5. 配置、数据库、Mock 规则
 
 ### 5.1 配置
@@ -257,7 +290,7 @@ backend/internal/
 
 ### 5.2 数据库
 
-- `ai/provider/service_discovery/identity/order/feedback` 已有 migration + mysql repository
+- `ai/provider/service_discovery/identity/order/feedback/user_settings/service_item_admin` 已有 migration + mysql repository
 - 新模块（payment、后台配置等）默认按 MySQL 设计
 - 开发 mysql 模式时，应优先复用现有 `mysql.NewDB(...)` 与仓储注册方式
 
@@ -280,7 +313,7 @@ backend/internal/
 合格任务示例：
 
 - “实现订单实体状态机 + 创建订单接口 + 单测”
-- “为设置页补后端持久化，并让前端切到真实接口”
+- “为平台管理后台补声音内容管理最小接口与页面”
 - “实现评价/投诉最小接口与前端提交页”
 
 不合格任务示例：

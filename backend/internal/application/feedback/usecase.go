@@ -78,7 +78,7 @@ func (u SubmitOrderFeedbackUseCase) Execute(ctx context.Context, input SubmitFee
 	if orderItem.UserID != userID {
 		return SubmitFeedbackOutput{}, feedbackDomain.ErrFeedbackForbidden
 	}
-	if orderItem.Status != orderDomain.StatusPaid {
+	if orderItem.Status != orderDomain.StatusPaid && orderItem.Status != orderDomain.StatusCompleted {
 		return SubmitFeedbackOutput{}, feedbackDomain.ErrOrderNotFinishable
 	}
 

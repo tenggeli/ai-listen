@@ -23,7 +23,26 @@ onMounted(() => {
 })
 
 function statusText(status: UserOrder['status']): string {
-  return status === 'paid' ? '已支付' : '待支付'
+  switch (status) {
+    case 'paid':
+      return '待服务方接单'
+    case 'accepted':
+      return '已接单'
+    case 'on_the_way':
+      return '服务方出发中'
+    case 'arrived':
+      return '服务方已到达'
+    case 'in_service':
+      return '服务中'
+    case 'completed':
+      return '已完成'
+    case 'after_sale_processing':
+      return '售后处理中'
+    case 'closed':
+      return '已关闭'
+    default:
+      return '待支付'
+  }
 }
 
 async function loadOrders(): Promise<void> {
