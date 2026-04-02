@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { HttpAuthApi } from '../../api/AuthApi'
+import { HttpSettingsApi, SettingsApiError } from '../../api/SettingsApi'
 import { clearSession, loadSession } from '../../application/identity/AuthSession'
 import { loadUserSettings, saveUserSettings } from '../../application/settings/UserSettingsStore'
 import { PageLoadState } from '../../domain/ai/PageLoadState'
@@ -10,6 +11,7 @@ import type { UserSettings } from '../../domain/settings/UserSettings'
 
 const router = useRouter()
 const authApi = new HttpAuthApi(import.meta.env.VITE_AI_API_BASE_URL ?? '/api/v1')
+const settingsApi = new HttpSettingsApi(import.meta.env.VITE_AI_API_BASE_URL ?? '/api/v1')
 
 const state = reactive<{
   pageState: PageLoadState
@@ -17,12 +19,16 @@ const state = reactive<{
   settings: UserSettings | null
   saveMessage: string
   errorMessage: string
+  persistMessage: string
+  useLocalFallback: boolean
 }>({
   pageState: PageLoadState.Idle,
   me: null,
   settings: null,
   saveMessage: '',
-  errorMessage: ''
+  errorMessage: '',
+  persistMessage: '',
+  useLocalFallback: false
 })
 
 onMounted(() => {
@@ -46,9 +52,21 @@ async function initialize(): Promise<void> {
   state.pageState = PageLoadState.Loading
   state.errorMessage = ''
   state.saveMessage = ''
+  state.persistMessage = ''
+  state.useLocalFallback = false
   try {
     state.me = await authApi.getMe(session.accessToken)
-    state.settings = loadUserSettings(session.userId)
+    try {
+      state.settings = await settingsApi.getMySettings(session.accessToken)
+    } catch (error) {
+      if (isMysqlUnavailable(error)) {
+        state.settings = loadUserSettings(session.userId)
+        state.useLocalFallback = true
+        state.persistMessage = '当前环境未启用 MySQL 设置持久化，已切换为本地保存。'
+      } else {
+        throw error
+      }
+    }
     state.pageState = PageLoadState.Success
   } catch (error) {
     state.pageState = PageLoadState.Error
@@ -56,13 +74,32 @@ async function initialize(): Promise<void> {
   }
 }
 
-function saveSettings(): void {
+async function saveSettings(): Promise<void> {
   const session = loadSession()
   if (!session || !state.settings) {
     return
   }
-  saveUserSettings(session.userId, state.settings)
-  state.saveMessage = '设置已保存'
+
+  try {
+    if (state.useLocalFallback) {
+      saveUserSettings(session.userId, state.settings)
+      state.saveMessage = '设置已保存（本地）'
+    } else {
+      state.settings = await settingsApi.saveMySettings(session.accessToken, state.settings)
+      state.saveMessage = '设置已保存'
+    }
+  } catch (error) {
+    if (isMysqlUnavailable(error)) {
+      saveUserSettings(session.userId, state.settings)
+      state.useLocalFallback = true
+      state.persistMessage = '当前环境未启用 MySQL 设置持久化，已切换为本地保存。'
+      state.saveMessage = '设置已保存（本地）'
+    } else {
+      state.errorMessage = error instanceof Error ? error.message : '保存设置失败'
+      return
+    }
+  }
+
   window.setTimeout(() => {
     state.saveMessage = ''
   }, 1600)
@@ -71,6 +108,16 @@ function saveSettings(): void {
 async function logout(): Promise<void> {
   clearSession()
   await router.push('/auth')
+}
+
+function isMysqlUnavailable(error: unknown): boolean {
+  if (!(error instanceof SettingsApiError)) {
+    return false
+  }
+  if (error.statusCode === 501) {
+    return true
+  }
+  return error.message.includes('mysql mode')
 }
 </script>
 
@@ -150,6 +197,8 @@ async function logout(): Promise<void> {
         <section class="footer-actions">
           <button type="button" class="save" @click="saveSettings">保存设置</button>
           <button type="button" class="logout" @click="logout">退出登录</button>
+          <p v-if="state.persistMessage" class="persist-msg">{{ state.persistMessage }}</p>
+          <p v-if="state.errorMessage" class="persist-msg error-msg">{{ state.errorMessage }}</p>
           <p v-if="state.saveMessage" class="save-msg">{{ state.saveMessage }}</p>
         </section>
       </template>
@@ -291,6 +340,16 @@ async function logout(): Promise<void> {
   margin: 4px 2px 0;
   font-size: 12px;
   color: #93f5c7;
+}
+
+.persist-msg {
+  margin: 4px 2px 0;
+  font-size: 12px;
+  color: rgba(239, 247, 251, 0.68);
+}
+
+.error-msg {
+  color: #fca5a5;
 }
 
 .error {

@@ -14,3 +14,10 @@ func RegisterProviderRoutes(mux *http.ServeMux, controller ProviderController) {
 	mux.HandleFunc("POST /api/v1/admin/providers/{id}/reject", requireAdminAuth(controller.HandleReject))
 	mux.HandleFunc("POST /api/v1/admin/providers/{id}/require-supplement", requireAdminAuth(controller.HandleRequireSupplement))
 }
+
+func RegisterServiceItemRoutes(mux *http.ServeMux, controller ServiceItemController) {
+	mux.HandleFunc("GET /api/v1/admin/service-items", requireAdminAuth(controller.HandleList))
+	mux.HandleFunc("GET /api/v1/admin/service-items/{id}", requireAdminAuth(controller.HandleDetail))
+	mux.HandleFunc("POST /api/v1/admin/service-items/{id}/activate", requireAdminAuth(controller.HandleActivate))
+	mux.HandleFunc("POST /api/v1/admin/service-items/{id}/deactivate", requireAdminAuth(controller.HandleDeactivate))
+}

@@ -17,8 +17,9 @@ function logout(): void {
       <button @click="logout">退出登录</button>
     </div>
     <h1>管理后台骨架</h1>
-    <p>当前已接入 P0 服务方审核模块。</p>
+    <p>当前已接入服务方审核与服务项目管理模块。</p>
     <p><RouterLink to="/providers/review">进入服务方审核</RouterLink></p>
+    <p><RouterLink to="/services/manage">进入服务项目管理</RouterLink></p>
   </main>
 </template>
 

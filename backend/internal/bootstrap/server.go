@@ -13,8 +13,12 @@ import (
 	orderApp "listen/backend/internal/application/order"
 	providerApp "listen/backend/internal/application/provider"
 	serviceDiscoveryApp "listen/backend/internal/application/service_discovery"
+	adminServiceItemApp "listen/backend/internal/application/service_item_admin"
+	userSettingsApp "listen/backend/internal/application/user_settings"
 	adminAuthDomain "listen/backend/internal/domain/admin_auth"
 	domainAi "listen/backend/internal/domain/ai"
+	serviceItemDomain "listen/backend/internal/domain/service_item_admin"
+	userSettingsDomain "listen/backend/internal/domain/user_settings"
 	infraAi "listen/backend/internal/infrastructure/ai"
 	infraAudio "listen/backend/internal/infrastructure/audio"
 	"listen/backend/internal/infrastructure/config"
@@ -43,8 +47,10 @@ func NewServer() Server {
 	providerRepo := memory.NewProviderRepository()
 	serviceDiscoveryRepo := memory.NewServiceDiscoveryRepository()
 	identityRepo := memory.NewIdentityRepository()
+	userSettingsRepo := userSettingsDomain.Repository(memory.NewUserSettingsRepository())
 	orderRepo := memory.NewOrderRepository()
 	feedbackRepo := memory.NewFeedbackRepository()
+	serviceItemRepo := serviceItemDomain.Repository(memory.NewServiceItemAdminRepository())
 	authService := infraIdentity.NewMockAuthService()
 	adminAuthRepo := adminAuthApp.NewInMemoryRepository([]adminAuthDomain.AdminAccount{
 		{
@@ -79,8 +85,10 @@ func NewServer() Server {
 			mysqlProviderRepo := mysqlInfra.NewProviderRepository(db)
 			mysqlServiceDiscoveryRepo := mysqlInfra.NewServiceDiscoveryRepository(db)
 			mysqlIdentityRepo := mysqlInfra.NewIdentityRepository(db)
+			mysqlUserSettingsRepo := mysqlInfra.NewUserSettingsRepository(db)
 			mysqlOrderRepo := mysqlInfra.NewOrderRepository(db)
 			mysqlFeedbackRepo := mysqlInfra.NewFeedbackRepository(db)
+			mysqlServiceItemRepo := mysqlInfra.NewServiceItemAdminRepository(db)
 
 			aiController := user.NewAIController(
 				aiApp.NewGetAiHomeUseCase(mysqlQuotaRepo, homeOverviewService, clock),
@@ -126,6 +134,15 @@ func NewServer() Server {
 				feedbackApp.NewSubmitOrderFeedbackUseCase(mysqlFeedbackRepo, mysqlOrderRepo, idGenerator, clock),
 				feedbackApp.NewGetOrderFeedbackUseCase(mysqlFeedbackRepo, mysqlOrderRepo),
 			)
+			settingsController := user.NewSettingsController(
+				userSettingsApp.NewGetSettingsUseCase(mysqlUserSettingsRepo, mysqlIdentityRepo),
+				userSettingsApp.NewSaveSettingsUseCase(mysqlUserSettingsRepo, mysqlIdentityRepo),
+			)
+			serviceItemController := adminHTTP.NewServiceItemController(
+				adminServiceItemApp.NewListServiceItemsUseCase(mysqlServiceItemRepo),
+				adminServiceItemApp.NewGetServiceItemDetailUseCase(mysqlServiceItemRepo),
+				adminServiceItemApp.NewUpdateServiceItemStatusUseCase(mysqlServiceItemRepo),
+			)
 
 			mux := http.NewServeMux()
 			user.RegisterAIRoutes(mux, aiController)
@@ -134,8 +151,10 @@ func NewServer() Server {
 			user.RegisterSoundRoutes(mux, soundController)
 			user.RegisterOrderRoutes(mux, orderController)
 			user.RegisterFeedbackRoutes(mux, feedbackController)
+			user.RegisterSettingsRoutes(mux, settingsController)
 			adminHTTP.RegisterAuthRoutes(mux, adminAuthController)
 			adminHTTP.RegisterProviderRoutes(mux, adminController)
+			adminHTTP.RegisterServiceItemRoutes(mux, serviceItemController)
 			mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte("ok"))
@@ -194,6 +213,15 @@ func NewServer() Server {
 		feedbackApp.NewSubmitOrderFeedbackUseCase(feedbackRepo, orderRepo, idGenerator, clock),
 		feedbackApp.NewGetOrderFeedbackUseCase(feedbackRepo, orderRepo),
 	)
+	settingsController := user.NewSettingsController(
+		userSettingsApp.NewGetSettingsUseCase(userSettingsRepo, identityRepo),
+		userSettingsApp.NewSaveSettingsUseCase(userSettingsRepo, identityRepo),
+	)
+	serviceItemController := adminHTTP.NewServiceItemController(
+		adminServiceItemApp.NewListServiceItemsUseCase(serviceItemRepo),
+		adminServiceItemApp.NewGetServiceItemDetailUseCase(serviceItemRepo),
+		adminServiceItemApp.NewUpdateServiceItemStatusUseCase(serviceItemRepo),
+	)
 
 	mux := http.NewServeMux()
 	user.RegisterAIRoutes(mux, aiController)
@@ -202,8 +230,10 @@ func NewServer() Server {
 	user.RegisterSoundRoutes(mux, soundController)
 	user.RegisterOrderRoutes(mux, orderController)
 	user.RegisterFeedbackRoutes(mux, feedbackController)
+	user.RegisterSettingsRoutes(mux, settingsController)
 	adminHTTP.RegisterAuthRoutes(mux, adminAuthController)
 	adminHTTP.RegisterProviderRoutes(mux, adminController)
+	adminHTTP.RegisterServiceItemRoutes(mux, serviceItemController)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))

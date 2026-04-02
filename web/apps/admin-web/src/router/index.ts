@@ -3,6 +3,7 @@ import { authService } from '../application/auth'
 import LoginPage from '../views/auth/LoginPage.vue'
 import DashboardPage from '../views/dashboard/DashboardPage.vue'
 import ProviderReviewPage from '../views/providers/ProviderReviewPage.vue'
+import ServiceItemManagePage from '../views/services/ServiceItemManagePage.vue'
 
 export const router = createRouter({
   history: createWebHistory('/admin/'),
@@ -10,7 +11,8 @@ export const router = createRouter({
     { path: '/', redirect: '/dashboard' },
     { path: '/login', component: LoginPage },
     { path: '/dashboard', component: DashboardPage, meta: { requiresAuth: true } },
-    { path: '/providers/review', component: ProviderReviewPage, meta: { requiresAuth: true } }
+    { path: '/providers/review', component: ProviderReviewPage, meta: { requiresAuth: true } },
+    { path: '/services/manage', component: ServiceItemManagePage, meta: { requiresAuth: true } }
   ]
 })
 
