@@ -178,6 +178,10 @@ func NewServer() Server {
 				orderApp.NewProviderGetOrderUseCase(mysqlOrderRepo),
 				orderApp.NewProviderOperateOrderUseCase(mysqlOrderRepo),
 			)
+			providerProfileController := providerHTTP.NewProfileController(
+				providerApp.NewUpdateCurrentProfileUseCase(providerAuthRepo),
+				providerApp.NewListCurrentProviderServicesUseCase(mysqlServiceDiscoveryRepo),
+			)
 
 			mux := http.NewServeMux()
 			user.RegisterAIRoutes(mux, aiController)
@@ -193,6 +197,7 @@ func NewServer() Server {
 			adminHTTP.RegisterOrderRoutes(mux, orderAdminController)
 			adminHTTP.RegisterComplaintRoutes(mux, orderAdminController)
 			providerHTTP.RegisterAuthRoutes(mux, providerAuthController)
+			providerHTTP.RegisterProfileRoutes(mux, providerProfileController)
 			providerHTTP.RegisterOrderRoutes(mux, providerOrderController)
 			mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
@@ -274,6 +279,10 @@ func NewServer() Server {
 		orderApp.NewProviderGetOrderUseCase(orderRepo),
 		orderApp.NewProviderOperateOrderUseCase(orderRepo),
 	)
+	providerProfileController := providerHTTP.NewProfileController(
+		providerApp.NewUpdateCurrentProfileUseCase(providerAuthRepo),
+		providerApp.NewListCurrentProviderServicesUseCase(serviceDiscoveryRepo),
+	)
 
 	mux := http.NewServeMux()
 	user.RegisterAIRoutes(mux, aiController)
@@ -289,6 +298,7 @@ func NewServer() Server {
 	adminHTTP.RegisterOrderRoutes(mux, orderAdminController)
 	adminHTTP.RegisterComplaintRoutes(mux, orderAdminController)
 	providerHTTP.RegisterAuthRoutes(mux, providerAuthController)
+	providerHTTP.RegisterProfileRoutes(mux, providerProfileController)
 	providerHTTP.RegisterOrderRoutes(mux, providerOrderController)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)

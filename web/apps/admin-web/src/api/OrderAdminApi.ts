@@ -1,10 +1,13 @@
+import { getAdminOrderStatusReason, isAdminOrderStatus, type AdminOrderStatus } from '../domain/order/OrderStatus'
+
 export interface AdminOrderSummary {
   id: string
   userId: string
   providerName: string
   serviceItemTitle: string
   amount: number
-  status: string
+  status: AdminOrderStatus
+  statusReason: string
   createdAt: string
 }
 
@@ -30,6 +33,9 @@ export interface AdminOrderDetail {
     action: string
     operator: string
     reason: string
+    statusBefore: string
+    statusAfter: string
+    statusAfterReason: string
     updatedAt: string
   }>
 }
@@ -103,6 +109,9 @@ export class HttpOrderAdminApi implements AdminOrderApi {
             action: String(item.action ?? ''),
             operator: String(item.operator ?? ''),
             reason: String(item.reason ?? ''),
+            statusBefore: String(item.status_before ?? ''),
+            statusAfter: String(item.status_after ?? ''),
+            statusAfterReason: String(item.status_after_reason ?? ''),
             updatedAt: String(item.updated_at ?? '')
           }))
         : []
@@ -135,13 +144,17 @@ export class HttpOrderAdminApi implements AdminOrderApi {
 }
 
 function mapOrderSummary(item: any): AdminOrderSummary {
+  const rawStatus = String(item.status ?? '')
+  const status = isAdminOrderStatus(rawStatus) ? rawStatus : 'created'
+  const statusReasonRaw = String(item.status_reason ?? '').trim()
   return {
     id: String(item.id ?? ''),
     userId: String(item.user_id ?? ''),
     providerName: String(item.provider_name ?? ''),
     serviceItemTitle: String(item.service_item_title ?? ''),
     amount: Number(item.amount ?? 0),
-    status: String(item.status ?? ''),
+    status,
+    statusReason: statusReasonRaw || getAdminOrderStatusReason(status),
     createdAt: String(item.created_at ?? '')
   }
 }

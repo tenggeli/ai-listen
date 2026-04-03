@@ -56,6 +56,7 @@ function logout(): void {
       <article class="card">
         <small>入口</small>
         <p><RouterLink to="/orders">进入订单管理</RouterLink></p>
+        <p><RouterLink to="/services">进入服务项目</RouterLink></p>
         <p><RouterLink to="/profile">进入个人资料</RouterLink></p>
       </article>
     </section>

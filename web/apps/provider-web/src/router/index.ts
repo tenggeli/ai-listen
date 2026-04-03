@@ -6,6 +6,7 @@ import DashboardPage from '../views/dashboard/DashboardPage.vue'
 import OrderListPage from '../views/orders/OrderListPage.vue'
 import OrderDetailPage from '../views/orders/OrderDetailPage.vue'
 import ProfilePage from '../views/profile/ProfilePage.vue'
+import ServiceListPage from '../views/services/ServiceListPage.vue'
 
 function createProviderRoutes() {
   return [
@@ -14,7 +15,8 @@ function createProviderRoutes() {
     { path: '/dashboard', component: DashboardPage, meta: { requiresAuth: true } },
     { path: '/orders', component: OrderListPage, meta: { requiresAuth: true } },
     { path: '/orders/:id', component: OrderDetailPage, meta: { requiresAuth: true } },
-    { path: '/profile', component: ProfilePage, meta: { requiresAuth: true } }
+    { path: '/profile', component: ProfilePage, meta: { requiresAuth: true } },
+    { path: '/services', component: ServiceListPage, meta: { requiresAuth: true } }
   ]
 }
 

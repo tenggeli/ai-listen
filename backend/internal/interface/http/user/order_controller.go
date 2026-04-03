@@ -129,6 +129,7 @@ func buildOrderResponse(item domain.Order) OrderResponseDTO {
 		Amount:           item.Amount,
 		Currency:         item.Currency,
 		Status:           item.Status,
+		StatusReason:     domain.StatusReason(item.Status),
 		CreatedAt:        item.CreatedAt.Format(time.RFC3339),
 		PaidAt:           paidAt,
 	}

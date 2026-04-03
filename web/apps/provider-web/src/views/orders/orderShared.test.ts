@@ -13,6 +13,7 @@ const sampleOrders: ProviderOrder[] = [
     amount: 200,
     currency: 'CNY',
     status: 'paid',
+    statusReason: '待接单',
     createdAt: '2026-04-01T10:00:00Z',
     paidAt: '2026-04-01T10:05:00Z'
   },
@@ -26,6 +27,7 @@ const sampleOrders: ProviderOrder[] = [
     amount: 180,
     currency: 'CNY',
     status: 'completed',
+    statusReason: '已完单',
     createdAt: '2026-04-01T11:00:00Z',
     paidAt: '2026-04-01T11:05:00Z'
   }
@@ -56,6 +58,7 @@ describe('order shared helpers', () => {
     expect(getNextOrderAction('on_the_way')).toBe('arrive')
     expect(getNextOrderAction('arrived')).toBe('start')
     expect(getNextOrderAction('in_service')).toBe('complete')
+    expect(getNextOrderAction('after_sale_processing')).toBeNull()
     expect(getNextOrderAction('completed')).toBeNull()
   })
 })

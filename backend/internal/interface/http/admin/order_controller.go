@@ -122,12 +122,15 @@ func (c OrderController) handleOrderAction(w http.ResponseWriter, r *http.Reques
 	writeJSON(w, http.StatusOK, map[string]any{
 		"order": orderToMap(output.Order),
 		"audit": map[string]any{
-			"action_id":  output.Audit.ActionID,
-			"scope":      output.Audit.Scope,
-			"action":     output.Audit.Action,
-			"operator":   output.Audit.Operator,
-			"reason":     output.Audit.Reason,
-			"updated_at": output.Audit.UpdatedAt.Format(timeRFC3339),
+			"action_id":           output.Audit.ActionID,
+			"scope":               output.Audit.Scope,
+			"action":              output.Audit.Action,
+			"operator":            output.Audit.Operator,
+			"reason":              output.Audit.Reason,
+			"status_before":       output.Audit.StatusBefore,
+			"status_after":        output.Audit.StatusAfter,
+			"status_after_reason": orderDomain.StatusReason(output.Audit.StatusAfter),
+			"updated_at":          output.Audit.UpdatedAt.Format(timeRFC3339),
 		},
 	})
 }
@@ -153,12 +156,15 @@ func (c OrderController) handleComplaintAction(w http.ResponseWriter, r *http.Re
 	writeJSON(w, http.StatusOK, map[string]any{
 		"complaint": complaintToMap(output.Item),
 		"audit": map[string]any{
-			"action_id":  output.Audit.ActionID,
-			"scope":      output.Audit.Scope,
-			"action":     output.Audit.Action,
-			"operator":   output.Audit.Operator,
-			"reason":     output.Audit.Reason,
-			"updated_at": output.Audit.UpdatedAt.Format(timeRFC3339),
+			"action_id":           output.Audit.ActionID,
+			"scope":               output.Audit.Scope,
+			"action":              output.Audit.Action,
+			"operator":            output.Audit.Operator,
+			"reason":              output.Audit.Reason,
+			"status_before":       output.Audit.StatusBefore,
+			"status_after":        output.Audit.StatusAfter,
+			"status_after_reason": orderDomain.StatusReason(output.Audit.StatusAfter),
+			"updated_at":          output.Audit.UpdatedAt.Format(timeRFC3339),
 		},
 	})
 }
@@ -176,6 +182,7 @@ func orderToMap(item orderDomain.Order) map[string]any {
 		"amount":             item.Amount,
 		"currency":           item.Currency,
 		"status":             item.Status,
+		"status_reason":      orderDomain.StatusReason(item.Status),
 		"created_at":         item.CreatedAt.Format(timeRFC3339),
 	}
 	if item.PaidAt != nil {
@@ -211,13 +218,16 @@ func actionLogsToMap(items []app.ActionAudit) []map[string]any {
 	result := make([]map[string]any, 0, len(items))
 	for _, item := range items {
 		result = append(result, map[string]any{
-			"action_id":  item.ActionID,
-			"order_id":   item.OrderID,
-			"scope":      item.Scope,
-			"action":     item.Action,
-			"operator":   item.Operator,
-			"reason":     item.Reason,
-			"updated_at": item.UpdatedAt.Format(timeRFC3339),
+			"action_id":           item.ActionID,
+			"order_id":            item.OrderID,
+			"scope":               item.Scope,
+			"action":              item.Action,
+			"operator":            item.Operator,
+			"reason":              item.Reason,
+			"status_before":       item.StatusBefore,
+			"status_after":        item.StatusAfter,
+			"status_after_reason": orderDomain.StatusReason(item.StatusAfter),
+			"updated_at":          item.UpdatedAt.Format(timeRFC3339),
 		})
 	}
 	return result

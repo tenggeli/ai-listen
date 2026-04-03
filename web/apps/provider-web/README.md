@@ -11,8 +11,11 @@
   - `/provider/orders`
   - `/provider/orders/:id`
   - `/provider/profile`
+  - `/provider/services`
 - 登录接口：`POST /api/v1/provider/auth/login/mock`
 - 会话校验接口：`GET /api/v1/provider/profile`
+- 资料编辑接口：`PUT /api/v1/provider/profile`
+- 服务项目接口：`GET /api/v1/provider/services`
 - 会话存储：`localStorage`（key: `provider_web_auth_session`）
 - 路由守卫：
   - 未登录访问受保护页面会跳转登录页
@@ -21,6 +24,12 @@
   - 刷新后通过 `GET /api/v1/provider/profile` 校验 token，成功则保留会话
   - token 失效（401）则清空会话并回到登录页
 - 页面状态：统一覆盖 `idle/loading/success/error`
+- 资料管理能力：
+  - 读取当前资料
+  - 编辑昵称与城市编码并保存
+- 服务项目管理最小版：
+  - 服务项目列表读取
+  - 空态与异常态反馈
 - 订单查看能力：
   - 列表分页
   - 状态筛选

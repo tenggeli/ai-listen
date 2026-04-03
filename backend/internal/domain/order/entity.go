@@ -25,6 +25,18 @@ const (
 	StatusClosed    = "closed"
 )
 
+var orderStatusReasonMap = map[string]string{
+	StatusCreated:   "待支付",
+	StatusPaid:      "待服务方接单",
+	StatusAccepted:  "服务方已接单",
+	StatusOnTheWay:  "服务方出发中",
+	StatusArrived:   "服务方已到达，待开始服务",
+	StatusInService: "服务进行中",
+	StatusCompleted: "服务已完成",
+	StatusAfterSale: "订单售后处理中",
+	StatusClosed:    "订单已关闭",
+}
+
 type Order struct {
 	ID               string
 	UserID           string
@@ -37,6 +49,18 @@ type Order struct {
 	Status           string
 	CreatedAt        time.Time
 	PaidAt           *time.Time
+}
+
+func IsKnownStatus(status string) bool {
+	_, ok := orderStatusReasonMap[status]
+	return ok
+}
+
+func StatusReason(status string) string {
+	if reason, ok := orderStatusReasonMap[status]; ok {
+		return reason
+	}
+	return "状态未知"
 }
 
 func NewOrder(

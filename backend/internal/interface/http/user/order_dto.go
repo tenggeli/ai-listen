@@ -19,6 +19,7 @@ type OrderResponseDTO struct {
 	Amount           int     `json:"amount"`
 	Currency         string  `json:"currency"`
 	Status           string  `json:"status"`
+	StatusReason     string  `json:"status_reason"`
 	CreatedAt        string  `json:"created_at"`
 	PaidAt           *string `json:"paid_at,omitempty"`
 }

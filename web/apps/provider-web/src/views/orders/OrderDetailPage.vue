@@ -103,7 +103,7 @@ function logout(): void {
     <section v-else-if="state.order" class="card">
       <header class="card-head">
         <strong>#{{ state.order.id }}</strong>
-        <span :class="['tag', getOrderStatusTagType(state.order.status)]">{{ getOrderStatusLabel(state.order.status) }}</span>
+        <span :class="['tag', getOrderStatusTagType(state.order.status)]">{{ getOrderStatusLabel(state.order) }}</span>
       </header>
       <p><span>服务项目</span>{{ state.order.serviceItemTitle }}</p>
       <p><span>用户 ID</span>{{ state.order.userId }}</p>

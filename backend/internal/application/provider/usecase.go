@@ -3,11 +3,16 @@ package provider
 import (
 	"context"
 	"errors"
+	"strings"
 
 	domain "listen/backend/internal/domain/provider"
+	providerAuthDomain "listen/backend/internal/domain/provider_auth"
+	serviceDiscoveryDomain "listen/backend/internal/domain/service_discovery"
 )
 
 var ErrProviderNotFound = errors.New("provider not found")
+var ErrInvalidInput = providerAuthDomain.ErrInvalidInput
+var ErrUnauthorized = providerAuthDomain.ErrUnauthorized
 
 type ListReviewProvidersInput struct {
 	ReviewStatus string
@@ -116,4 +121,84 @@ func (u ReviewProviderUseCase) Execute(ctx context.Context, input ReviewActionIn
 		return ReviewActionOutput{}, err
 	}
 	return ReviewActionOutput{Provider: provider}, nil
+}
+
+type UpdateCurrentProfileInput struct {
+	ProviderID  string
+	DisplayName string
+	CityCode    string
+}
+
+type UpdateCurrentProfileOutput struct {
+	Provider providerAuthDomain.ProviderProfile
+}
+
+type UpdateCurrentProfileRepository interface {
+	UpdateProfile(ctx context.Context, providerID string, displayName string, cityCode string) (providerAuthDomain.ProviderAccount, bool, error)
+}
+
+type UpdateCurrentProfileUseCase struct {
+	repo UpdateCurrentProfileRepository
+}
+
+func NewUpdateCurrentProfileUseCase(repo UpdateCurrentProfileRepository) UpdateCurrentProfileUseCase {
+	return UpdateCurrentProfileUseCase{repo: repo}
+}
+
+func (u UpdateCurrentProfileUseCase) Execute(ctx context.Context, input UpdateCurrentProfileInput) (UpdateCurrentProfileOutput, error) {
+	providerID := strings.TrimSpace(input.ProviderID)
+	displayName := strings.TrimSpace(input.DisplayName)
+	cityCode := strings.TrimSpace(input.CityCode)
+
+	if providerID == "" {
+		return UpdateCurrentProfileOutput{}, providerAuthDomain.ErrUnauthorized
+	}
+	if displayName == "" {
+		return UpdateCurrentProfileOutput{}, providerAuthDomain.ErrInvalidInput
+	}
+
+	account, found, err := u.repo.UpdateProfile(ctx, providerID, displayName, cityCode)
+	if err != nil {
+		return UpdateCurrentProfileOutput{}, err
+	}
+	if !found {
+		return UpdateCurrentProfileOutput{}, providerAuthDomain.ErrProviderNotFound
+	}
+	return UpdateCurrentProfileOutput{
+		Provider: providerAuthDomain.ProviderProfile{
+			ProviderID:  account.ProviderID,
+			Account:     account.Account,
+			DisplayName: account.DisplayName,
+			Status:      account.Status,
+			CityCode:    account.CityCode,
+		},
+	}, nil
+}
+
+type ListCurrentProviderServicesInput struct {
+	ProviderID string
+}
+
+type ListCurrentProviderServicesOutput struct {
+	Items []serviceDiscoveryDomain.ServiceItem
+}
+
+type ListCurrentProviderServicesUseCase struct {
+	repo serviceDiscoveryDomain.Repository
+}
+
+func NewListCurrentProviderServicesUseCase(repo serviceDiscoveryDomain.Repository) ListCurrentProviderServicesUseCase {
+	return ListCurrentProviderServicesUseCase{repo: repo}
+}
+
+func (u ListCurrentProviderServicesUseCase) Execute(ctx context.Context, input ListCurrentProviderServicesInput) (ListCurrentProviderServicesOutput, error) {
+	providerID := strings.TrimSpace(input.ProviderID)
+	if providerID == "" {
+		return ListCurrentProviderServicesOutput{}, providerAuthDomain.ErrUnauthorized
+	}
+	items, err := u.repo.ListProviderServiceItems(ctx, providerID)
+	if err != nil {
+		return ListCurrentProviderServicesOutput{}, err
+	}
+	return ListCurrentProviderServicesOutput{Items: items}, nil
 }

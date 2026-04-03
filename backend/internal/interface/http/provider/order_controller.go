@@ -98,7 +98,11 @@ func (c OrderController) handleAction(w http.ResponseWriter, r *http.Request, ac
 		return
 	}
 
-	writeJSON(w, http.StatusOK, OrderStatusActionResponseDTO{ID: output.Order.ID, Status: output.Order.Status})
+	writeJSON(w, http.StatusOK, OrderStatusActionResponseDTO{
+		ID:           output.Order.ID,
+		Status:       output.Order.Status,
+		StatusReason: domain.StatusReason(output.Order.Status),
+	})
 }
 
 func buildOrderDTO(item domain.Order) map[string]any {
@@ -117,6 +121,7 @@ func buildOrderDTO(item domain.Order) map[string]any {
 		"amount":             item.Amount,
 		"currency":           item.Currency,
 		"status":             item.Status,
+		"status_reason":      domain.StatusReason(item.Status),
 		"created_at":         item.CreatedAt.Format(time.RFC3339),
 		"paid_at":            paidAt,
 	}

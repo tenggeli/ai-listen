@@ -29,6 +29,7 @@ const state = reactive({
     userId: string
     amount: number
     status: ProviderOrderStatus
+    statusReason: string
     createdAt: string
     paidAt: string | null
   }>,
@@ -111,12 +112,14 @@ function logout(): void {
         <select :value="state.statusFilter" @change="updateFilter(($event.target as HTMLSelectElement).value)">
           <option value="all">全部状态</option>
           <option value="created">待支付</option>
-          <option value="paid">待接单</option>
-          <option value="accepted">已接单</option>
-          <option value="on_the_way">出发中</option>
-          <option value="arrived">已到达</option>
-          <option value="in_service">服务中</option>
-          <option value="completed">已完单</option>
+          <option value="paid">待服务方接单</option>
+          <option value="accepted">服务方已接单</option>
+          <option value="on_the_way">服务方出发中</option>
+          <option value="arrived">服务方已到达，待开始服务</option>
+          <option value="in_service">服务进行中</option>
+          <option value="completed">服务已完成</option>
+          <option value="after_sale_processing">订单售后处理中</option>
+          <option value="closed">订单已关闭</option>
         </select>
       </label>
     </header>
@@ -135,7 +138,7 @@ function logout(): void {
         <button v-for="item in filteredItems" :key="item.id" type="button" class="row" @click="openDetail(item.id)">
           <div class="row-head">
             <strong>#{{ item.id }}</strong>
-            <span :class="['tag', getOrderStatusTagType(item.status)]">{{ getOrderStatusLabel(item.status) }}</span>
+            <span :class="['tag', getOrderStatusTagType(item.status)]">{{ getOrderStatusLabel(item) }}</span>
           </div>
           <p>服务项目：{{ item.serviceItemTitle }}</p>
           <p>用户 ID：{{ item.userId }}</p>

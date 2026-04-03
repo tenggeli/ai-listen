@@ -7,7 +7,8 @@ import { AuthSessionStore } from './AuthSessionStore'
 function createApiMock(): ProviderAuthApi {
   return {
     loginMock: vi.fn(),
-    getMe: vi.fn()
+    getMe: vi.fn(),
+    saveProfile: vi.fn()
   }
 }
 

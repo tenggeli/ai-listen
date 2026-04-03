@@ -18,9 +18,9 @@ func NewOrderAdminActionRepository(db *sql.DB) OrderAdminActionRepository {
 func (r OrderAdminActionRepository) Create(ctx context.Context, item app.ActionAudit) error {
 	const insertSQL = `
 INSERT INTO order_admin_action_records(
-  action_id, order_id, scope, action, operator_id, reason, created_at, updated_at
+  action_id, order_id, scope, action, operator_id, reason, status_before, status_after, created_at, updated_at
 ) VALUES(
-  ?, ?, ?, ?, ?, ?, ?, NOW()
+  ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
 )`
 
 	_, err := r.db.ExecContext(
@@ -32,6 +32,8 @@ INSERT INTO order_admin_action_records(
 		item.Action,
 		item.Operator,
 		item.Reason,
+		item.StatusBefore,
+		item.StatusAfter,
 		item.UpdatedAt,
 	)
 	return err
@@ -39,7 +41,7 @@ INSERT INTO order_admin_action_records(
 
 func (r OrderAdminActionRepository) ListByOrderID(ctx context.Context, orderID string) ([]app.ActionAudit, error) {
 	const query = `
-SELECT action_id, order_id, scope, action, operator_id, reason, created_at
+SELECT action_id, order_id, scope, action, operator_id, reason, COALESCE(status_before, ''), COALESCE(status_after, ''), created_at
 FROM order_admin_action_records
 WHERE order_id = ?
 ORDER BY created_at DESC, id DESC`
@@ -60,6 +62,8 @@ ORDER BY created_at DESC, id DESC`
 			&item.Action,
 			&item.Operator,
 			&item.Reason,
+			&item.StatusBefore,
+			&item.StatusAfter,
 			&item.UpdatedAt,
 		); err != nil {
 			return nil, err

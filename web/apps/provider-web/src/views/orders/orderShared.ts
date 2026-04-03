@@ -1,26 +1,10 @@
-import type { ProviderOrder, ProviderOrderStatus } from '../../domain/order/ProviderOrder'
+import { getProviderOrderStatusReason, type ProviderOrder, type ProviderOrderStatus } from '../../domain/order/ProviderOrder'
 
 export type OrderStatusFilter = 'all' | ProviderOrderStatus
 export type ProviderOrderAction = 'accept' | 'depart' | 'arrive' | 'start' | 'complete'
 
-export function getOrderStatusLabel(status: ProviderOrderStatus): string {
-  switch (status) {
-    case 'paid':
-      return '待接单'
-    case 'accepted':
-      return '已接单'
-    case 'on_the_way':
-      return '出发中'
-    case 'arrived':
-      return '已到达'
-    case 'in_service':
-      return '服务中'
-    case 'completed':
-      return '已完单'
-    case 'created':
-    default:
-      return '待支付'
-  }
+export function getOrderStatusLabel(order: Pick<ProviderOrder, 'status' | 'statusReason'>): string {
+  return order.statusReason || getProviderOrderStatusReason(order.status)
 }
 
 export function getOrderStatusTagType(status: ProviderOrderStatus): 'warn' | 'info' | 'success' | 'default' {
@@ -33,6 +17,8 @@ export function getOrderStatusTagType(status: ProviderOrderStatus): 'warn' | 'in
       return 'info'
     case 'in_service':
     case 'completed':
+    case 'after_sale_processing':
+    case 'closed':
       return 'success'
     default:
       return 'default'

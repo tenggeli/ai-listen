@@ -81,28 +81,6 @@ function logout(): void {
   void router.replace('/login')
 }
 
-function statusText(status: string): string {
-  switch (status) {
-    case 'paid':
-      return '待接单'
-    case 'accepted':
-      return '已接单'
-    case 'on_the_way':
-      return '出发中'
-    case 'arrived':
-      return '已到达'
-    case 'in_service':
-      return '服务中'
-    case 'completed':
-      return '已完成'
-    case 'after_sale_processing':
-      return '售后处理中'
-    case 'closed':
-      return '已关闭'
-    default:
-      return status
-  }
-}
 </script>
 
 <template>
@@ -120,14 +98,15 @@ function statusText(status: string): string {
     <section class="filters">
       <select v-model="state.status">
         <option value="">全部状态</option>
-        <option value="paid">paid</option>
-        <option value="accepted">accepted</option>
-        <option value="on_the_way">on_the_way</option>
-        <option value="arrived">arrived</option>
-        <option value="in_service">in_service</option>
-        <option value="completed">completed</option>
-        <option value="after_sale_processing">after_sale_processing</option>
-        <option value="closed">closed</option>
+        <option value="created">待支付（created）</option>
+        <option value="paid">待服务方接单（paid）</option>
+        <option value="accepted">服务方已接单（accepted）</option>
+        <option value="on_the_way">服务方出发中（on_the_way）</option>
+        <option value="arrived">服务方已到达，待开始服务（arrived）</option>
+        <option value="in_service">服务进行中（in_service）</option>
+        <option value="completed">服务已完成（completed）</option>
+        <option value="after_sale_processing">订单售后处理中（after_sale_processing）</option>
+        <option value="closed">订单已关闭（closed）</option>
       </select>
       <input v-model.trim="state.keyword" placeholder="关键词: 订单号/用户/服务方/项目" />
       <button @click="loadOrders">查询</button>
@@ -146,7 +125,7 @@ function statusText(status: string): string {
         >
           <div class="title-row">
             <strong>{{ item.serviceItemTitle }}</strong>
-            <span>{{ statusText(item.status) }}</span>
+            <span>{{ item.statusReason }}</span>
           </div>
           <p>订单号：{{ item.id }}</p>
           <p>用户：{{ item.userId }} · 服务方：{{ item.providerName }}</p>
@@ -156,7 +135,7 @@ function statusText(status: string): string {
 
       <section class="detail-panel" v-if="state.detail">
         <h3>{{ state.detail.order.serviceItemTitle }}</h3>
-        <p>状态：{{ statusText(state.detail.order.status) }}</p>
+        <p>状态：{{ state.detail.order.statusReason }}</p>
         <p>订单号：{{ state.detail.order.id }}</p>
         <p>用户：{{ state.detail.order.userId }}</p>
         <p>服务方：{{ state.detail.order.providerName }}</p>
@@ -173,6 +152,7 @@ function statusText(status: string): string {
             <li v-for="log in state.detail.actionLogs" :key="log.actionId">
               <strong>{{ log.scope }}/{{ log.action }}</strong>
               <span> · {{ log.operator }} · {{ log.reason || '无原因' }} · {{ log.updatedAt }}</span>
+              <span v-if="log.statusAfterReason"> · 状态：{{ log.statusBefore || 'unknown' }} → {{ log.statusAfter }}（{{ log.statusAfterReason }}）</span>
             </li>
           </ul>
         </div>

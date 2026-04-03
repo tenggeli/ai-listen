@@ -14,13 +14,15 @@ type Clock interface {
 }
 
 type ActionAudit struct {
-	ActionID  string
-	OrderID   string
-	Operator  string
-	Reason    string
-	UpdatedAt time.Time
-	Scope     string
-	Action    string
+	ActionID     string
+	OrderID      string
+	Operator     string
+	Reason       string
+	UpdatedAt    time.Time
+	Scope        string
+	Action       string
+	StatusBefore string
+	StatusAfter  string
 }
 
 type ListOrdersInput struct {
@@ -184,6 +186,7 @@ func (u UseCase) ActionOrder(ctx context.Context, input ActionOrderInput) (Actio
 	if err != nil {
 		return ActionOrderOutput{}, err
 	}
+	statusBefore := item.Status
 
 	switch action {
 	case "intervene":
@@ -203,13 +206,15 @@ func (u UseCase) ActionOrder(ctx context.Context, input ActionOrderInput) (Actio
 
 	now := u.clock.Now()
 	audit := ActionAudit{
-		ActionID:  u.idGenerator.NewID("oad"),
-		OrderID:   orderID,
-		Operator:  operator,
-		Reason:    reason,
-		UpdatedAt: now,
-		Scope:     "order",
-		Action:    action,
+		ActionID:     u.idGenerator.NewID("oad"),
+		OrderID:      orderID,
+		Operator:     operator,
+		Reason:       reason,
+		UpdatedAt:    now,
+		Scope:        "order",
+		Action:       action,
+		StatusBefore: statusBefore,
+		StatusAfter:  item.Status,
 	}
 	if err := u.logRepo.Create(ctx, audit); err != nil {
 		return ActionOrderOutput{}, err
@@ -309,13 +314,15 @@ func (u UseCase) ActionComplaint(ctx context.Context, input ActionComplaintInput
 	}
 
 	complaintAudit := ActionAudit{
-		ActionID:  u.idGenerator.NewID("cad"),
-		OrderID:   orderID,
-		Operator:  operator,
-		Reason:    reason,
-		UpdatedAt: u.clock.Now(),
-		Scope:     "complaint",
-		Action:    action,
+		ActionID:     u.idGenerator.NewID("cad"),
+		OrderID:      orderID,
+		Operator:     operator,
+		Reason:       reason,
+		UpdatedAt:    u.clock.Now(),
+		Scope:        "complaint",
+		Action:       action,
+		StatusBefore: orderOutput.Audit.StatusBefore,
+		StatusAfter:  orderOutput.Order.Status,
 	}
 	if err := u.logRepo.Create(ctx, complaintAudit); err != nil {
 		return ActionComplaintOutput{}, err

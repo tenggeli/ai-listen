@@ -1,4 +1,4 @@
-import type { UserOrder } from '../domain/order/UserOrder'
+import { getUserOrderStatusReason, isUserOrderStatus, type UserOrder } from '../domain/order/UserOrder'
 
 export interface OrderApi {
   createOrder(
@@ -91,7 +91,9 @@ export class HttpOrderApi implements OrderApi {
 }
 
 function mapOrder(data: any): UserOrder {
-  const status = String(data.status ?? 'created')
+  const rawStatus = String(data.status ?? 'created')
+  const status = isUserOrderStatus(rawStatus) ? rawStatus : 'created'
+  const statusReasonRaw = String(data.status_reason ?? '').trim()
   return {
     id: String(data.id ?? ''),
     userId: String(data.user_id ?? ''),
@@ -101,17 +103,8 @@ function mapOrder(data: any): UserOrder {
     serviceItemTitle: String(data.service_item_title ?? ''),
     amount: Number(data.amount ?? 0),
     currency: String(data.currency ?? 'CNY'),
-    status:
-      status === 'paid' ||
-      status === 'accepted' ||
-      status === 'on_the_way' ||
-      status === 'arrived' ||
-      status === 'in_service' ||
-      status === 'completed' ||
-      status === 'after_sale_processing' ||
-      status === 'closed'
-        ? status
-        : 'created',
+    status,
+    statusReason: statusReasonRaw || getUserOrderStatusReason(status),
     createdAt: String(data.created_at ?? ''),
     paidAt: data.paid_at ? String(data.paid_at) : null
   }

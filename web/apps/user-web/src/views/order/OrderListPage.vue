@@ -22,29 +22,6 @@ onMounted(() => {
   void loadOrders()
 })
 
-function statusText(status: UserOrder['status']): string {
-  switch (status) {
-    case 'paid':
-      return '待服务方接单'
-    case 'accepted':
-      return '已接单'
-    case 'on_the_way':
-      return '服务方出发中'
-    case 'arrived':
-      return '服务方已到达'
-    case 'in_service':
-      return '服务中'
-    case 'completed':
-      return '已完成'
-    case 'after_sale_processing':
-      return '售后处理中'
-    case 'closed':
-      return '已关闭'
-    default:
-      return '待支付'
-  }
-}
-
 async function loadOrders(): Promise<void> {
   const session = loadSession()
   if (!session) {
@@ -98,7 +75,7 @@ async function loadOrders(): Promise<void> {
           </div>
           <p class="provider">{{ item.providerName }}</p>
           <div class="row meta">
-            <span>{{ statusText(item.status) }}</span>
+            <span>{{ item.statusReason }}</span>
             <span>{{ new Date(item.createdAt).toLocaleString('zh-CN') }}</span>
           </div>
         </article>

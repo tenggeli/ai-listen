@@ -9,6 +9,38 @@ export type UserOrderStatus =
   | 'after_sale_processing'
   | 'closed'
 
+export const USER_ORDER_STATUSES: UserOrderStatus[] = [
+  'created',
+  'paid',
+  'accepted',
+  'on_the_way',
+  'arrived',
+  'in_service',
+  'completed',
+  'after_sale_processing',
+  'closed'
+]
+
+const USER_ORDER_STATUS_REASON_MAP: Record<UserOrderStatus, string> = {
+  created: '待支付',
+  paid: '待服务方接单',
+  accepted: '服务方已接单',
+  on_the_way: '服务方出发中',
+  arrived: '服务方已到达，待开始服务',
+  in_service: '服务进行中',
+  completed: '服务已完成',
+  after_sale_processing: '订单售后处理中',
+  closed: '订单已关闭'
+}
+
+export function isUserOrderStatus(value: string): value is UserOrderStatus {
+  return USER_ORDER_STATUSES.includes(value as UserOrderStatus)
+}
+
+export function getUserOrderStatusReason(status: UserOrderStatus): string {
+  return USER_ORDER_STATUS_REASON_MAP[status]
+}
+
 export interface UserOrder {
   id: string
   userId: string
@@ -19,6 +51,7 @@ export interface UserOrder {
   amount: number
   currency: string
   status: UserOrderStatus
+  statusReason: string
   createdAt: string
   paidAt: string | null
 }

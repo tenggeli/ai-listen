@@ -1,4 +1,4 @@
-import type { ProviderOrder } from '../domain/order/ProviderOrder'
+import { getProviderOrderStatusReason, isProviderOrderStatus, type ProviderOrder } from '../domain/order/ProviderOrder'
 import { ApiError } from './ApiError'
 
 export interface ProviderOrderApi {
@@ -86,7 +86,9 @@ export class HttpProviderOrderApi implements ProviderOrderApi {
 }
 
 function mapOrder(data: any): ProviderOrder {
-  const status = String(data.status ?? 'created')
+  const rawStatus = String(data.status ?? 'created')
+  const status = isProviderOrderStatus(rawStatus) ? rawStatus : 'created'
+  const statusReasonRaw = String(data.status_reason ?? '').trim()
   return {
     id: String(data.id ?? ''),
     userId: String(data.user_id ?? ''),
@@ -96,15 +98,8 @@ function mapOrder(data: any): ProviderOrder {
     serviceItemTitle: String(data.service_item_title ?? ''),
     amount: Number(data.amount ?? 0),
     currency: String(data.currency ?? 'CNY'),
-    status:
-      status === 'paid' ||
-      status === 'accepted' ||
-      status === 'on_the_way' ||
-      status === 'arrived' ||
-      status === 'in_service' ||
-      status === 'completed'
-        ? status
-        : 'created',
+    status,
+    statusReason: statusReasonRaw || getProviderOrderStatusReason(status),
     createdAt: String(data.created_at ?? ''),
     paidAt: data.paid_at ? String(data.paid_at) : null
   }

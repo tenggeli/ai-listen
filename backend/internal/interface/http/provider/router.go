@@ -7,6 +7,11 @@ func RegisterAuthRoutes(mux *http.ServeMux, controller AuthController) {
 	mux.HandleFunc("GET /api/v1/provider/profile", requireProviderAuth(controller.HandleGetMe))
 }
 
+func RegisterProfileRoutes(mux *http.ServeMux, controller ProfileController) {
+	mux.HandleFunc("PUT /api/v1/provider/profile", requireProviderAuth(controller.HandleUpdateProfile))
+	mux.HandleFunc("GET /api/v1/provider/services", requireProviderAuth(controller.HandleListServices))
+}
+
 func RegisterOrderRoutes(mux *http.ServeMux, controller OrderController) {
 	mux.HandleFunc("GET /api/v1/provider/orders", requireProviderAuth(controller.HandleListOrders))
 	mux.HandleFunc("GET /api/v1/provider/orders/{id}", requireProviderAuth(controller.HandleGetOrder))

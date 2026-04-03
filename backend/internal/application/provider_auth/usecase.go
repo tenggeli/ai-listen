@@ -137,3 +137,15 @@ func (r InMemoryRepository) GetByID(_ context.Context, providerID string) (domai
 	}
 	return item, true, nil
 }
+
+func (r InMemoryRepository) UpdateProfile(_ context.Context, providerID string, displayName string, cityCode string) (domain.ProviderAccount, bool, error) {
+	cleanID := strings.TrimSpace(providerID)
+	item, ok := r.byID[cleanID]
+	if !ok {
+		return domain.ProviderAccount{}, false, nil
+	}
+	item.DisplayName = strings.TrimSpace(displayName)
+	item.CityCode = strings.TrimSpace(cityCode)
+	r.byID[cleanID] = item
+	return item, true, nil
+}

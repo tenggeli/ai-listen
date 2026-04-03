@@ -1,0 +1,3 @@
+ALTER TABLE order_admin_action_records
+  ADD COLUMN IF NOT EXISTS status_before VARCHAR(32) NOT NULL DEFAULT '' AFTER reason,
+  ADD COLUMN IF NOT EXISTS status_after VARCHAR(32) NOT NULL DEFAULT '' AFTER status_before;
