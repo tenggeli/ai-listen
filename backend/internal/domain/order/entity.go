@@ -93,9 +93,6 @@ func (o *Order) MarkPaid(now time.Time) error {
 }
 
 func (o *Order) MarkAccepted() error {
-	if o.Status == StatusAccepted {
-		return nil
-	}
 	if o.Status != StatusPaid {
 		return ErrInvalidOrderTransition
 	}
@@ -104,9 +101,6 @@ func (o *Order) MarkAccepted() error {
 }
 
 func (o *Order) MarkOnTheWay() error {
-	if o.Status == StatusOnTheWay {
-		return nil
-	}
 	if o.Status != StatusAccepted {
 		return ErrInvalidOrderTransition
 	}
@@ -115,9 +109,6 @@ func (o *Order) MarkOnTheWay() error {
 }
 
 func (o *Order) MarkArrived() error {
-	if o.Status == StatusArrived {
-		return nil
-	}
 	if o.Status != StatusOnTheWay {
 		return ErrInvalidOrderTransition
 	}
@@ -126,9 +117,6 @@ func (o *Order) MarkArrived() error {
 }
 
 func (o *Order) MarkInService() error {
-	if o.Status == StatusInService {
-		return nil
-	}
 	if o.Status != StatusArrived {
 		return ErrInvalidOrderTransition
 	}
@@ -137,9 +125,6 @@ func (o *Order) MarkInService() error {
 }
 
 func (o *Order) MarkCompleted() error {
-	if o.Status == StatusCompleted {
-		return nil
-	}
 	if o.Status != StatusInService {
 		return ErrInvalidOrderTransition
 	}

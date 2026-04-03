@@ -9,6 +9,7 @@ export interface ProviderOrderApi {
     status?: ProviderOrder['status']
   ): Promise<{ items: ProviderOrder[]; total: number }>
   getOrder(accessToken: string, orderId: string): Promise<ProviderOrder>
+  operate(accessToken: string, orderId: string, action: 'accept' | 'depart' | 'arrive' | 'start' | 'complete'): Promise<string>
 }
 
 export class HttpProviderOrderApi implements ProviderOrderApi {
@@ -51,6 +52,18 @@ export class HttpProviderOrderApi implements ProviderOrderApi {
       throw new ApiError(payload.message || 'load order detail failed', response.status)
     }
     return mapOrder(payload.data)
+  }
+
+  async operate(accessToken: string, orderId: string, action: 'accept' | 'depart' | 'arrive' | 'start' | 'complete'): Promise<string> {
+    const response = await this.fetchWithTimeout(`${this.baseUrl}/orders/${orderId}/${action}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` }
+    })
+    const payload = await response.json()
+    if (!response.ok || payload.code !== 0) {
+      throw new ApiError(payload.message || 'order action failed', response.status)
+    }
+    return String(payload.data?.status ?? '')
   }
 
   private async fetchWithTimeout(input: string, init: RequestInit): Promise<Response> {

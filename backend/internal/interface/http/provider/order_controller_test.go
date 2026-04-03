@@ -96,3 +96,80 @@ func TestProviderRoutes_OrderFlow(t *testing.T) {
 		}
 	}
 }
+
+func TestProviderRoutes_OrderActionConflict(t *testing.T) {
+	orderRepo := memory.NewOrderRepository()
+	clock := aiApp.SystemClock{}
+	idGenerator := aiApp.NewTimestampIDGenerator(clock)
+
+	providerRepo := providerAuthApp.NewInMemoryRepository([]providerAuthDomain.ProviderAccount{
+		{ProviderID: "p_pub_001", Account: "provider", Password: "provider123", DisplayName: "provider", Status: "active", CityCode: "310000"},
+	})
+
+	userCreateOrderUC := orderApp.NewCreateOrderUseCase(orderRepo, idGenerator, clock)
+	userPayOrderUC := orderApp.NewPayOrderMockSuccessUseCase(orderRepo, clock)
+	providerAuthController := NewAuthController(
+		providerAuthApp.NewLoginMockUseCase(providerRepo, clock),
+		providerAuthApp.NewGetCurrentProviderUseCase(providerRepo),
+	)
+	providerOrderController := NewOrderController(
+		orderApp.NewProviderListOrdersUseCase(orderRepo),
+		orderApp.NewProviderGetOrderUseCase(orderRepo),
+		orderApp.NewProviderOperateOrderUseCase(orderRepo),
+	)
+
+	mux := http.NewServeMux()
+	RegisterAuthRoutes(mux, providerAuthController)
+	RegisterOrderRoutes(mux, providerOrderController)
+
+	created, err := userCreateOrderUC.Execute(t.Context(), orderApp.CreateOrderInput{
+		UserID:           "u_1",
+		ProviderID:       "p_pub_001",
+		ProviderName:     "provider",
+		ServiceItemID:    "si_001",
+		ServiceItemTitle: "service",
+		Amount:           99,
+		Currency:         "CNY",
+	})
+	if err != nil {
+		t.Fatalf("create order failed: %v", err)
+	}
+	if _, err = userPayOrderUC.Execute(t.Context(), orderApp.PayOrderMockSuccessInput{UserID: "u_1", OrderID: created.Order.ID}); err != nil {
+		t.Fatalf("pay order failed: %v", err)
+	}
+
+	loginRaw, _ := json.Marshal(map[string]any{"account": "provider", "password": "provider123"})
+	loginReq := httptest.NewRequest(http.MethodPost, "/api/v1/provider/auth/login/mock", bytes.NewReader(loginRaw))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginRec := httptest.NewRecorder()
+	mux.ServeHTTP(loginRec, loginReq)
+	if loginRec.Code != http.StatusOK {
+		t.Fatalf("unexpected login status: %d", loginRec.Code)
+	}
+	var loginEnv Envelope
+	if err := json.Unmarshal(loginRec.Body.Bytes(), &loginEnv); err != nil {
+		t.Fatalf("decode login failed: %v", err)
+	}
+	loginDataRaw, _ := json.Marshal(loginEnv.Data)
+	var loginData LoginMockResponseDTO
+	if err := json.Unmarshal(loginDataRaw, &loginData); err != nil {
+		t.Fatalf("decode login data failed: %v", err)
+	}
+
+	header := "Bearer " + loginData.AccessToken
+	firstReq := httptest.NewRequest(http.MethodPost, "/api/v1/provider/orders/"+created.Order.ID+"/accept", nil)
+	firstReq.Header.Set("Authorization", header)
+	firstRec := httptest.NewRecorder()
+	mux.ServeHTTP(firstRec, firstReq)
+	if firstRec.Code != http.StatusOK {
+		t.Fatalf("unexpected first accept status: %d", firstRec.Code)
+	}
+
+	secondReq := httptest.NewRequest(http.MethodPost, "/api/v1/provider/orders/"+created.Order.ID+"/accept", nil)
+	secondReq.Header.Set("Authorization", header)
+	secondRec := httptest.NewRecorder()
+	mux.ServeHTTP(secondRec, secondReq)
+	if secondRec.Code != http.StatusConflict {
+		t.Fatalf("unexpected second accept status: %d", secondRec.Code)
+	}
+}

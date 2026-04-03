@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ProviderOrder } from '../../domain/order/ProviderOrder'
-import { filterOrdersByStatus, getTotalPages } from './orderShared'
+import { filterOrdersByStatus, getNextOrderAction, getTotalPages } from './orderShared'
 
 const sampleOrders: ProviderOrder[] = [
   {
@@ -48,5 +48,14 @@ describe('order shared helpers', () => {
     expect(getTotalPages(1, 10)).toBe(1)
     expect(getTotalPages(10, 10)).toBe(1)
     expect(getTotalPages(11, 10)).toBe(2)
+  })
+
+  it('returns next executable action by status', () => {
+    expect(getNextOrderAction('paid')).toBe('accept')
+    expect(getNextOrderAction('accepted')).toBe('depart')
+    expect(getNextOrderAction('on_the_way')).toBe('arrive')
+    expect(getNextOrderAction('arrived')).toBe('start')
+    expect(getNextOrderAction('in_service')).toBe('complete')
+    expect(getNextOrderAction('completed')).toBeNull()
   })
 })

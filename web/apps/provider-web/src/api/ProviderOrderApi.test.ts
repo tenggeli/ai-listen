@@ -60,4 +60,50 @@ describe('HttpProviderOrderApi', () => {
       })
     )
   })
+
+  it('calls provider order action endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        code: 0,
+        data: { status: 'accepted' }
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const api = new HttpProviderOrderApi('/api/v1/provider')
+
+    const status = await api.operate('token-1', 'ord-1', 'accept')
+
+    expect(status).toBe('accepted')
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/provider/orders/ord-1/accept',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { Authorization: 'Bearer token-1' }
+      })
+    )
+  })
+
+  it('returns 409 when action transition is invalid', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 409,
+        json: async () => ({
+          code: 409,
+          message: 'invalid order transition',
+          data: {}
+        })
+      })
+    )
+    const api = new HttpProviderOrderApi('/api/v1/provider')
+
+    await expect(api.operate('token-1', 'ord-1', 'accept')).rejects.toEqual(
+      expect.objectContaining<ApiError>({
+        statusCode: 409
+      })
+    )
+  })
 })

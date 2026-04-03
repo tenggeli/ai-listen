@@ -3,6 +3,7 @@ package order
 import (
 	"context"
 	"strings"
+	"sync"
 	"time"
 
 	domain "listen/backend/internal/domain/order"
@@ -276,11 +277,15 @@ func (u ProviderGetOrderUseCase) Execute(ctx context.Context, input ProviderGetO
 }
 
 type ProviderOperateOrderUseCase struct {
-	repo domain.Repository
+	repo      domain.Repository
+	orderLock *sync.Map
 }
 
 func NewProviderOperateOrderUseCase(repo domain.Repository) ProviderOperateOrderUseCase {
-	return ProviderOperateOrderUseCase{repo: repo}
+	return ProviderOperateOrderUseCase{
+		repo:      repo,
+		orderLock: &sync.Map{},
+	}
 }
 
 func (u ProviderOperateOrderUseCase) Execute(ctx context.Context, input ProviderOperateOrderInput) (ProviderOperateOrderOutput, error) {
@@ -290,6 +295,9 @@ func (u ProviderOperateOrderUseCase) Execute(ctx context.Context, input Provider
 	if providerID == "" || orderID == "" || action == "" {
 		return ProviderOperateOrderOutput{}, domain.ErrInvalidInput
 	}
+	lock := u.getOrderLock(orderID)
+	lock.Lock()
+	defer lock.Unlock()
 
 	item, err := u.repo.GetByID(ctx, orderID)
 	if err != nil {
@@ -320,4 +328,16 @@ func (u ProviderOperateOrderUseCase) Execute(ctx context.Context, input Provider
 		return ProviderOperateOrderOutput{}, err
 	}
 	return ProviderOperateOrderOutput{Order: item}, nil
+}
+
+func (u ProviderOperateOrderUseCase) getOrderLock(orderID string) *sync.Mutex {
+	if u.orderLock == nil {
+		u.orderLock = &sync.Map{}
+	}
+	value, _ := u.orderLock.LoadOrStore(orderID, &sync.Mutex{})
+	lock, ok := value.(*sync.Mutex)
+	if !ok {
+		return &sync.Mutex{}
+	}
+	return lock
 }

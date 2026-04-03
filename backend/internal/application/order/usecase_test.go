@@ -2,6 +2,9 @@ package order
 
 import (
 	"context"
+	"errors"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -196,5 +199,65 @@ func TestProviderOrderFlowUseCase(t *testing.T) {
 	}
 	if detail.Order.Status != domain.StatusCompleted {
 		t.Fatalf("unexpected final status: %s", detail.Order.Status)
+	}
+}
+
+func TestProviderOperateOrderUseCase_ConcurrentSubmit(t *testing.T) {
+	repo := memory.NewOrderRepository()
+	clock := fixedClock{now: time.Date(2026, 3, 30, 10, 0, 0, 0, time.UTC)}
+	idGenerator := fixedIDGenerator{id: "ord_001"}
+
+	createUC := NewCreateOrderUseCase(repo, idGenerator, clock)
+	payUC := NewPayOrderMockSuccessUseCase(repo, fixedClock{now: time.Date(2026, 3, 30, 10, 5, 0, 0, time.UTC)})
+	operateUC := NewProviderOperateOrderUseCase(repo)
+
+	created, err := createUC.Execute(context.Background(), CreateOrderInput{
+		UserID:           "u_001",
+		ProviderID:       "p_pub_001",
+		ProviderName:     "provider-a",
+		ServiceItemID:    "si_001",
+		ServiceItemTitle: "service-a",
+		Amount:           99,
+		Currency:         "CNY",
+	})
+	if err != nil {
+		t.Fatalf("create order failed: %v", err)
+	}
+	if _, err = payUC.Execute(context.Background(), PayOrderMockSuccessInput{UserID: "u_001", OrderID: created.Order.ID}); err != nil {
+		t.Fatalf("pay order failed: %v", err)
+	}
+
+	var successCount int32
+	var invalidTransitionCount int32
+	var wg sync.WaitGroup
+	wg.Add(2)
+	start := make(chan struct{})
+	run := func() {
+		defer wg.Done()
+		<-start
+		_, execErr := operateUC.Execute(context.Background(), ProviderOperateOrderInput{
+			ProviderID: "p_pub_001",
+			OrderID:    created.Order.ID,
+			Action:     "accept",
+		})
+		if execErr == nil {
+			atomic.AddInt32(&successCount, 1)
+			return
+		}
+		if errors.Is(execErr, domain.ErrInvalidOrderTransition) {
+			atomic.AddInt32(&invalidTransitionCount, 1)
+		}
+	}
+
+	go run()
+	go run()
+	close(start)
+	wg.Wait()
+
+	if successCount != 1 {
+		t.Fatalf("expected one success, got %d", successCount)
+	}
+	if invalidTransitionCount != 1 {
+		t.Fatalf("expected one invalid transition, got %d", invalidTransitionCount)
 	}
 }

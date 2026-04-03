@@ -164,13 +164,29 @@ function logout(): void {
 
 <style scoped>
 .page {
+  min-height: 100vh;
   padding: 20px;
+  color: #eaf6fb;
+  background:
+    radial-gradient(circle at top left, rgba(31, 109, 141, 0.2), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(21, 59, 93, 0.22), transparent 32%),
+    #06111b;
 }
 .top-nav {
   margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.top-nav a {
+  color: #8bd7ff;
+}
+.top-nav button {
+  border: 1px solid rgba(148, 217, 255, 0.24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #eaf6fb;
+  padding: 8px 12px;
 }
 .header {
   margin-bottom: 12px;
@@ -184,20 +200,22 @@ function logout(): void {
 }
 .header p {
   margin: 8px 0 0;
-  color: #475569;
+  color: rgba(234, 246, 251, 0.66);
 }
 .filter {
   display: grid;
   gap: 6px;
 }
 .filter span {
-  color: #475569;
+  color: rgba(234, 246, 251, 0.72);
   font-size: 13px;
 }
 .filter select {
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
+  border: 1px solid rgba(148, 217, 255, 0.24);
+  border-radius: 14px;
   padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #eaf6fb;
 }
 .list {
   display: grid;
@@ -205,10 +223,11 @@ function logout(): void {
 }
 .row {
   text-align: left;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: #fff;
+  border: 1px solid rgba(148, 217, 255, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.045);
   padding: 12px;
+  color: #eaf6fb;
 }
 .row-head {
   display: flex;
@@ -218,7 +237,7 @@ function logout(): void {
 }
 .row p {
   margin: 8px 0 0;
-  color: #334155;
+  color: rgba(234, 246, 251, 0.78);
 }
 .tag {
   border-radius: 999px;
@@ -226,20 +245,20 @@ function logout(): void {
   font-size: 12px;
 }
 .tag.default {
-  background: #e2e8f0;
-  color: #1e293b;
+  background: rgba(255, 255, 255, 0.12);
+  color: #dceaf2;
 }
 .tag.warn {
-  background: #fff7ed;
-  color: #9a3412;
+  background: rgba(255, 189, 89, 0.16);
+  color: #ffd278;
 }
 .tag.info {
-  background: #e0f2fe;
-  color: #075985;
+  background: rgba(115, 213, 255, 0.16);
+  color: #8bd7ff;
 }
 .tag.success {
-  background: #dcfce7;
-  color: #166534;
+  background: rgba(91, 212, 154, 0.16);
+  color: #7df0bc;
 }
 .pager {
   margin-top: 16px;
@@ -249,26 +268,30 @@ function logout(): void {
   gap: 12px;
 }
 .pager button {
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border: 1px solid rgba(148, 217, 255, 0.24);
+  border-radius: 10px;
   padding: 8px 12px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.04);
+  color: #eaf6fb;
+}
+.pager span {
+  color: rgba(234, 246, 251, 0.78);
 }
 .empty {
-  border: 1px dashed #cbd5e1;
-  border-radius: 12px;
+  border: 1px dashed rgba(148, 217, 255, 0.28);
+  border-radius: 16px;
   padding: 20px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.04);
 }
 .empty p {
   margin: 0;
 }
 .sub {
   margin-top: 8px !important;
-  color: #64748b;
+  color: rgba(234, 246, 251, 0.56);
 }
 .error {
-  color: #b91c1c;
+  color: #ffd278;
 }
 @media (max-width: 900px) {
   .header {
