@@ -187,12 +187,13 @@ func (u UseCase) ActionOrder(ctx context.Context, input ActionOrderInput) (Actio
 		return ActionOrderOutput{}, err
 	}
 	statusBefore := item.Status
+	now := u.clock.Now()
 
 	switch action {
 	case "intervene":
-		err = item.MarkAfterSaleProcessing()
+		err = item.MarkAfterSaleProcessing(now, reason)
 	case "close":
-		err = item.MarkClosedByAdmin()
+		err = item.MarkClosedByAdmin(now, reason)
 	default:
 		return ActionOrderOutput{}, orderDomain.ErrInvalidInput
 	}
@@ -204,7 +205,6 @@ func (u UseCase) ActionOrder(ctx context.Context, input ActionOrderInput) (Actio
 		return ActionOrderOutput{}, err
 	}
 
-	now := u.clock.Now()
 	audit := ActionAudit{
 		ActionID:     u.idGenerator.NewID("oad"),
 		OrderID:      orderID,

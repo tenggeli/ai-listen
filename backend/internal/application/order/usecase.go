@@ -279,12 +279,24 @@ func (u ProviderGetOrderUseCase) Execute(ctx context.Context, input ProviderGetO
 type ProviderOperateOrderUseCase struct {
 	repo      domain.Repository
 	orderLock *sync.Map
+	clock     Clock
 }
 
-func NewProviderOperateOrderUseCase(repo domain.Repository) ProviderOperateOrderUseCase {
+type systemClock struct{}
+
+func (systemClock) Now() time.Time {
+	return time.Now()
+}
+
+func NewProviderOperateOrderUseCase(repo domain.Repository, clocks ...Clock) ProviderOperateOrderUseCase {
+	clock := Clock(systemClock{})
+	if len(clocks) > 0 && clocks[0] != nil {
+		clock = clocks[0]
+	}
 	return ProviderOperateOrderUseCase{
 		repo:      repo,
 		orderLock: &sync.Map{},
+		clock:     clock,
 	}
 }
 
@@ -309,15 +321,15 @@ func (u ProviderOperateOrderUseCase) Execute(ctx context.Context, input Provider
 
 	switch action {
 	case "accept":
-		err = item.MarkAccepted()
+		err = item.MarkAccepted(u.clock.Now())
 	case "depart":
-		err = item.MarkOnTheWay()
+		err = item.MarkOnTheWay(u.clock.Now())
 	case "arrive":
-		err = item.MarkArrived()
+		err = item.MarkArrived(u.clock.Now())
 	case "start":
-		err = item.MarkInService()
+		err = item.MarkInService(u.clock.Now())
 	case "complete":
-		err = item.MarkCompleted()
+		err = item.MarkCompleted(u.clock.Now())
 	default:
 		return ProviderOperateOrderOutput{}, domain.ErrInvalidInput
 	}

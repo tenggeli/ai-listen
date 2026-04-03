@@ -157,6 +157,10 @@ func cloneOrder(item domain.Order) domain.Order {
 		t := *item.PaidAt
 		cloned.PaidAt = &t
 	}
+	if item.StatusUpdatedAt != nil {
+		t := *item.StatusUpdatedAt
+		cloned.StatusUpdatedAt = &t
+	}
 	return cloned
 }
 

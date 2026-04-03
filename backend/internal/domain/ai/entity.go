@@ -2,6 +2,7 @@ package ai
 
 import (
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -110,10 +111,11 @@ func NewSession(id string, userID string, sceneType string) (Session, error) {
 }
 
 func (s *Session) AppendMessage(senderType string, content string, now time.Time) error {
-	if senderType == "" || content == "" {
+	trimmed := strings.TrimSpace(content)
+	if senderType == "" || trimmed == "" {
 		return ErrInvalidInput
 	}
-	message := Message{SenderType: senderType, Content: content, CreatedAt: now}
+	message := Message{SenderType: senderType, Content: trimmed, CreatedAt: now}
 	s.Messages = append(s.Messages, message)
 	s.LastMessageAt = now
 	return nil

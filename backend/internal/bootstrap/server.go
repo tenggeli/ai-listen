@@ -45,6 +45,7 @@ func NewServer() Server {
 	idGenerator := aiApp.NewTimestampIDGenerator(clock)
 	homeOverviewService := infraAi.NewMockHomeOverviewService()
 	matchService := infraAi.NewMockMatchService()
+	replyService := aiApp.NewMockReplyService()
 	soundPageService := infraAudio.NewMockSoundPageService()
 	quotaRepo := memory.NewMatchQuotaRepository()
 	sessionRepo := memory.NewSessionRepository()
@@ -119,7 +120,7 @@ func NewServer() Server {
 				aiApp.NewSubmitMatchUseCase(mysqlQuotaRepo, matchService, clock),
 				aiApp.NewCreateAiSessionUseCase(mysqlSessionRepo, idGenerator),
 				aiApp.NewGetAiSessionUseCase(mysqlSessionRepo),
-				aiApp.NewAppendAiMessageUseCase(mysqlSessionRepo, clock),
+				aiApp.NewAppendAiMessageUseCase(mysqlSessionRepo, replyService, clock),
 			)
 			adminController := adminHTTP.NewProviderController(
 				providerApp.NewListReviewProvidersUseCase(mysqlProviderRepo),
@@ -219,7 +220,7 @@ func NewServer() Server {
 		aiApp.NewSubmitMatchUseCase(quotaRepo, matchService, clock),
 		aiApp.NewCreateAiSessionUseCase(sessionRepo, idGenerator),
 		aiApp.NewGetAiSessionUseCase(sessionRepo),
-		aiApp.NewAppendAiMessageUseCase(sessionRepo, clock),
+		aiApp.NewAppendAiMessageUseCase(sessionRepo, replyService, clock),
 	)
 	adminController := adminHTTP.NewProviderController(
 		providerApp.NewListReviewProvidersUseCase(providerRepo),

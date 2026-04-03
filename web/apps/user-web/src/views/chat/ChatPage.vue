@@ -84,6 +84,7 @@ function onUseQuickReply(reply: string) {
           </button>
         </div>
       </div>
+      <ChatTypingIndicator v-else-if="vm.state.sendState === PageLoadState.Loading" />
 
       <div v-if="vm.state.sessionState === PageLoadState.Success" class="message-list">
         <ChatMessageBubble
@@ -129,7 +130,8 @@ function onUseQuickReply(reply: string) {
       </div>
       <p v-if="vm.state.sendState === PageLoadState.Empty" class="footer-tips">请输入内容后再发送。</p>
       <p v-else-if="vm.state.sendState === PageLoadState.Error" class="footer-tips error">{{ vm.state.errorMessage }}</p>
-      <p v-else-if="vm.state.sendState === PageLoadState.Success" class="footer-tips">消息已送达。</p>
+      <p v-else-if="vm.state.sendState === PageLoadState.Success" class="footer-tips">listen 已回复。</p>
+      <p v-else-if="vm.state.sendState === PageLoadState.Loading" class="footer-tips">listen 正在回复...</p>
       <p v-else class="footer-tips">按 Enter 可直接发送，Shift + Enter 换行。</p>
     </footer>
   </main>

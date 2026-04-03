@@ -2,7 +2,10 @@ package ai
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
+	"sync"
 	"time"
 
 	domain "listen/backend/internal/domain/ai"
@@ -202,14 +205,34 @@ func (u GetAiSessionUseCase) Execute(ctx context.Context, input GetSessionInput)
 
 type AppendAiMessageUseCase struct {
 	sessionRepo domain.SessionRepository
+	replySvc    domain.ReplyService
 	clock       Clock
+	replyCfg    replyConfig
+	lockPool    *sessionLockPool
 }
 
-func NewAppendAiMessageUseCase(sessionRepo domain.SessionRepository, clock Clock) AppendAiMessageUseCase {
-	return AppendAiMessageUseCase{sessionRepo: sessionRepo, clock: clock}
+type replyConfig struct {
+	timeout    time.Duration
+	maxRetries int
+}
+
+func NewAppendAiMessageUseCase(sessionRepo domain.SessionRepository, replySvc domain.ReplyService, clock Clock) AppendAiMessageUseCase {
+	return AppendAiMessageUseCase{
+		sessionRepo: sessionRepo,
+		replySvc:    replySvc,
+		clock:       clock,
+		replyCfg: replyConfig{
+			timeout:    800 * time.Millisecond,
+			maxRetries: 2,
+		},
+		lockPool: newSessionLockPool(),
+	}
 }
 
 func (u AppendAiMessageUseCase) Execute(ctx context.Context, input AppendMessageInput) (AppendMessageOutput, error) {
+	unlock := u.lockPool.Lock(input.SessionID)
+	defer unlock()
+
 	session, err := u.sessionRepo.GetByID(ctx, input.SessionID)
 	if err != nil {
 		return AppendMessageOutput{}, err
@@ -217,10 +240,112 @@ func (u AppendAiMessageUseCase) Execute(ctx context.Context, input AppendMessage
 	if err := session.AppendMessage(input.SenderType, input.ContentText, u.clock.Now()); err != nil {
 		return AppendMessageOutput{}, err
 	}
+
+	if input.SenderType == "user" {
+		reply, err := u.generateReplyWithRetry(ctx, session, input.ContentText)
+		if err != nil {
+			reply = buildFallbackReply(input.ContentText)
+		}
+		if err := session.AppendMessage("assistant", reply, u.clock.Now()); err != nil {
+			return AppendMessageOutput{}, err
+		}
+	}
+
 	if err := u.sessionRepo.Save(ctx, session); err != nil {
 		return AppendMessageOutput{}, err
 	}
 	return AppendMessageOutput{Session: session}, nil
+}
+
+func (u AppendAiMessageUseCase) generateReplyWithRetry(ctx context.Context, session domain.Session, userMessage string) (string, error) {
+	if u.replySvc == nil {
+		return "", errors.New("reply service is nil")
+	}
+
+	var lastErr error
+	for attempt := 0; attempt <= u.replyCfg.maxRetries; attempt++ {
+		attemptCtx, cancel := context.WithTimeout(ctx, u.replyCfg.timeout)
+		reply, err := u.replySvc.GenerateReply(attemptCtx, session, userMessage)
+		cancel()
+		if err == nil {
+			trimmed := strings.TrimSpace(reply)
+			if trimmed != "" {
+				return trimmed, nil
+			}
+			err = domain.ErrInvalidInput
+		}
+		lastErr = err
+	}
+
+	if lastErr == nil {
+		lastErr = domain.ErrInvalidInput
+	}
+	return "", lastErr
+}
+
+type sessionLockPool struct {
+	mu    sync.Mutex
+	locks map[string]*sessionRefLock
+}
+
+type sessionRefLock struct {
+	mu   sync.Mutex
+	refs int
+}
+
+func newSessionLockPool() *sessionLockPool {
+	return &sessionLockPool{locks: make(map[string]*sessionRefLock)}
+}
+
+func (p *sessionLockPool) Lock(sessionID string) func() {
+	key := sessionID
+	if key == "" {
+		key = "_empty_session"
+	}
+
+	p.mu.Lock()
+	ref, ok := p.locks[key]
+	if !ok {
+		ref = &sessionRefLock{}
+		p.locks[key] = ref
+	}
+	ref.refs++
+	p.mu.Unlock()
+
+	ref.mu.Lock()
+	return func() {
+		ref.mu.Unlock()
+		p.mu.Lock()
+		ref.refs--
+		if ref.refs == 0 {
+			delete(p.locks, key)
+		}
+		p.mu.Unlock()
+	}
+}
+
+type MockReplyService struct{}
+
+func NewMockReplyService() MockReplyService {
+	return MockReplyService{}
+}
+
+func (MockReplyService) GenerateReply(_ context.Context, _ domain.Session, userMessage string) (string, error) {
+	content := strings.TrimSpace(userMessage)
+	switch {
+	case strings.Contains(content, "压力"), strings.Contains(content, "累"):
+		return "听起来你已经扛了很久。先不用急着解决全部问题，我们可以先把最难受的那一刻说出来。", nil
+	case strings.Contains(content, "睡"):
+		return "睡不着往往不是你不够努力，而是情绪还没被放下。你愿意和我说说，今晚最卡在心里的事吗？", nil
+	case strings.Contains(content, "孤单"), strings.Contains(content, "说说话"):
+		return "那种想找个人说话的瞬间很真实，我在。你想到哪就说到哪，我们慢慢来。", nil
+	default:
+		return "我听见你了。现在不用组织得很完整，先从你最想说的一句开始就好。", nil
+	}
+}
+
+func buildFallbackReply(_ string) string {
+	return "我在这里，已经收到你的消息。刚刚有点忙乱，但不会离开。你愿意再多说一点吗？"
 }
 
 type SystemClock struct{}

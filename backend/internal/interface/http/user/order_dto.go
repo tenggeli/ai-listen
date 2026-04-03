@@ -10,16 +10,18 @@ type CreateOrderRequestDTO struct {
 }
 
 type OrderResponseDTO struct {
-	ID               string  `json:"id"`
-	UserID           string  `json:"user_id"`
-	ProviderID       string  `json:"provider_id"`
-	ProviderName     string  `json:"provider_name"`
-	ServiceItemID    string  `json:"service_item_id"`
-	ServiceItemTitle string  `json:"service_item_title"`
-	Amount           int     `json:"amount"`
-	Currency         string  `json:"currency"`
-	Status           string  `json:"status"`
-	StatusReason     string  `json:"status_reason"`
-	CreatedAt        string  `json:"created_at"`
-	PaidAt           *string `json:"paid_at,omitempty"`
+	ID                 string  `json:"id"`
+	UserID             string  `json:"user_id"`
+	ProviderID         string  `json:"provider_id"`
+	ProviderName       string  `json:"provider_name"`
+	ServiceItemID      string  `json:"service_item_id"`
+	ServiceItemTitle   string  `json:"service_item_title"`
+	Amount             int     `json:"amount"`
+	Currency           string  `json:"currency"`
+	Status             string  `json:"status"`
+	StatusReason       string  `json:"status_reason"`
+	StatusActionReason string  `json:"status_action_reason"`
+	StatusUpdatedAt    *string `json:"status_updated_at,omitempty"`
+	CreatedAt          string  `json:"created_at"`
+	PaidAt             *string `json:"paid_at,omitempty"`
 }

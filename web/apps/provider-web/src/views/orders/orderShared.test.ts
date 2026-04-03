@@ -14,6 +14,8 @@ const sampleOrders: ProviderOrder[] = [
     currency: 'CNY',
     status: 'paid',
     statusReason: '待接单',
+    statusActionReason: '',
+    statusUpdatedAt: null,
     createdAt: '2026-04-01T10:00:00Z',
     paidAt: '2026-04-01T10:05:00Z'
   },
@@ -28,6 +30,8 @@ const sampleOrders: ProviderOrder[] = [
     currency: 'CNY',
     status: 'completed',
     statusReason: '已完单',
+    statusActionReason: '',
+    statusUpdatedAt: null,
     createdAt: '2026-04-01T11:00:00Z',
     paidAt: '2026-04-01T11:05:00Z'
   }

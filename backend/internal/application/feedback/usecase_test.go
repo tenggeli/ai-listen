@@ -8,6 +8,7 @@ import (
 	aiApp "listen/backend/internal/application/ai"
 	orderApp "listen/backend/internal/application/order"
 	feedbackDomain "listen/backend/internal/domain/feedback"
+	orderDomain "listen/backend/internal/domain/order"
 	memory "listen/backend/internal/infrastructure/persistence/memory"
 )
 
@@ -123,6 +124,62 @@ func TestSubmitOrderFeedbackUseCase_RejectDuplicate(t *testing.T) {
 	}
 	if err != feedbackDomain.ErrFeedbackSubmitted {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestSubmitOrderFeedbackUseCase_ComplaintMovesOrderToAfterSale(t *testing.T) {
+	orderRepo := memory.NewOrderRepository()
+	feedbackRepo := memory.NewFeedbackRepository()
+	idGenerator := fixedIDGenerator{id: "fixed_id"}
+	clock := fixedClock{now: time.Date(2026, 4, 4, 10, 0, 0, 0, time.UTC)}
+
+	createOrderUC := orderApp.NewCreateOrderUseCase(orderRepo, idGenerator, clock)
+	payOrderUC := orderApp.NewPayOrderMockSuccessUseCase(orderRepo, clock)
+	submitUC := NewSubmitOrderFeedbackUseCase(feedbackRepo, orderRepo, idGenerator, clock)
+
+	createdOrder, err := createOrderUC.Execute(context.Background(), orderApp.CreateOrderInput{
+		UserID:           "u_001",
+		ProviderID:       "p_001",
+		ProviderName:     "provider-a",
+		ServiceItemID:    "si_001",
+		ServiceItemTitle: "service-a",
+		Amount:           99,
+		Currency:         "CNY",
+	})
+	if err != nil {
+		t.Fatalf("create order failed: %v", err)
+	}
+	if _, err := payOrderUC.Execute(context.Background(), orderApp.PayOrderMockSuccessInput{
+		UserID:  "u_001",
+		OrderID: createdOrder.Order.ID,
+	}); err != nil {
+		t.Fatalf("pay order failed: %v", err)
+	}
+
+	if _, err := submitUC.Execute(context.Background(), SubmitFeedbackInput{
+		UserID:           "u_001",
+		OrderID:          createdOrder.Order.ID,
+		RatingScore:      8,
+		ReviewTags:       []string{"需介入"},
+		ReviewContent:    "有争议",
+		ComplaintReason:  "服务内容与描述不符",
+		ComplaintContent: "希望平台处理",
+	}); err != nil {
+		t.Fatalf("submit complaint feedback failed: %v", err)
+	}
+
+	orderItem, err := orderRepo.GetByID(context.Background(), createdOrder.Order.ID)
+	if err != nil {
+		t.Fatalf("get order failed: %v", err)
+	}
+	if orderItem.Status != orderDomain.StatusAfterSale {
+		t.Fatalf("expected after sale status, got %s", orderItem.Status)
+	}
+	if orderItem.StatusActionReason != "用户发起投诉" {
+		t.Fatalf("expected complaint reason mark, got %s", orderItem.StatusActionReason)
+	}
+	if orderItem.StatusUpdatedAt == nil {
+		t.Fatalf("expected status updated at")
 	}
 }
 

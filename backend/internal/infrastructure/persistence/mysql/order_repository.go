@@ -22,9 +22,9 @@ func (r OrderRepository) Create(ctx context.Context, order domain.Order) error {
 	const insertSQL = `
 INSERT INTO order_records(
   order_id, user_id, provider_id, provider_name, service_item_id, service_item_title,
-  amount, currency, status, created_at, paid_at, updated_at
+  amount, currency, status, status_action_reason, status_updated_at, created_at, paid_at, updated_at
 ) VALUES(
-  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
+  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
 )`
 
 	_, err := r.db.ExecContext(
@@ -39,6 +39,8 @@ INSERT INTO order_records(
 		order.Amount,
 		order.Currency,
 		order.Status,
+		order.StatusActionReason,
+		nullableStatusUpdatedAt(order.StatusUpdatedAt),
 		order.CreatedAt,
 		nullablePaidAt(order.PaidAt),
 	)
@@ -48,7 +50,7 @@ INSERT INTO order_records(
 func (r OrderRepository) GetByID(ctx context.Context, orderID string) (domain.Order, error) {
 	const query = `
 SELECT order_id, user_id, provider_id, provider_name, service_item_id, service_item_title,
-       amount, currency, status, created_at, paid_at
+       amount, currency, status, status_action_reason, status_updated_at, created_at, paid_at
 FROM order_records
 WHERE order_id = ?
 LIMIT 1`
@@ -74,7 +76,7 @@ func (r OrderRepository) ListByUser(ctx context.Context, query domain.ListQuery)
 
 	const listSQL = `
 SELECT order_id, user_id, provider_id, provider_name, service_item_id, service_item_title,
-       amount, currency, status, created_at, paid_at
+       amount, currency, status, status_action_reason, status_updated_at, created_at, paid_at
 FROM order_records
 WHERE user_id = ?
 ORDER BY created_at DESC, id DESC
@@ -111,7 +113,7 @@ func (r OrderRepository) ListByProvider(ctx context.Context, query domain.Provid
 
 	const listSQL = `
 SELECT order_id, user_id, provider_id, provider_name, service_item_id, service_item_title,
-       amount, currency, status, created_at, paid_at
+       amount, currency, status, status_action_reason, status_updated_at, created_at, paid_at
 FROM order_records
 WHERE provider_id = ?
 ORDER BY created_at DESC, id DESC
@@ -160,7 +162,7 @@ func (r OrderRepository) ListAll(ctx context.Context, query domain.AdminListQuer
 
 	listSQL := fmt.Sprintf(`
 SELECT order_id, user_id, provider_id, provider_name, service_item_id, service_item_title,
-       amount, currency, status, created_at, paid_at
+       amount, currency, status, status_action_reason, status_updated_at, created_at, paid_at
 FROM order_records
 %s
 ORDER BY created_at DESC, id DESC
@@ -192,9 +194,19 @@ func (r OrderRepository) Save(ctx context.Context, order domain.Order) error {
 	const updateSQL = `
 UPDATE order_records
 SET status = ?, paid_at = ?, updated_at = NOW()
+    , status_action_reason = ?
+    , status_updated_at = ?
 WHERE order_id = ?`
 
-	result, err := r.db.ExecContext(ctx, updateSQL, order.Status, nullablePaidAt(order.PaidAt), order.ID)
+	result, err := r.db.ExecContext(
+		ctx,
+		updateSQL,
+		order.Status,
+		nullablePaidAt(order.PaidAt),
+		order.StatusActionReason,
+		nullableStatusUpdatedAt(order.StatusUpdatedAt),
+		order.ID,
+	)
 	if err != nil {
 		return err
 	}
@@ -215,6 +227,7 @@ type scanner interface {
 func scanOrder(s scanner) (domain.Order, error) {
 	var item domain.Order
 	var paidAt sql.NullTime
+	var statusUpdatedAt sql.NullTime
 	err := s.Scan(
 		&item.ID,
 		&item.UserID,
@@ -225,6 +238,8 @@ func scanOrder(s scanner) (domain.Order, error) {
 		&item.Amount,
 		&item.Currency,
 		&item.Status,
+		&item.StatusActionReason,
+		&statusUpdatedAt,
 		&item.CreatedAt,
 		&paidAt,
 	)
@@ -232,10 +247,18 @@ func scanOrder(s scanner) (domain.Order, error) {
 		return domain.Order{}, err
 	}
 	item.PaidAt = nullTimePtr(paidAt)
+	item.StatusUpdatedAt = nullTimePtr(statusUpdatedAt)
 	return item, nil
 }
 
 func nullablePaidAt(value *time.Time) any {
+	if value == nil {
+		return nil
+	}
+	return *value
+}
+
+func nullableStatusUpdatedAt(value *time.Time) any {
 	if value == nil {
 		return nil
 	}

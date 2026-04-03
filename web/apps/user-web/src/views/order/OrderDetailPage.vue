@@ -75,6 +75,8 @@ async function loadOrder(): Promise<void> {
         <p class="sub">当前订单已接入真实订单接口。</p>
         <div class="line"><span>订单号</span><strong>{{ state.order.id }}</strong></div>
         <div class="line"><span>状态</span><strong>{{ statusText }}</strong></div>
+        <div class="line" v-if="state.order.statusActionReason"><span>状态原因</span><strong>{{ state.order.statusActionReason }}</strong></div>
+        <div class="line" v-if="state.order.statusUpdatedAt"><span>状态时间</span><strong>{{ new Date(state.order.statusUpdatedAt).toLocaleString('zh-CN') }}</strong></div>
         <div class="line"><span>服务方</span><strong>{{ state.order.providerName }}</strong></div>
         <div class="line"><span>服务项目</span><strong>{{ state.order.serviceItemTitle }}</strong></div>
         <div class="line total"><span>支付金额</span><strong>¥{{ state.order.amount }}</strong></div>

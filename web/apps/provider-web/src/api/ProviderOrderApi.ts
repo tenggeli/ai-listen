@@ -100,6 +100,8 @@ function mapOrder(data: any): ProviderOrder {
     currency: String(data.currency ?? 'CNY'),
     status,
     statusReason: statusReasonRaw || getProviderOrderStatusReason(status),
+    statusActionReason: String(data.status_action_reason ?? ''),
+    statusUpdatedAt: data.status_updated_at ? String(data.status_updated_at) : null,
     createdAt: String(data.created_at ?? ''),
     paidAt: data.paid_at ? String(data.paid_at) : null
   }

@@ -99,9 +99,11 @@ func (c OrderController) handleAction(w http.ResponseWriter, r *http.Request, ac
 	}
 
 	writeJSON(w, http.StatusOK, OrderStatusActionResponseDTO{
-		ID:           output.Order.ID,
-		Status:       output.Order.Status,
-		StatusReason: domain.StatusReason(output.Order.Status),
+		ID:                 output.Order.ID,
+		Status:             output.Order.Status,
+		StatusReason:       domain.StatusReasonByAction(output.Order.Status, output.Order.StatusActionReason),
+		StatusActionReason: output.Order.StatusActionReason,
+		StatusUpdatedAt:    formatRFC3339Ptr(output.Order.StatusUpdatedAt),
 	})
 }
 
@@ -112,19 +114,29 @@ func buildOrderDTO(item domain.Order) map[string]any {
 		paidAt = &formatted
 	}
 	return map[string]any{
-		"id":                 item.ID,
-		"user_id":            item.UserID,
-		"provider_id":        item.ProviderID,
-		"provider_name":      item.ProviderName,
-		"service_item_id":    item.ServiceItemID,
-		"service_item_title": item.ServiceItemTitle,
-		"amount":             item.Amount,
-		"currency":           item.Currency,
-		"status":             item.Status,
-		"status_reason":      domain.StatusReason(item.Status),
-		"created_at":         item.CreatedAt.Format(time.RFC3339),
-		"paid_at":            paidAt,
+		"id":                   item.ID,
+		"user_id":              item.UserID,
+		"provider_id":          item.ProviderID,
+		"provider_name":        item.ProviderName,
+		"service_item_id":      item.ServiceItemID,
+		"service_item_title":   item.ServiceItemTitle,
+		"amount":               item.Amount,
+		"currency":             item.Currency,
+		"status":               item.Status,
+		"status_reason":        domain.StatusReasonByAction(item.Status, item.StatusActionReason),
+		"status_action_reason": item.StatusActionReason,
+		"status_updated_at":    formatRFC3339Ptr(item.StatusUpdatedAt),
+		"created_at":           item.CreatedAt.Format(time.RFC3339),
+		"paid_at":              paidAt,
 	}
+}
+
+func formatRFC3339Ptr(value *time.Time) *string {
+	if value == nil {
+		return nil
+	}
+	formatted := value.Format(time.RFC3339)
+	return &formatted
 }
 
 func writeOrderError(w http.ResponseWriter, err error) {

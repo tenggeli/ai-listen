@@ -115,23 +115,30 @@ func (c OrderController) HandlePayMockSuccess(w http.ResponseWriter, r *http.Req
 
 func buildOrderResponse(item domain.Order) OrderResponseDTO {
 	var paidAt *string
+	var statusUpdatedAt *string
 	if item.PaidAt != nil {
 		formatted := item.PaidAt.Format(time.RFC3339)
 		paidAt = &formatted
 	}
+	if item.StatusUpdatedAt != nil {
+		formatted := item.StatusUpdatedAt.Format(time.RFC3339)
+		statusUpdatedAt = &formatted
+	}
 	return OrderResponseDTO{
-		ID:               item.ID,
-		UserID:           item.UserID,
-		ProviderID:       item.ProviderID,
-		ProviderName:     item.ProviderName,
-		ServiceItemID:    item.ServiceItemID,
-		ServiceItemTitle: item.ServiceItemTitle,
-		Amount:           item.Amount,
-		Currency:         item.Currency,
-		Status:           item.Status,
-		StatusReason:     domain.StatusReason(item.Status),
-		CreatedAt:        item.CreatedAt.Format(time.RFC3339),
-		PaidAt:           paidAt,
+		ID:                 item.ID,
+		UserID:             item.UserID,
+		ProviderID:         item.ProviderID,
+		ProviderName:       item.ProviderName,
+		ServiceItemID:      item.ServiceItemID,
+		ServiceItemTitle:   item.ServiceItemTitle,
+		Amount:             item.Amount,
+		Currency:           item.Currency,
+		Status:             item.Status,
+		StatusReason:       domain.StatusReasonByAction(item.Status, item.StatusActionReason),
+		StatusActionReason: item.StatusActionReason,
+		StatusUpdatedAt:    statusUpdatedAt,
+		CreatedAt:          item.CreatedAt.Format(time.RFC3339),
+		PaidAt:             paidAt,
 	}
 }
 

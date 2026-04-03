@@ -109,6 +109,8 @@ function logout(): void {
       <p><span>用户 ID</span>{{ state.order.userId }}</p>
       <p><span>服务方</span>{{ state.order.providerName }}</p>
       <p><span>订单金额</span>¥{{ state.order.amount }} {{ state.order.currency }}</p>
+      <p v-if="state.order.statusActionReason"><span>状态原因</span>{{ state.order.statusActionReason }}</p>
+      <p v-if="state.order.statusUpdatedAt"><span>状态时间</span>{{ formatOrderTime(state.order.statusUpdatedAt) }}</p>
       <p><span>创建时间</span>{{ formatOrderTime(state.order.createdAt) }}</p>
       <p><span>支付时间</span>{{ formatOrderTime(state.order.paidAt) }}</p>
       <div class="action-block">

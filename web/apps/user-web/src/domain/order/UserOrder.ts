@@ -52,6 +52,8 @@ export interface UserOrder {
   currency: string
   status: UserOrderStatus
   statusReason: string
+  statusActionReason: string
+  statusUpdatedAt: string | null
   createdAt: string
   paidAt: string | null
 }

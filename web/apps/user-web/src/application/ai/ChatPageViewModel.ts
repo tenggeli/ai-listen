@@ -46,6 +46,10 @@ export class ChatPageViewModel {
   }
 
   async submitMessage(): Promise<void> {
+    if (this.state.sendState === PageLoadState.Loading) {
+      return
+    }
+
     const content = this.state.draft.trim()
     if (!content) {
       this.state.sendState = PageLoadState.Empty
@@ -65,10 +69,11 @@ export class ChatPageViewModel {
       await this.api.appendMessage(this.state.sessionId, 'user', content)
       this.state.draft = ''
       await this.reloadSession()
+      this.state.errorMessage = ''
       this.state.sendState = PageLoadState.Success
     } catch (error) {
       this.state.sendState = PageLoadState.Error
-      this.state.errorMessage = error instanceof Error ? error.message : '消息发送失败'
+      this.state.errorMessage = error instanceof Error ? error.message : '消息发送失败，请稍后重试'
     }
   }
 

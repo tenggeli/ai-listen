@@ -52,6 +52,8 @@ export interface ProviderOrder {
   currency: string
   status: ProviderOrderStatus
   statusReason: string
+  statusActionReason: string
+  statusUpdatedAt: string | null
   createdAt: string
   paidAt: string | null
 }

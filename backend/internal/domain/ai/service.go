@@ -18,3 +18,7 @@ type HomeOverviewService interface {
 type MatchService interface {
 	GenerateCandidates(ctx context.Context, inputText string) (MatchResult, error)
 }
+
+type ReplyService interface {
+	GenerateReply(ctx context.Context, session Session, userMessage string) (string, error)
+}

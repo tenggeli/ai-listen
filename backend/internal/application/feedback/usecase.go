@@ -103,6 +103,16 @@ func (u SubmitOrderFeedbackUseCase) Execute(ctx context.Context, input SubmitFee
 		return SubmitFeedbackOutput{}, err
 	}
 
+	hasComplaint := strings.TrimSpace(input.ComplaintReason) != "" || strings.TrimSpace(input.ComplaintContent) != ""
+	if hasComplaint {
+		if err := orderItem.MarkAfterSaleProcessing(u.clock.Now(), "用户发起投诉"); err != nil {
+			return SubmitFeedbackOutput{}, err
+		}
+		if err := u.orderRepo.Save(ctx, orderItem); err != nil {
+			return SubmitFeedbackOutput{}, err
+		}
+	}
+
 	if err := u.feedbackRepo.Create(ctx, item); err != nil {
 		return SubmitFeedbackOutput{}, err
 	}

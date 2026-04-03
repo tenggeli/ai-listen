@@ -129,7 +129,7 @@ func (c OrderController) handleOrderAction(w http.ResponseWriter, r *http.Reques
 			"reason":              output.Audit.Reason,
 			"status_before":       output.Audit.StatusBefore,
 			"status_after":        output.Audit.StatusAfter,
-			"status_after_reason": orderDomain.StatusReason(output.Audit.StatusAfter),
+			"status_after_reason": orderDomain.StatusReasonByAction(output.Audit.StatusAfter, output.Audit.Reason),
 			"updated_at":          output.Audit.UpdatedAt.Format(timeRFC3339),
 		},
 	})
@@ -163,7 +163,7 @@ func (c OrderController) handleComplaintAction(w http.ResponseWriter, r *http.Re
 			"reason":              output.Audit.Reason,
 			"status_before":       output.Audit.StatusBefore,
 			"status_after":        output.Audit.StatusAfter,
-			"status_after_reason": orderDomain.StatusReason(output.Audit.StatusAfter),
+			"status_after_reason": orderDomain.StatusReasonByAction(output.Audit.StatusAfter, output.Audit.Reason),
 			"updated_at":          output.Audit.UpdatedAt.Format(timeRFC3339),
 		},
 	})
@@ -173,17 +173,21 @@ const timeRFC3339 = "2006-01-02T15:04:05Z07:00"
 
 func orderToMap(item orderDomain.Order) map[string]any {
 	data := map[string]any{
-		"id":                 item.ID,
-		"user_id":            item.UserID,
-		"provider_id":        item.ProviderID,
-		"provider_name":      item.ProviderName,
-		"service_item_id":    item.ServiceItemID,
-		"service_item_title": item.ServiceItemTitle,
-		"amount":             item.Amount,
-		"currency":           item.Currency,
-		"status":             item.Status,
-		"status_reason":      orderDomain.StatusReason(item.Status),
-		"created_at":         item.CreatedAt.Format(timeRFC3339),
+		"id":                   item.ID,
+		"user_id":              item.UserID,
+		"provider_id":          item.ProviderID,
+		"provider_name":        item.ProviderName,
+		"service_item_id":      item.ServiceItemID,
+		"service_item_title":   item.ServiceItemTitle,
+		"amount":               item.Amount,
+		"currency":             item.Currency,
+		"status":               item.Status,
+		"status_reason":        orderDomain.StatusReasonByAction(item.Status, item.StatusActionReason),
+		"status_action_reason": item.StatusActionReason,
+		"created_at":           item.CreatedAt.Format(timeRFC3339),
+	}
+	if item.StatusUpdatedAt != nil {
+		data["status_updated_at"] = item.StatusUpdatedAt.Format(timeRFC3339)
 	}
 	if item.PaidAt != nil {
 		data["paid_at"] = item.PaidAt.Format(timeRFC3339)
@@ -226,7 +230,7 @@ func actionLogsToMap(items []app.ActionAudit) []map[string]any {
 			"reason":              item.Reason,
 			"status_before":       item.StatusBefore,
 			"status_after":        item.StatusAfter,
-			"status_after_reason": orderDomain.StatusReason(item.StatusAfter),
+			"status_after_reason": orderDomain.StatusReasonByAction(item.StatusAfter, item.Reason),
 			"updated_at":          item.UpdatedAt.Format(timeRFC3339),
 		})
 	}

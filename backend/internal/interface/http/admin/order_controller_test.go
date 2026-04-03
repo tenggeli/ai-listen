@@ -116,3 +116,59 @@ func TestOrderAndComplaintRoutes(t *testing.T) {
 		t.Fatalf("expected action logs")
 	}
 }
+
+func TestOrderRoutes_CloseConflictAndDuplicateIntervene(t *testing.T) {
+	orderRepo := memory.NewOrderRepository()
+	feedbackRepo := memory.NewFeedbackRepository()
+	actionRepo := memory.NewOrderAdminActionRepository()
+	idGenerator := aiApp.NewTimestampIDGenerator(fixedClock{now: time.Date(2026, 4, 2, 10, 0, 0, 0, time.UTC)})
+	clock := fixedClock{now: time.Date(2026, 4, 2, 10, 0, 0, 0, time.UTC)}
+
+	createOrderUC := orderApp.NewCreateOrderUseCase(orderRepo, idGenerator, clock)
+	payOrderUC := orderApp.NewPayOrderMockSuccessUseCase(orderRepo, clock)
+
+	created, err := createOrderUC.Execute(context.Background(), orderApp.CreateOrderInput{
+		UserID:           "u_001",
+		ProviderID:       "p_pub_001",
+		ProviderName:     "provider",
+		ServiceItemID:    "si_001",
+		ServiceItemTitle: "service",
+		Amount:           99,
+		Currency:         "CNY",
+	})
+	if err != nil {
+		t.Fatalf("create order failed: %v", err)
+	}
+	if _, err = payOrderUC.Execute(context.Background(), orderApp.PayOrderMockSuccessInput{UserID: "u_001", OrderID: created.Order.ID}); err != nil {
+		t.Fatalf("pay order failed: %v", err)
+	}
+
+	controller := NewOrderController(adminOrderApp.NewUseCase(orderRepo, feedbackRepo, actionRepo, idGenerator, clock))
+	mux := http.NewServeMux()
+	RegisterOrderRoutes(mux, controller)
+	authHeader := "Bearer mock_admin_at_admin_001_1712013723"
+
+	closeReq := httptest.NewRequest(http.MethodPost, "/api/v1/admin/orders/"+created.Order.ID+"/close", nil)
+	closeReq.Header.Set("Authorization", authHeader)
+	closeRec := httptest.NewRecorder()
+	mux.ServeHTTP(closeRec, closeReq)
+	if closeRec.Code != http.StatusConflict {
+		t.Fatalf("expected close conflict 409, got %d", closeRec.Code)
+	}
+
+	interveneReq := httptest.NewRequest(http.MethodPost, "/api/v1/admin/orders/"+created.Order.ID+"/intervene", nil)
+	interveneReq.Header.Set("Authorization", authHeader)
+	interveneRec := httptest.NewRecorder()
+	mux.ServeHTTP(interveneRec, interveneReq)
+	if interveneRec.Code != http.StatusOK {
+		t.Fatalf("unexpected first intervene status: %d", interveneRec.Code)
+	}
+
+	duplicateReq := httptest.NewRequest(http.MethodPost, "/api/v1/admin/orders/"+created.Order.ID+"/intervene", nil)
+	duplicateReq.Header.Set("Authorization", authHeader)
+	duplicateRec := httptest.NewRecorder()
+	mux.ServeHTTP(duplicateRec, duplicateReq)
+	if duplicateRec.Code != http.StatusOK {
+		t.Fatalf("unexpected duplicate intervene status: %d", duplicateRec.Code)
+	}
+}

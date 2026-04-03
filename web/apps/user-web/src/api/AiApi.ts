@@ -81,9 +81,16 @@ export class HttpAiApi implements AiApi {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sender_type: senderType, content })
     })
-    const payload = await response.json()
-    if (!response.ok || payload.code !== 0) {
-      throw new Error(payload.message || 'append message failed')
+
+    let payload: any = null
+    try {
+      payload = await response.json()
+    } catch {
+      payload = null
+    }
+
+    if (!response.ok || payload?.code !== 0) {
+      throw new Error(payload?.message || 'AI 回复暂时超时，请稍后重试')
     }
   }
 }

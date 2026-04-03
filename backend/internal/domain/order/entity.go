@@ -33,22 +33,24 @@ var orderStatusReasonMap = map[string]string{
 	StatusArrived:   "服务方已到达，待开始服务",
 	StatusInService: "服务进行中",
 	StatusCompleted: "服务已完成",
-	StatusAfterSale: "订单售后处理中",
-	StatusClosed:    "订单已关闭",
+	StatusAfterSale: "介入中",
+	StatusClosed:    "已关闭",
 }
 
 type Order struct {
-	ID               string
-	UserID           string
-	ProviderID       string
-	ProviderName     string
-	ServiceItemID    string
-	ServiceItemTitle string
-	Amount           int
-	Currency         string
-	Status           string
-	CreatedAt        time.Time
-	PaidAt           *time.Time
+	ID                 string
+	UserID             string
+	ProviderID         string
+	ProviderName       string
+	ServiceItemID      string
+	ServiceItemTitle   string
+	Amount             int
+	Currency           string
+	Status             string
+	StatusActionReason string
+	CreatedAt          time.Time
+	PaidAt             *time.Time
+	StatusUpdatedAt    *time.Time
 }
 
 func IsKnownStatus(status string) bool {
@@ -61,6 +63,17 @@ func StatusReason(status string) string {
 		return reason
 	}
 	return "状态未知"
+}
+
+func StatusReasonByAction(status string, actionReason string) string {
+	if status == StatusAfterSale {
+		reason := strings.TrimSpace(actionReason)
+		if strings.Contains(reason, "投诉") {
+			return "投诉处理中"
+		}
+		return "介入中"
+	}
+	return StatusReason(status)
 }
 
 func NewOrder(
@@ -90,16 +103,18 @@ func NewOrder(
 	}
 
 	return Order{
-		ID:               strings.TrimSpace(id),
-		UserID:           strings.TrimSpace(userID),
-		ProviderID:       strings.TrimSpace(providerID),
-		ProviderName:     strings.TrimSpace(providerName),
-		ServiceItemID:    strings.TrimSpace(serviceItemID),
-		ServiceItemTitle: strings.TrimSpace(serviceItemTitle),
-		Amount:           amount,
-		Currency:         currency,
-		Status:           StatusCreated,
-		CreatedAt:        createdAt,
+		ID:                 strings.TrimSpace(id),
+		UserID:             strings.TrimSpace(userID),
+		ProviderID:         strings.TrimSpace(providerID),
+		ProviderName:       strings.TrimSpace(providerName),
+		ServiceItemID:      strings.TrimSpace(serviceItemID),
+		ServiceItemTitle:   strings.TrimSpace(serviceItemTitle),
+		Amount:             amount,
+		Currency:           currency,
+		Status:             StatusCreated,
+		StatusActionReason: "",
+		CreatedAt:          createdAt,
+		StatusUpdatedAt:    timePtr(createdAt),
 	}, nil
 }
 
@@ -113,71 +128,100 @@ func (o *Order) MarkPaid(now time.Time) error {
 	o.Status = StatusPaid
 	paidAt := now
 	o.PaidAt = &paidAt
+	o.StatusActionReason = ""
+	o.StatusUpdatedAt = timePtr(now)
 	return nil
 }
 
-func (o *Order) MarkAccepted() error {
+func (o *Order) MarkAccepted(now time.Time) error {
 	if o.Status != StatusPaid {
 		return ErrInvalidOrderTransition
 	}
 	o.Status = StatusAccepted
+	o.StatusActionReason = ""
+	o.StatusUpdatedAt = timePtr(now)
 	return nil
 }
 
-func (o *Order) MarkOnTheWay() error {
+func (o *Order) MarkOnTheWay(now time.Time) error {
 	if o.Status != StatusAccepted {
 		return ErrInvalidOrderTransition
 	}
 	o.Status = StatusOnTheWay
+	o.StatusActionReason = ""
+	o.StatusUpdatedAt = timePtr(now)
 	return nil
 }
 
-func (o *Order) MarkArrived() error {
+func (o *Order) MarkArrived(now time.Time) error {
 	if o.Status != StatusOnTheWay {
 		return ErrInvalidOrderTransition
 	}
 	o.Status = StatusArrived
+	o.StatusActionReason = ""
+	o.StatusUpdatedAt = timePtr(now)
 	return nil
 }
 
-func (o *Order) MarkInService() error {
+func (o *Order) MarkInService(now time.Time) error {
 	if o.Status != StatusArrived {
 		return ErrInvalidOrderTransition
 	}
 	o.Status = StatusInService
+	o.StatusActionReason = ""
+	o.StatusUpdatedAt = timePtr(now)
 	return nil
 }
 
-func (o *Order) MarkCompleted() error {
+func (o *Order) MarkCompleted(now time.Time) error {
 	if o.Status != StatusInService {
 		return ErrInvalidOrderTransition
 	}
 	o.Status = StatusCompleted
+	o.StatusActionReason = ""
+	o.StatusUpdatedAt = timePtr(now)
 	return nil
 }
 
-func (o *Order) MarkAfterSaleProcessing() error {
+func (o *Order) MarkAfterSaleProcessing(now time.Time, actionReason string) error {
 	if o.Status == StatusAfterSale {
+		if strings.TrimSpace(actionReason) != "" {
+			o.StatusActionReason = strings.TrimSpace(actionReason)
+			o.StatusUpdatedAt = timePtr(now)
+		}
 		return nil
 	}
 	switch o.Status {
 	case StatusPaid, StatusAccepted, StatusOnTheWay, StatusArrived, StatusInService, StatusCompleted, StatusClosed:
 		o.Status = StatusAfterSale
+		o.StatusActionReason = strings.TrimSpace(actionReason)
+		o.StatusUpdatedAt = timePtr(now)
 		return nil
 	default:
 		return ErrInvalidOrderTransition
 	}
 }
 
-func (o *Order) MarkClosedByAdmin() error {
+func (o *Order) MarkClosedByAdmin(now time.Time, actionReason string) error {
 	if o.Status == StatusClosed {
+		if strings.TrimSpace(actionReason) != "" {
+			o.StatusActionReason = strings.TrimSpace(actionReason)
+			o.StatusUpdatedAt = timePtr(now)
+		}
 		return nil
 	}
 	switch o.Status {
 	case StatusAfterSale, StatusCompleted:
 		o.Status = StatusClosed
+		o.StatusActionReason = strings.TrimSpace(actionReason)
+		o.StatusUpdatedAt = timePtr(now)
 		return nil
 	default:
 		return ErrInvalidOrderTransition
 	}
+}
+
+func timePtr(value time.Time) *time.Time {
+	v := value
+	return &v
 }
