@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { isUnauthorizedError } from '../../api/ApiError'
 import { HttpProviderOrderApi } from '../../api/ProviderOrderApi'
 import { authService } from '../../application/auth'
+import { PageLoadState } from '../../domain/common/PageLoadState'
 
 const router = useRouter()
 const orderApi = new HttpProviderOrderApi('/api/v1/provider')
 const state = reactive({
   pendingCount: 0,
-  loading: false,
+  pageState: PageLoadState.Idle,
   errorMessage: ''
 })
 
@@ -17,15 +19,20 @@ onMounted(() => {
 })
 
 async function loadSummary(): Promise<void> {
-  state.loading = true
+  state.pageState = PageLoadState.Loading
   state.errorMessage = ''
   try {
     const result = await orderApi.listOrders(authService.getAccessToken(), 1, 50)
     state.pendingCount = result.items.filter((item) => item.status === 'paid').length
+    state.pageState = PageLoadState.Success
   } catch (error) {
+    if (isUnauthorizedError(error)) {
+      authService.logout()
+      await router.replace('/login')
+      return
+    }
+    state.pageState = PageLoadState.Error
     state.errorMessage = error instanceof Error ? error.message : '加载失败'
-  } finally {
-    state.loading = false
   }
 }
 
@@ -44,7 +51,7 @@ function logout(): void {
     <section class="cards">
       <article class="card">
         <small>待处理订单</small>
-        <strong>{{ state.loading ? '...' : `${state.pendingCount} 单` }}</strong>
+        <strong>{{ state.pageState === PageLoadState.Loading ? '...' : `${state.pendingCount} 单` }}</strong>
       </article>
       <article class="card">
         <small>入口</small>
@@ -52,7 +59,9 @@ function logout(): void {
         <p><RouterLink to="/profile">进入个人资料</RouterLink></p>
       </article>
     </section>
-    <p v-if="state.errorMessage" class="error">{{ state.errorMessage }}</p>
+    <p v-if="state.pageState === PageLoadState.Idle">等待加载工作台数据...</p>
+    <p v-else-if="state.pageState === PageLoadState.Error" class="error">{{ state.errorMessage }}</p>
+    <p v-else-if="state.pageState === PageLoadState.Success" class="success">工作台数据已更新。</p>
   </main>
 </template>
 
@@ -87,6 +96,9 @@ function logout(): void {
 }
 .error {
   color: #b91c1c;
+}
+.success {
+  color: #166534;
 }
 @media (max-width: 960px) {
   .cards {

@@ -1,3 +1,5 @@
+import { ApiError } from './ApiError'
+
 export interface ProviderLoginResult {
   accessToken: string
   providerId: string
@@ -27,7 +29,7 @@ export class HttpProviderAuthApi implements ProviderAuthApi {
     })
     const payload = await response.json()
     if (!response.ok || payload.code !== 0) {
-      throw new Error(payload.message || 'login failed')
+      throw new ApiError(payload.message || 'login failed', response.status)
     }
     return {
       accessToken: payload.data.access_token,
@@ -43,7 +45,7 @@ export class HttpProviderAuthApi implements ProviderAuthApi {
     })
     const payload = await response.json()
     if (!response.ok || payload.code !== 0) {
-      throw new Error(payload.message || 'load profile failed')
+      throw new ApiError(payload.message || 'load profile failed', response.status)
     }
     return {
       providerId: payload.data.provider_id,

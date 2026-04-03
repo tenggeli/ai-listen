@@ -1,4 +1,4 @@
-# Listen AI Coding 指导文档（按 2026-04-02 当前仓库状态）
+# Listen AI Coding 指导文档（按 2026-04-03 当前仓库状态）
 
 ## 0. 文档定位
 
@@ -24,7 +24,7 @@
 
 若文档与代码冲突：以代码现状为准，并回写文档。
 
-## 2. 当前优先级（2026-04-02 代码快照）
+## 2. 当前优先级（2026-04-03 代码快照）
 
 高优先：
 
@@ -44,7 +44,6 @@
 - 真实 AI 网关
 - 真实短信与微信授权
 - 真实支付、结算、提现、VIP
-- 用户 App 页面化
 
 ## 3. 必须遵守的代码组织
 
@@ -56,12 +55,14 @@
 backend/internal/
   application/
     admin_auth/
+    admin_order/
     ai/
     audio/
     feedback/
     identity/
     order/
     provider/
+    provider_auth/
     service_discovery/
     service_item_admin/
     user_settings/
@@ -73,6 +74,7 @@ backend/internal/
     identity/
     order/
     provider/
+    provider_auth/
     service_discovery/
     service_item_admin/
     user_settings/
@@ -280,6 +282,35 @@ backend/internal/
 - 鉴权接口：`POST /api/v1/admin/auth/login/mock`、`GET /api/v1/admin/auth/me`
 - 服务项目接口：`GET /api/v1/admin/service-items`、`GET /api/v1/admin/service-items/{id}`、`POST /api/v1/admin/service-items/{id}/activate|deactivate`
 
+### 4.10 平台管理后台订单与投诉模块（已落地）
+
+续写优先复用：
+
+- `HttpOrderAdminApi`
+- `HttpComplaintAdminApi`
+- `OrderManagePage`
+- `ComplaintManagePage`
+- `application/admin_order` UseCase
+
+注意：
+
+- 订单接口：`GET /api/v1/admin/orders`、`GET /api/v1/admin/orders/{id}`、`POST /api/v1/admin/orders/{id}/intervene|close`
+- 投诉接口：`GET /api/v1/admin/complaints`、`GET /api/v1/admin/complaints/{id}`、`POST /api/v1/admin/complaints/{id}/intervene|resolve`
+- 后台订单/投诉动作日志由 `order_admin_action_records` 持久化
+
+### 4.11 服务方侧后端模块（已落地，前端待落地）
+
+续写优先复用：
+
+- `application/provider_auth`
+- `interface/http/provider/*`
+- `application/order` 中 Provider 相关 UseCase
+
+注意：
+
+- 已落地接口：`POST /api/v1/provider/auth/login/mock`、`GET /api/v1/provider/profile`、`GET /api/v1/provider/orders`、`GET /api/v1/provider/orders/{id}`、`POST /api/v1/provider/orders/{id}/accept|depart|arrive|start|complete`
+- 后续新增服务方能力（资料编辑、服务项目管理）继续归到 `/api/v1/provider/...` 分组
+
 ## 5. 配置、数据库、Mock 规则
 
 ### 5.1 配置
@@ -290,7 +321,7 @@ backend/internal/
 
 ### 5.2 数据库
 
-- `ai/provider/service_discovery/identity/order/feedback/user_settings/service_item_admin` 已有 migration + mysql repository
+- `ai/provider/service_discovery/identity/order/feedback/user_settings/service_item_admin/admin_order_action` 已有 migration + mysql repository
 - 新模块（payment、后台配置等）默认按 MySQL 设计
 - 开发 mysql 模式时，应优先复用现有 `mysql.NewDB(...)` 与仓储注册方式
 

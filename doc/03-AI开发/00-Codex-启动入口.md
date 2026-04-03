@@ -4,7 +4,7 @@
 
 ## 1. 当前项目状态（以仓库代码为准）
 
-当前仓库处于 `P1 扩展阶段`，已经从“仅 AI 首页 + 审核”扩展到“用户引导、AI 主入口、服务浏览、声音页、我的页、设置页后端持久化、支付与订单最小闭环、平台管理后台鉴权与服务项目管理可运行”。
+当前仓库处于 `P1 扩展阶段`，已经从“仅 AI 首页 + 审核”扩展到“用户引导、AI 主入口、服务浏览、声音页、我的页、设置页后端持久化、支付与订单最小闭环、平台管理后台鉴权与运营管理可运行、服务方侧后端接口已落地”。
 
 当前端形态统一按以下口径理解：
 
@@ -30,17 +30,17 @@
 - 用户 Web：`/orders` 订单列表页，读取真实后端订单列表
 - 用户 Web：`/orders/:id/feedback` 评价/投诉页，读取与提交真实后端反馈
 - 用户 Web：`/settings` 设置页，支持账号资料查看、设置项后端持久化（MySQL）与 memory 模式本地兜底、退出登录
-- 平台管理后台 Web：当前仓库为 `web/apps/admin-web`，已实现 `/admin/login`、`/admin/dashboard`、`/admin/providers/review`、`/admin/services/manage`
-- 服务方管理后台：当前已有 `doc/05-管理后台原型`，前端工程尚未正式落地
-- Go 后端：统一单体接口服务，当前已包含 AI、identity、user_settings、service discovery、sound、order、feedback、admin_auth、service_item_admin 与平台管理侧服务方审核接口
+- 平台管理后台 Web：当前仓库为 `web/apps/admin-web`，已实现 `/admin/login`、`/admin/dashboard`、`/admin/providers/review`、`/admin/services/manage`、`/admin/orders/manage`、`/admin/complaints/manage`
+- 服务方管理后台：当前已有 `doc/05-管理后台原型`，前端工程尚未正式落地；但后端 provider 侧鉴权与订单履约接口已可用
+- Go 后端：统一单体接口服务，当前已包含 AI、identity、user_settings、service discovery、sound、order、feedback、admin_auth、admin_order、service_item_admin、provider_auth 与平台管理侧/服务方侧路由
 - 配置：后端优先读取 `~/conf/listenbase.cof`
-- MySQL：AI、服务浏览、服务方审核、identity、order、feedback、user_settings、服务项目管理均具备 migration / mysql repository，可在 `memory/mysql` 间切换
+- MySQL：AI、服务浏览、服务方审核、identity、order、feedback、user_settings、服务项目管理、后台订单操作日志均具备 migration / mysql repository，可在 `memory/mysql` 间切换
 
 仍未落地或仅占位：
 
-- Go 后端：真实支付模块、服务方侧接口
-- 服务方管理后台：工程骨架、登录鉴权、履约/经营/结算页面
-- 平台管理后台：声音内容管理、订单/投诉管理
+- Go 后端：真实支付模块、服务方资料与服务项目管理接口
+- 服务方管理后台：前端工程骨架、登录鉴权、履约/经营/结算页面
+- 平台管理后台：声音内容管理
 - 用户 App：仍为骨架，仅 `/home`
 - 第三方真实对接：AI 网关、短信、微信真实授权、真实支付
 
@@ -112,7 +112,7 @@
 
 ### 4.2 数据库约束
 
-- 已有 MySQL 表：AI 会话/消息/匹配、每日配额、服务方审核、服务浏览、identity 用户账户、订单、订单反馈、用户设置
+- 已有 MySQL 表：AI 会话/消息/匹配、每日配额、服务方审核、服务浏览、identity 用户账户、订单、订单反馈、用户设置、后台订单操作日志
 - 新增业务（payment/admin 配置等）应继续按 MySQL 可落地结构设计
 - 当前 `repository.driver` 可切 `memory/mysql`
 
@@ -147,11 +147,13 @@ backend/migrations     MySQL 迁移脚本
 
 - `application/ai`
 - `application/admin_auth`
+- `application/admin_order`
 - `application/audio`
 - `application/feedback`
 - `application/identity`
 - `application/order`
 - `application/provider`
+- `application/provider_auth`
 - `application/service_discovery`
 - `application/service_item_admin`
 - `application/user_settings`
@@ -162,6 +164,7 @@ backend/migrations     MySQL 迁移脚本
 - `domain/identity`
 - `domain/order`
 - `domain/provider`
+- `domain/provider_auth`
 - `domain/service_discovery`
 - `domain/service_item_admin`
 - `domain/user_settings`
