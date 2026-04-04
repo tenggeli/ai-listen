@@ -1,21 +1,35 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ADMIN_WEB_DIR="/home/hwd/app/ai-listen/web/apps/admin-web"
-USER_WEB_DIR="/home/hwd/app/ai-listen/web/apps/user-web"
-WEB_ROOT="/var/www/html"
-STAGE_ROOT="${HOME}/webdeploy"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+WEB_ROOT="${WEB_ROOT:-/var/www/html}"
+STAGE_ROOT="${STAGE_ROOT:-${HOME}/webdeploy}"
 STAGE_TS="$(date +%Y%m%d%H%M%S)"
 
-ADMIN_TARGET="${WEB_ROOT}/admin-web"
-USER_TARGET="${WEB_ROOT}/user-web"
-ADMIN_STAGE="${STAGE_ROOT}/admin-web-${STAGE_TS}"
-USER_STAGE="${STAGE_ROOT}/user-web-${STAGE_TS}"
+APP_NAMES=("admin-web" "user-web" "provider-web")
+APP_DIRS=(
+  "${REPO_ROOT}/web/apps/admin-web"
+  "${REPO_ROOT}/web/apps/user-web"
+  "${REPO_ROOT}/web/apps/provider-web"
+)
+APP_TARGETS=(
+  "${WEB_ROOT}/admin-web"
+  "${WEB_ROOT}/user-web"
+  "${WEB_ROOT}/provider-web"
+)
+APP_STAGES=()
 
 build_and_stage_app() {
   local app_dir="$1"
   local app_name="$2"
   local stage_dir="$3"
+
+  if [[ ! -d "${app_dir}" ]]; then
+    echo "${app_name} directory not found: ${app_dir}"
+    exit 1
+  fi
 
   echo "[build] ${app_name} and stage to ${stage_dir}"
   cd "${app_dir}"
@@ -56,11 +70,15 @@ deploy_app() {
   sudo rm -rf "${target_dir}.bak"
 }
 
-build_and_stage_app "${ADMIN_WEB_DIR}" "admin-web" "${ADMIN_STAGE}"
-build_and_stage_app "${USER_WEB_DIR}" "user-web" "${USER_STAGE}"
+for i in "${!APP_NAMES[@]}"; do
+  stage_dir="${STAGE_ROOT}/${APP_NAMES[$i]}-${STAGE_TS}"
+  build_and_stage_app "${APP_DIRS[$i]}" "${APP_NAMES[$i]}" "${stage_dir}"
+  APP_STAGES+=("${stage_dir}")
+done
 
-deploy_app "${ADMIN_STAGE}" "${ADMIN_TARGET}"
-deploy_app "${USER_STAGE}" "${USER_TARGET}"
+for i in "${!APP_NAMES[@]}"; do
+  deploy_app "${APP_STAGES[$i]}" "${APP_TARGETS[$i]}"
+done
 
 echo "[nginx] check and reload"
 sudo nginx -t
