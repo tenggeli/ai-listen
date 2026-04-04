@@ -3,8 +3,11 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
+
+	mysqlDriver "github.com/go-sql-driver/mysql"
 
 	domain "listen/backend/internal/domain/service_discovery"
 )
@@ -68,7 +71,7 @@ func (r ServiceDiscoveryRepository) ListPublicProviders(ctx context.Context, que
 		return nil, 0, err
 	}
 
-	listSQL := fmt.Sprintf(`
+	baseSelectSQL := `
 SELECT
   p.id,
   COALESCE(pp.display_name, ''),
@@ -77,10 +80,7 @@ SELECT
   COALESCE(pp.bio, ''),
   p.rating_avg,
   p.order_completed_count,
-  CASE
-    WHEN p.provider_status = 'active' AND pr.last_seen_at IS NOT NULL AND pr.last_seen_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
-    ELSE 0
-  END AS is_online,
+  %s AS is_online,
   COALESCE(pp.verification_text, ''),
   COALESCE(min_price.price_amount, 0),
   COALESCE(min_price.price_unit, '')
@@ -92,14 +92,16 @@ LEFT JOIN (
   WHERE service_status = 'active'
   GROUP BY provider_id
 ) min_price ON min_price.provider_id = p.id
-LEFT JOIN provider_presence pr ON pr.provider_id = p.id
+%s
 %s
 ORDER BY p.rating_avg DESC, p.order_completed_count DESC
-LIMIT ? OFFSET ?`, where)
+LIMIT ? OFFSET ?`
 
 	offset := (query.Page - 1) * query.PageSize
-	args = append(args, query.PageSize, offset)
-	rows, err := r.db.QueryContext(ctx, listSQL, args...)
+	rows, err := r.queryListPublicProvidersRows(ctx, baseSelectSQL, where, args, query.PageSize, offset, true)
+	if err != nil && isMissingProviderPresenceTable(err) {
+		rows, err = r.queryListPublicProvidersRows(ctx, baseSelectSQL, where, args, query.PageSize, offset, false)
+	}
 	if err != nil {
 		return nil, 0, err
 	}
@@ -139,7 +141,7 @@ LIMIT ? OFFSET ?`, where)
 }
 
 func (r ServiceDiscoveryRepository) GetPublicProviderByID(ctx context.Context, providerID string) (domain.ProviderPublicProfile, error) {
-	const query = `
+	const queryTemplate = `
 SELECT
   p.id,
   COALESCE(pp.display_name, ''),
@@ -148,10 +150,7 @@ SELECT
   COALESCE(pp.bio, ''),
   p.rating_avg,
   p.order_completed_count,
-  CASE
-    WHEN p.provider_status = 'active' AND pr.last_seen_at IS NOT NULL AND pr.last_seen_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
-    ELSE 0
-  END AS is_online,
+  %s AS is_online,
   COALESCE(pp.verification_text, ''),
   COALESCE(min_price.price_amount, 0),
   COALESCE(min_price.price_unit, '')
@@ -163,25 +162,33 @@ LEFT JOIN (
   WHERE service_status = 'active'
   GROUP BY provider_id
 ) min_price ON min_price.provider_id = p.id
-LEFT JOIN provider_presence pr ON pr.provider_id = p.id
+%s
 WHERE p.id = ? AND p.review_status = 'approved'
 LIMIT 1`
 
 	var item domain.ProviderPublicProfile
 	var isOnline int
-	err := r.db.QueryRowContext(ctx, query, providerID).Scan(
-		&item.ID,
-		&item.DisplayName,
-		&item.AvatarURL,
-		&item.CityCode,
-		&item.Bio,
-		&item.RatingAvg,
-		&item.CompletedOrders,
-		&isOnline,
-		&item.VerificationText,
-		&item.PriceFrom,
-		&item.PriceUnit,
-	)
+	scan := func(withPresence bool) error {
+		query := fmt.Sprintf(queryTemplate, onlineStatusSelectExpr(withPresence), providerPresenceJoin(withPresence))
+		return r.db.QueryRowContext(ctx, query, providerID).Scan(
+			&item.ID,
+			&item.DisplayName,
+			&item.AvatarURL,
+			&item.CityCode,
+			&item.Bio,
+			&item.RatingAvg,
+			&item.CompletedOrders,
+			&isOnline,
+			&item.VerificationText,
+			&item.PriceFrom,
+			&item.PriceUnit,
+		)
+	}
+
+	err := scan(true)
+	if err != nil && isMissingProviderPresenceTable(err) {
+		err = scan(false)
+	}
 	if err == sql.ErrNoRows {
 		return domain.ProviderPublicProfile{}, domain.ErrProviderNotFound
 	}
@@ -265,6 +272,50 @@ ORDER BY sort_order ASC, id ASC`
 		return nil, err
 	}
 	return tags, nil
+}
+
+func (r ServiceDiscoveryRepository) queryListPublicProvidersRows(
+	ctx context.Context,
+	baseSelectSQL string,
+	where string,
+	args []any,
+	pageSize int,
+	offset int,
+	withPresence bool,
+) (*sql.Rows, error) {
+	listSQL := fmt.Sprintf(baseSelectSQL, onlineStatusSelectExpr(withPresence), providerPresenceJoin(withPresence), where)
+	queryArgs := append(make([]any, 0, len(args)+2), args...)
+	queryArgs = append(queryArgs, pageSize, offset)
+	return r.db.QueryContext(ctx, listSQL, queryArgs...)
+}
+
+func onlineStatusSelectExpr(withPresence bool) string {
+	if !withPresence {
+		return "0"
+	}
+	return `CASE
+    WHEN p.provider_status = 'active' AND pr.last_seen_at IS NOT NULL AND pr.last_seen_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
+    ELSE 0
+  END`
+}
+
+func providerPresenceJoin(withPresence bool) string {
+	if !withPresence {
+		return ""
+	}
+	return "LEFT JOIN provider_presence pr ON pr.provider_id = p.id"
+}
+
+func isMissingProviderPresenceTable(err error) bool {
+	if err == nil {
+		return false
+	}
+	var mysqlErr *mysqlDriver.MySQLError
+	if errors.As(err, &mysqlErr) {
+		return mysqlErr.Number == 1146 && strings.Contains(mysqlErr.Message, "provider_presence")
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "provider_presence") && strings.Contains(msg, "doesn't exist")
 }
 
 var _ domain.Repository = ServiceDiscoveryRepository{}

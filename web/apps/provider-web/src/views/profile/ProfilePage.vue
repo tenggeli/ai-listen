@@ -5,6 +5,7 @@ import { isUnauthorizedError } from '../../api/ApiError'
 import { HttpProviderAuthApi } from '../../api/ProviderAuthApi'
 import { authService } from '../../application/auth'
 import { PageLoadState } from '../../domain/common/PageLoadState'
+import ProviderShell from '../../components/layout/ProviderShell.vue'
 
 const router = useRouter()
 const authApi = new HttpProviderAuthApi('/api/v1/provider')
@@ -81,90 +82,30 @@ function logout(): void {
 </script>
 
 <template>
-  <main class="page">
-    <nav class="top-nav">
-      <RouterLink to="/dashboard">返回工作台</RouterLink>
-      <div class="nav-links">
-        <RouterLink to="/services">服务项目</RouterLink>
-        <button @click="logout">退出登录</button>
-      </div>
-    </nav>
-    <h1>资料编辑</h1>
-    <p v-if="state.pageState === PageLoadState.Idle">准备加载资料...</p>
-    <p v-else-if="state.pageState === PageLoadState.Loading">加载中...</p>
-    <section v-else-if="state.pageState === PageLoadState.Success" class="card">
+  <ProviderShell title="资料管理" subtitle="维护服务方资料与基础身份信息，保障展示信息一致性。" @logout="logout">
+    <p v-if="state.pageState === PageLoadState.Idle" class="provider-sub">准备加载资料...</p>
+    <p v-else-if="state.pageState === PageLoadState.Loading" class="provider-sub">加载中...</p>
+    <section v-else-if="state.pageState === PageLoadState.Success" class="provider-card">
       <p><strong>Provider ID：</strong>{{ state.providerId }}</p>
       <p><strong>账号：</strong>{{ state.account }}</p>
       <p><strong>状态：</strong>{{ state.status }}</p>
 
-      <label class="field">
-        <span>昵称</span>
-        <input v-model="state.displayName" type="text" placeholder="请输入昵称" maxlength="64" />
-      </label>
-      <label class="field">
-        <span>城市编码</span>
-        <input v-model="state.cityCode" type="text" placeholder="如 310100" maxlength="16" />
-      </label>
+      <div class="provider-form">
+        <label class="provider-field">
+          <span>昵称</span>
+          <input v-model="state.displayName" type="text" placeholder="请输入昵称" maxlength="64" />
+        </label>
+        <label class="provider-field">
+          <span>城市编码</span>
+          <input v-model="state.cityCode" type="text" placeholder="如 310100" maxlength="16" />
+        </label>
+      </div>
 
       <button :disabled="state.saving" @click="saveProfile">
         {{ state.saving ? '保存中...' : '保存资料' }}
       </button>
     </section>
-    <p v-if="state.successMessage" class="success">{{ state.successMessage }}</p>
-    <p v-if="state.pageState === PageLoadState.Error || state.errorMessage" class="error">{{ state.errorMessage }}</p>
-  </main>
+    <p v-if="state.successMessage" class="provider-success">{{ state.successMessage }}</p>
+    <p v-if="state.pageState === PageLoadState.Error || state.errorMessage" class="provider-error">{{ state.errorMessage }}</p>
+  </ProviderShell>
 </template>
-
-<style scoped>
-.page {
-  padding: 20px;
-}
-.top-nav {
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.nav-links {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-.card {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: #fff;
-  padding: 14px;
-}
-.field {
-  margin-top: 12px;
-  display: grid;
-  gap: 6px;
-}
-.field input {
-  height: 40px;
-  padding: 0 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-}
-button {
-  margin-top: 14px;
-  height: 40px;
-  padding: 0 16px;
-  border: 1px solid #0f172a;
-  background: #0f172a;
-  color: #fff;
-  border-radius: 8px;
-  cursor: pointer;
-}
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.error {
-  color: #b91c1c;
-}
-.success {
-  color: #166534;
-}
-</style>

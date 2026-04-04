@@ -3,6 +3,7 @@ import { onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService } from '../../application/auth'
 import { HttpSoundAdminApi, MockSoundAdminApi, type AdminSoundItem } from '../../api/SoundAdminApi'
+import AdminShell from '../../components/layout/AdminShell.vue'
 
 const router = useRouter()
 const useMock = import.meta.env.VITE_USE_MOCK === 'true'
@@ -176,18 +177,8 @@ function logout(): void {
 </script>
 
 <template>
-  <main class="page">
-    <nav class="top-nav">
-      <RouterLink to="/dashboard">返回仪表盘</RouterLink>
-      <button @click="logout">退出登录</button>
-    </nav>
-
-    <header>
-      <h1>声音内容管理</h1>
-      <p>首版能力：列表、创建、编辑、上/下线。</p>
-    </header>
-
-    <section class="filters">
+  <AdminShell title="声音内容管理" subtitle="支持声音内容查询、编辑、创建与上/下线操作。" @logout="logout">
+    <section class="admin-filters">
       <select v-model="state.categoryKey">
         <option value="">全部分类</option>
         <option value="nature">自然白噪音</option>
@@ -206,27 +197,27 @@ function logout(): void {
       <button @click="startCreate">新建</button>
     </section>
 
-    <section class="layout">
-      <section class="list-panel">
-        <p v-if="state.loading">列表加载中...</p>
+    <section class="admin-panel-grid">
+      <section class="admin-list-panel admin-card">
+        <p v-if="state.loading" class="admin-loading">列表加载中...</p>
         <template v-else>
-          <p class="total">共 {{ state.total }} 条</p>
+          <p>共 {{ state.total }} 条</p>
           <button
             v-for="item in state.items"
             :key="item.id"
             type="button"
-            class="list-item"
+            class="admin-list-item"
             :class="{ active: item.id === state.selectedId }"
             @click="startEdit(item)"
           >
-            <div class="title-row">
+            <div class="admin-title-row">
               <strong>{{ item.title }}</strong>
-              <span class="status">{{ item.status }}</span>
+              <span class="pill-soft">{{ item.status }}</span>
             </div>
             <p>ID: {{ item.id }}</p>
             <p>分类: {{ item.categoryKey }} · 时长: {{ item.durationText }}</p>
             <p>作者: {{ item.author || '-' }}</p>
-            <div class="actions">
+            <div class="admin-actions">
               <button :disabled="state.actionLoading || item.status === 'active'" @click.stop="changeStatus(item, 'activate')">上线</button>
               <button :disabled="state.actionLoading || item.status === 'inactive'" @click.stop="changeStatus(item, 'deactivate')">下线</button>
             </div>
@@ -234,187 +225,34 @@ function logout(): void {
         </template>
       </section>
 
-      <section class="form-panel">
+      <section class="admin-card admin-detail-panel">
         <h3>{{ state.formMode === 'create' ? '新建声音内容' : `编辑声音内容：${state.selectedId}` }}</h3>
-        <div class="form-grid">
-          <label>
-            <span>track_id（可选）</span>
-            <input v-model.trim="state.form.id" :disabled="state.formMode === 'edit'" placeholder="留空自动生成" />
-          </label>
-          <label>
-            <span>分类</span>
-            <select v-model="state.form.categoryKey">
-              <option value="nature">nature</option>
-              <option value="sleep">sleep</option>
-              <option value="meditation">meditation</option>
-              <option value="story">story</option>
-              <option value="breath">breath</option>
-            </select>
-          </label>
-          <label>
-            <span>标题</span>
-            <input v-model.trim="state.form.title" placeholder="必填" />
-          </label>
-          <label>
-            <span>播放文案</span>
-            <input v-model.trim="state.form.playCountText" placeholder="例如：12 次播放" />
-          </label>
-          <label>
-            <span>时长</span>
-            <input v-model.trim="state.form.durationText" placeholder="必填，如 10:00" />
-          </label>
-          <label>
-            <span>emoji</span>
-            <input v-model.trim="state.form.emoji" placeholder="例如：🌙" />
-          </label>
-          <label>
-            <span>作者</span>
-            <input v-model.trim="state.form.author" placeholder="例如：listen 声音库" />
-          </label>
-          <label>
-            <span>排序</span>
-            <input v-model.number="state.form.sortOrder" type="number" min="0" />
-          </label>
-          <label v-if="state.formMode === 'create'">
-            <span>初始状态</span>
-            <select v-model="state.form.status">
-              <option value="inactive">inactive</option>
-              <option value="active">active</option>
-            </select>
-          </label>
-        </div>
-        <button class="submit-btn" :disabled="state.saving" @click="submitForm">
+        <section class="admin-filters">
+          <input v-model.trim="state.form.id" :disabled="state.formMode === 'edit'" placeholder="track_id（可选，留空自动生成）" />
+          <select v-model="state.form.categoryKey">
+            <option value="nature">nature</option>
+            <option value="sleep">sleep</option>
+            <option value="meditation">meditation</option>
+            <option value="story">story</option>
+            <option value="breath">breath</option>
+          </select>
+          <input v-model.trim="state.form.title" placeholder="标题（必填）" />
+          <input v-model.trim="state.form.playCountText" placeholder="播放文案，例如：12 次播放" />
+          <input v-model.trim="state.form.durationText" placeholder="时长（必填，如 10:00）" />
+          <input v-model.trim="state.form.emoji" placeholder="emoji" />
+          <input v-model.trim="state.form.author" placeholder="作者" />
+          <input v-model.number="state.form.sortOrder" type="number" min="0" placeholder="排序" />
+          <select v-if="state.formMode === 'create'" v-model="state.form.status">
+            <option value="inactive">inactive</option>
+            <option value="active">active</option>
+          </select>
+        </section>
+        <button :disabled="state.saving" @click="submitForm">
           {{ state.formMode === 'create' ? '创建' : '保存更新' }}
         </button>
       </section>
     </section>
 
     <p v-if="state.errorMessage" class="error">{{ state.errorMessage }}</p>
-  </main>
+  </AdminShell>
 </template>
-
-<style scoped>
-.page {
-  padding: 20px;
-}
-
-.top-nav {
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.filters {
-  display: grid;
-  grid-template-columns: 1fr 1fr 2fr auto auto;
-  gap: 8px;
-  margin: 12px 0;
-}
-
-.filters select,
-.filters input,
-.filters button,
-.form-grid input,
-.form-grid select,
-.submit-btn {
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 8px 10px;
-  background: #fff;
-}
-
-.layout {
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 16px;
-}
-
-.list-panel {
-  display: grid;
-  gap: 8px;
-}
-
-.total {
-  margin: 0 0 4px;
-  color: #475569;
-}
-
-.list-item {
-  text-align: left;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  background: #fff;
-  padding: 10px;
-}
-
-.list-item.active {
-  border-color: #0f172a;
-}
-
-.title-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.status {
-  color: #334155;
-  font-size: 12px;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-}
-
-.actions button {
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 6px 10px;
-  background: #fff;
-}
-
-.form-panel {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 12px;
-  background: #fff;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.form-grid label {
-  display: grid;
-  gap: 6px;
-  font-size: 13px;
-  color: #334155;
-}
-
-.submit-btn {
-  margin-top: 12px;
-}
-
-.error {
-  margin-top: 10px;
-  color: #b91c1c;
-}
-
-@media (max-width: 960px) {
-  .filters {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

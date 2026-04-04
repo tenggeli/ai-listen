@@ -5,6 +5,7 @@ import { isUnauthorizedError } from '../../api/ApiError'
 import { HttpProviderOrderApi } from '../../api/ProviderOrderApi'
 import { authService } from '../../application/auth'
 import { PageLoadState } from '../../domain/common/PageLoadState'
+import ProviderShell from '../../components/layout/ProviderShell.vue'
 
 const router = useRouter()
 const orderApi = new HttpProviderOrderApi('/api/v1/provider')
@@ -43,67 +44,96 @@ function logout(): void {
 </script>
 
 <template>
-  <main class="page">
-    <nav class="top-nav">
-      <span>服务方工作台</span>
-      <button @click="logout">退出登录</button>
-    </nav>
-    <section class="cards">
-      <article class="card">
+  <ProviderShell
+    title="服务方工作台"
+    subtitle="首页强调当前状态、待处理任务、今日收益与快捷履约动作，帮助服务方一屏完成关键操作。"
+    @logout="logout"
+  >
+    <template #topbar-right>
+      <div class="provider-status-card">
+        <div class="provider-status-head">
+          <strong>当前工作状态</strong>
+          <span class="provider-pill">空闲中，可接新单</span>
+        </div>
+        <p class="provider-page-subtitle">认证状态：已通过 ｜ 信用等级：A ｜ 当前评分：9.4 ｜ 近 30 天取消率：1.2%</p>
+      </div>
+    </template>
+
+    <section class="provider-kpi-grid">
+      <article class="provider-card provider-kpi">
         <small>待处理订单</small>
         <strong>{{ state.pageState === PageLoadState.Loading ? '...' : `${state.pendingCount} 单` }}</strong>
       </article>
-      <article class="card">
-        <small>入口</small>
-        <p><RouterLink to="/orders">进入订单管理</RouterLink></p>
-        <p><RouterLink to="/services">进入服务项目</RouterLink></p>
-        <p><RouterLink to="/profile">进入个人资料</RouterLink></p>
+      <article class="provider-card provider-kpi">
+        <small>今日完成</small>
+        <strong>4 单</strong>
+      </article>
+      <article class="provider-card provider-kpi">
+        <small>今日预估收入</small>
+        <strong>¥ 1,280</strong>
+      </article>
+      <article class="provider-card provider-kpi">
+        <small>当前积分</small>
+        <strong>2,460</strong>
+      </article>
+      <article class="provider-card provider-kpi">
+        <small>待处理任务</small>
+        <strong>5 项</strong>
       </article>
     </section>
-    <p v-if="state.pageState === PageLoadState.Idle">等待加载工作台数据...</p>
-    <p v-else-if="state.pageState === PageLoadState.Error" class="error">{{ state.errorMessage }}</p>
-    <p v-else-if="state.pageState === PageLoadState.Success" class="success">工作台数据已更新。</p>
-  </main>
-</template>
 
-<style scoped>
-.page {
-  padding: 20px;
-}
-.top-nav {
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.cards {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-.card {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: #fff;
-  padding: 14px;
-}
-.card small {
-  color: #64748b;
-}
-.card strong {
-  display: block;
-  margin-top: 10px;
-  font-size: 26px;
-}
-.error {
-  color: #b91c1c;
-}
-.success {
-  color: #166534;
-}
-@media (max-width: 960px) {
-  .cards {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
+    <section class="provider-grid">
+      <article class="provider-card">
+        <div class="provider-section-head">
+          <h2>待处理订单</h2>
+          <span class="provider-badge-soft">按履约优先级排序</span>
+        </div>
+        <div class="provider-table">
+          <div class="provider-row-head">
+            <div>订单 / 用户</div>
+            <div>服务项目</div>
+            <div>预约时间</div>
+            <div>状态</div>
+            <div>操作</div>
+          </div>
+          <div class="provider-row">
+            <div><strong>待处理汇总</strong></div>
+            <div>当前待接单任务</div>
+            <div>实时更新</div>
+            <div><span class="provider-badge-warn">{{ state.pendingCount }} 单待确认</span></div>
+            <div><RouterLink to="/orders">进入订单列表</RouterLink></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="provider-card">
+        <div class="provider-section-head">
+          <h2>快捷入口</h2>
+          <span class="provider-badge-soft">高频操作</span>
+        </div>
+        <div class="provider-actions-grid">
+          <div class="provider-action-card">
+            <strong>管理服务项目</strong>
+            <span>新增项目、调整价格、查看上架状态。</span>
+          </div>
+          <div class="provider-action-card">
+            <strong>资料编辑</strong>
+            <span>维护昵称、城市与基础资料，保持资料完整度。</span>
+          </div>
+          <div class="provider-action-card">
+            <strong>订单履约</strong>
+            <span>按状态推进接单、出发、到达和完单动作。</span>
+          </div>
+          <div class="provider-action-card">
+            <strong>经营提醒</strong>
+            <span>查看待处理任务与状态变化，及时响应。</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <p v-if="state.pageState === PageLoadState.Idle" class="provider-sub">等待加载工作台数据...</p>
+    <p v-else-if="state.pageState === PageLoadState.Error" class="provider-error">{{ state.errorMessage }}</p>
+    <p v-else-if="state.pageState === PageLoadState.Success" class="provider-success">工作台数据已更新。</p>
+  </ProviderShell>
+</template>

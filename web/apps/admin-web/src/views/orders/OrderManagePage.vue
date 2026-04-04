@@ -3,6 +3,7 @@ import { onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService } from '../../application/auth'
 import { HttpOrderAdminApi, type AdminOrderSummary, type AdminOrderDetail } from '../../api/OrderAdminApi'
+import AdminShell from '../../components/layout/AdminShell.vue'
 
 const router = useRouter()
 const api = new HttpOrderAdminApi('/api/v1/admin', () => authService.getAccessToken())
@@ -80,22 +81,11 @@ function logout(): void {
   authService.logout()
   void router.replace('/login')
 }
-
 </script>
 
 <template>
-  <main class="page">
-    <nav class="top-nav">
-      <RouterLink to="/dashboard">返回仪表盘</RouterLink>
-      <button @click="logout">退出登录</button>
-    </nav>
-
-    <header>
-      <h1>订单管理</h1>
-      <p>支持订单列表、详情与人工介入/关闭动作。</p>
-    </header>
-
-    <section class="filters">
+  <AdminShell title="订单监管" subtitle="支持订单筛选、详情排查与人工介入处置。" @logout="logout">
+    <section class="admin-filters admin-filters-compact">
       <select v-model="state.status">
         <option value="">全部状态</option>
         <option value="created">待支付（created）</option>
@@ -112,20 +102,20 @@ function logout(): void {
       <button @click="loadOrders">查询</button>
     </section>
 
-    <section v-if="state.loading">订单加载中...</section>
-    <section v-else class="layout">
-      <section class="list-panel">
+    <section v-if="state.loading" class="admin-card admin-loading">订单加载中...</section>
+    <section v-else class="admin-panel-grid">
+      <section class="admin-list-panel">
         <button
           v-for="item in state.items"
           :key="item.id"
           type="button"
-          class="list-item"
+          class="admin-list-item"
           :class="{ active: state.selectedOrderId === item.id }"
           @click="selectOrder(item.id)"
         >
-          <div class="title-row">
+          <div class="admin-title-row">
             <strong>{{ item.serviceItemTitle }}</strong>
-            <span>{{ item.statusReason }}</span>
+            <span class="pill-soft">{{ item.statusReason }}</span>
           </div>
           <p>订单号：{{ item.id }}</p>
           <p>用户：{{ item.userId }} · 服务方：{{ item.providerName }}</p>
@@ -133,7 +123,7 @@ function logout(): void {
         </button>
       </section>
 
-      <section class="detail-panel" v-if="state.detail">
+      <section class="admin-card admin-detail-panel" v-if="state.detail">
         <h3>{{ state.detail.order.serviceItemTitle }}</h3>
         <p>状态：{{ state.detail.order.statusReason }}</p>
         <p>订单号：{{ state.detail.order.id }}</p>
@@ -141,11 +131,11 @@ function logout(): void {
         <p>服务方：{{ state.detail.order.providerName }}</p>
         <p>金额：¥{{ state.detail.order.amount }}</p>
         <p v-if="state.detail.feedback">反馈：{{ state.detail.feedback.hasComplaint ? '有投诉' : '仅评价' }}</p>
-        <div class="actions">
+        <div class="admin-actions">
           <button :disabled="state.actionLoading" @click="action('intervene')">人工介入</button>
           <button :disabled="state.actionLoading" @click="action('close')">人工关闭</button>
         </div>
-        <div class="log-panel">
+        <div class="admin-log-panel">
           <h4>操作日志</h4>
           <p v-if="state.detail.actionLogs.length === 0">暂无操作记录</p>
           <ul v-else>
@@ -160,94 +150,5 @@ function logout(): void {
     </section>
 
     <p v-if="state.errorMessage" class="error">{{ state.errorMessage }}</p>
-  </main>
+  </AdminShell>
 </template>
-
-<style scoped>
-.page {
-  padding: 20px;
-}
-.top-nav {
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.filters {
-  display: grid;
-  grid-template-columns: 1fr 2fr auto;
-  gap: 8px;
-  margin: 12px 0;
-}
-.filters select,
-.filters input,
-.filters button {
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 8px 10px;
-}
-.layout {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 16px;
-}
-.list-panel {
-  display: grid;
-  gap: 8px;
-}
-.list-item {
-  text-align: left;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  background: #fff;
-  padding: 10px;
-}
-.list-item.active {
-  border-color: #0f172a;
-}
-.title-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-.detail-panel {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 12px;
-}
-.actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
-.actions button {
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 8px 12px;
-  background: #fff;
-}
-.log-panel {
-  margin-top: 12px;
-  border-top: 1px solid #e2e8f0;
-  padding-top: 10px;
-}
-.log-panel ul {
-  margin: 8px 0 0;
-  padding-left: 18px;
-}
-.log-panel li {
-  margin: 6px 0;
-  color: #334155;
-}
-.error {
-  color: #b91c1c;
-}
-@media (max-width: 960px) {
-  .filters {
-    grid-template-columns: 1fr;
-  }
-  .layout {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

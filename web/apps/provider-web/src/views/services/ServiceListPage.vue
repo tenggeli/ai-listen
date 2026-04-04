@@ -6,6 +6,7 @@ import { HttpProviderServiceApi } from '../../api/ProviderServiceApi'
 import { authService } from '../../application/auth'
 import { PageLoadState } from '../../domain/common/PageLoadState'
 import type { ProviderService } from '../../domain/service/ProviderService'
+import ProviderShell from '../../components/layout/ProviderShell.vue'
 
 const router = useRouter()
 const api = new HttpProviderServiceApi('/api/v1/provider')
@@ -43,86 +44,30 @@ function logout(): void {
 </script>
 
 <template>
-  <main class="page">
-    <nav class="top-nav">
-      <RouterLink to="/dashboard">返回工作台</RouterLink>
-      <div class="links">
-        <RouterLink to="/profile">资料编辑</RouterLink>
-        <button @click="logout">退出登录</button>
+  <ProviderShell title="服务项目与价格" subtitle="展示服务项目、价格、分类与线上支持状态，支撑服务运营管理。" @logout="logout">
+    <p v-if="state.pageState === PageLoadState.Idle" class="provider-sub">准备加载服务项目...</p>
+    <p v-else-if="state.pageState === PageLoadState.Loading" class="provider-sub">加载中...</p>
+
+    <section v-else-if="state.pageState === PageLoadState.Success" class="provider-card">
+      <div v-if="state.items.length === 0" class="provider-empty">暂无服务项目</div>
+      <div v-else class="provider-table">
+        <div class="provider-row-head">
+          <div>项目</div>
+          <div>价格</div>
+          <div>分类</div>
+          <div>线上支持</div>
+          <div>说明</div>
+        </div>
+        <div v-for="item in state.items" :key="item.itemId" class="provider-row">
+          <div><strong>{{ item.title }}</strong></div>
+          <div>¥{{ item.priceAmount }} / {{ item.priceUnit || '次' }}</div>
+          <div>{{ item.categoryId }}</div>
+          <div>{{ item.supportOnline ? '支持' : '仅线下' }}</div>
+          <div>{{ item.description || '暂无描述' }}</div>
+        </div>
       </div>
-    </nav>
-    <h1>服务项目</h1>
-
-    <p v-if="state.pageState === PageLoadState.Idle">准备加载服务项目...</p>
-    <p v-else-if="state.pageState === PageLoadState.Loading">加载中...</p>
-
-    <section v-else-if="state.pageState === PageLoadState.Success" class="card">
-      <p v-if="state.items.length === 0">暂无服务项目</p>
-      <table v-else class="table">
-        <thead>
-          <tr>
-            <th>项目</th>
-            <th>价格</th>
-            <th>分类</th>
-            <th>线上支持</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in state.items" :key="item.itemId">
-            <td>
-              <strong>{{ item.title }}</strong>
-              <p>{{ item.description || '暂无描述' }}</p>
-            </td>
-            <td>¥{{ item.priceAmount }} / {{ item.priceUnit || '次' }}</td>
-            <td>{{ item.categoryId }}</td>
-            <td>{{ item.supportOnline ? '支持' : '仅线下' }}</td>
-          </tr>
-        </tbody>
-      </table>
     </section>
 
-    <p v-if="state.pageState === PageLoadState.Error" class="error">{{ state.errorMessage }}</p>
-  </main>
+    <p v-if="state.pageState === PageLoadState.Error" class="provider-error">{{ state.errorMessage }}</p>
+  </ProviderShell>
 </template>
-
-<style scoped>
-.page {
-  padding: 20px;
-}
-.top-nav {
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.links {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-.card {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: #fff;
-  padding: 14px;
-  overflow-x: auto;
-}
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.table th,
-.table td {
-  text-align: left;
-  padding: 10px 8px;
-  border-bottom: 1px solid #e2e8f0;
-  vertical-align: top;
-}
-.table td p {
-  margin: 6px 0 0;
-  color: #64748b;
-}
-.error {
-  color: #b91c1c;
-}
-</style>

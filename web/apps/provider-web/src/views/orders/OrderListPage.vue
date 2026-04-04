@@ -6,6 +6,7 @@ import { HttpProviderOrderApi } from '../../api/ProviderOrderApi'
 import { authService } from '../../application/auth'
 import { PageLoadState } from '../../domain/common/PageLoadState'
 import type { ProviderOrderStatus } from '../../domain/order/ProviderOrder'
+import ProviderShell from '../../components/layout/ProviderShell.vue'
 import {
   filterOrdersByStatus,
   formatOrderTime,
@@ -96,18 +97,9 @@ function logout(): void {
 </script>
 
 <template>
-  <main class="page">
-    <nav class="top-nav">
-      <RouterLink to="/dashboard">返回工作台</RouterLink>
-      <button type="button" @click="logout">退出登录</button>
-    </nav>
-
-    <header class="header">
-      <div>
-        <h1>订单列表</h1>
-        <p>支持按状态筛选、分页浏览，并进入订单详情页查看完整信息。</p>
-      </div>
-      <label class="filter">
+  <ProviderShell title="订单列表" subtitle="支持按状态筛选、分页浏览，并进入订单详情页查看完整信息。" @logout="logout">
+    <section class="provider-filter-row">
+      <div class="provider-filter">
         <span>状态筛选</span>
         <select :value="state.statusFilter" @change="updateFilter(($event.target as HTMLSelectElement).value)">
           <option value="all">全部状态</option>
@@ -121,24 +113,24 @@ function logout(): void {
           <option value="after_sale_processing">订单售后处理中</option>
           <option value="closed">订单已关闭</option>
         </select>
-      </label>
-    </header>
+      </div>
+    </section>
 
-    <p v-if="state.pageState === PageLoadState.Idle">等待加载订单数据...</p>
-    <p v-else-if="state.pageState === PageLoadState.Loading">订单加载中，请稍候...</p>
-    <p v-else-if="state.pageState === PageLoadState.Error" class="error">{{ state.errorMessage }}</p>
+    <p v-if="state.pageState === PageLoadState.Idle" class="provider-sub">等待加载订单数据...</p>
+    <p v-else-if="state.pageState === PageLoadState.Loading" class="provider-sub">订单加载中，请稍候...</p>
+    <p v-else-if="state.pageState === PageLoadState.Error" class="provider-error">{{ state.errorMessage }}</p>
 
     <section v-else>
-      <div v-if="filteredItems.length === 0" class="empty">
+      <div v-if="filteredItems.length === 0" class="provider-empty">
         <p>当前筛选条件下暂无订单。</p>
-        <p class="sub">可切换状态筛选或稍后重试。</p>
+        <p class="provider-sub">可切换状态筛选或稍后重试。</p>
       </div>
 
-      <div v-else class="list">
-        <button v-for="item in filteredItems" :key="item.id" type="button" class="row" @click="openDetail(item.id)">
-          <div class="row-head">
+      <div v-else class="provider-stack">
+        <button v-for="item in filteredItems" :key="item.id" type="button" class="provider-row-button" @click="openDetail(item.id)">
+          <div class="provider-row-headline">
             <strong>#{{ item.id }}</strong>
-            <span :class="['tag', getOrderStatusTagType(item.status)]">{{ getOrderStatusLabel(item) }}</span>
+            <span :class="['provider-tag', getOrderStatusTagType(item.status)]">{{ getOrderStatusLabel(item) }}</span>
           </div>
           <p>服务项目：{{ item.serviceItemTitle }}</p>
           <p>用户 ID：{{ item.userId }}</p>
@@ -148,7 +140,7 @@ function logout(): void {
         </button>
       </div>
 
-      <footer class="pager">
+      <footer class="provider-pager">
         <button type="button" :disabled="state.page <= 1 || state.pageState === PageLoadState.Loading" @click="goPrevPage">
           上一页
         </button>
@@ -162,144 +154,5 @@ function logout(): void {
         </button>
       </footer>
     </section>
-  </main>
+  </ProviderShell>
 </template>
-
-<style scoped>
-.page {
-  min-height: 100vh;
-  padding: 20px;
-  color: #eaf6fb;
-  background:
-    radial-gradient(circle at top left, rgba(31, 109, 141, 0.2), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(21, 59, 93, 0.22), transparent 32%),
-    #06111b;
-}
-.top-nav {
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.top-nav a {
-  color: #8bd7ff;
-}
-.top-nav button {
-  border: 1px solid rgba(148, 217, 255, 0.24);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #eaf6fb;
-  padding: 8px 12px;
-}
-.header {
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: flex-end;
-}
-.header h1 {
-  margin: 0;
-}
-.header p {
-  margin: 8px 0 0;
-  color: rgba(234, 246, 251, 0.66);
-}
-.filter {
-  display: grid;
-  gap: 6px;
-}
-.filter span {
-  color: rgba(234, 246, 251, 0.72);
-  font-size: 13px;
-}
-.filter select {
-  border: 1px solid rgba(148, 217, 255, 0.24);
-  border-radius: 14px;
-  padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #eaf6fb;
-}
-.list {
-  display: grid;
-  gap: 10px;
-}
-.row {
-  text-align: left;
-  border: 1px solid rgba(148, 217, 255, 0.12);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.045);
-  padding: 12px;
-  color: #eaf6fb;
-}
-.row-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-.row p {
-  margin: 8px 0 0;
-  color: rgba(234, 246, 251, 0.78);
-}
-.tag {
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 12px;
-}
-.tag.default {
-  background: rgba(255, 255, 255, 0.12);
-  color: #dceaf2;
-}
-.tag.warn {
-  background: rgba(255, 189, 89, 0.16);
-  color: #ffd278;
-}
-.tag.info {
-  background: rgba(115, 213, 255, 0.16);
-  color: #8bd7ff;
-}
-.tag.success {
-  background: rgba(91, 212, 154, 0.16);
-  color: #7df0bc;
-}
-.pager {
-  margin-top: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-.pager button {
-  border: 1px solid rgba(148, 217, 255, 0.24);
-  border-radius: 10px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #eaf6fb;
-}
-.pager span {
-  color: rgba(234, 246, 251, 0.78);
-}
-.empty {
-  border: 1px dashed rgba(148, 217, 255, 0.28);
-  border-radius: 16px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.04);
-}
-.empty p {
-  margin: 0;
-}
-.sub {
-  margin-top: 8px !important;
-  color: rgba(234, 246, 251, 0.56);
-}
-.error {
-  color: #ffd278;
-}
-@media (max-width: 900px) {
-  .header {
-    display: grid;
-    align-items: initial;
-  }
-}
-</style>

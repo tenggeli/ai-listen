@@ -6,6 +6,7 @@ import { HttpProviderOrderApi } from '../../api/ProviderOrderApi'
 import { authService } from '../../application/auth'
 import { PageLoadState } from '../../domain/common/PageLoadState'
 import type { ProviderOrder } from '../../domain/order/ProviderOrder'
+import ProviderShell from '../../components/layout/ProviderShell.vue'
 import { toOrderDetailErrorMessage } from './orderError'
 import { formatOrderTime, getNextOrderAction, getOrderActionLabel, getOrderStatusLabel, getOrderStatusTagType } from './orderShared'
 
@@ -88,139 +89,32 @@ function logout(): void {
 </script>
 
 <template>
-  <main class="page">
-    <nav class="top-nav">
-      <RouterLink to="/orders">返回订单列表</RouterLink>
-      <button type="button" @click="logout">退出登录</button>
-    </nav>
+  <ProviderShell title="订单详情" subtitle="展示订单关键信息，并支持按状态执行下一步履约动作。" @logout="logout">
+    <p v-if="state.pageState === PageLoadState.Idle" class="provider-sub">等待加载订单详情...</p>
+    <p v-else-if="state.pageState === PageLoadState.Loading" class="provider-sub">订单详情加载中，请稍候...</p>
+    <p v-else-if="state.pageState === PageLoadState.Error" class="provider-error">{{ state.errorMessage }}</p>
 
-    <h1>订单详情</h1>
-
-    <p v-if="state.pageState === PageLoadState.Idle">等待加载订单详情...</p>
-    <p v-else-if="state.pageState === PageLoadState.Loading">订单详情加载中，请稍候...</p>
-    <p v-else-if="state.pageState === PageLoadState.Error" class="error">{{ state.errorMessage }}</p>
-
-    <section v-else-if="state.order" class="card">
-      <header class="card-head">
-        <strong>#{{ state.order.id }}</strong>
-        <span :class="['tag', getOrderStatusTagType(state.order.status)]">{{ getOrderStatusLabel(state.order) }}</span>
-      </header>
-      <p><span>服务项目</span>{{ state.order.serviceItemTitle }}</p>
-      <p><span>用户 ID</span>{{ state.order.userId }}</p>
-      <p><span>服务方</span>{{ state.order.providerName }}</p>
-      <p><span>订单金额</span>¥{{ state.order.amount }} {{ state.order.currency }}</p>
-      <p v-if="state.order.statusActionReason"><span>状态原因</span>{{ state.order.statusActionReason }}</p>
-      <p v-if="state.order.statusUpdatedAt"><span>状态时间</span>{{ formatOrderTime(state.order.statusUpdatedAt) }}</p>
-      <p><span>创建时间</span>{{ formatOrderTime(state.order.createdAt) }}</p>
-      <p><span>支付时间</span>{{ formatOrderTime(state.order.paidAt) }}</p>
-      <div class="action-block">
-        <button
-          v-if="nextAction"
-          type="button"
-          class="action-btn"
-          :disabled="state.actionState === PageLoadState.Loading"
-          @click="triggerNextAction"
-        >
+    <section v-else-if="state.order" class="provider-card">
+      <div class="provider-section-head">
+        <h3>#{{ state.order.id }}</h3>
+        <span :class="['provider-tag', getOrderStatusTagType(state.order.status)]">{{ getOrderStatusLabel(state.order) }}</span>
+      </div>
+      <p>服务项目：{{ state.order.serviceItemTitle }}</p>
+      <p>用户 ID：{{ state.order.userId }}</p>
+      <p>服务方：{{ state.order.providerName }}</p>
+      <p>订单金额：¥{{ state.order.amount }} {{ state.order.currency }}</p>
+      <p v-if="state.order.statusActionReason">状态原因：{{ state.order.statusActionReason }}</p>
+      <p v-if="state.order.statusUpdatedAt">状态时间：{{ formatOrderTime(state.order.statusUpdatedAt) }}</p>
+      <p>创建时间：{{ formatOrderTime(state.order.createdAt) }}</p>
+      <p>支付时间：{{ formatOrderTime(state.order.paidAt) }}</p>
+      <div class="provider-actions-grid">
+        <button v-if="nextAction" type="button" :disabled="state.actionState === PageLoadState.Loading" @click="triggerNextAction">
           {{ state.actionState === PageLoadState.Loading ? '提交中...' : getOrderActionLabel(nextAction) }}
         </button>
-        <p v-else class="action-tip">当前状态无可执行履约动作。</p>
-        <p v-if="state.actionState === PageLoadState.Error" class="error">{{ state.actionMessage }}</p>
-        <p v-else-if="state.actionState === PageLoadState.Success" class="success">{{ state.actionMessage }}</p>
+        <p v-else class="provider-sub">当前状态无可执行履约动作。</p>
       </div>
+      <p v-if="state.actionState === PageLoadState.Error" class="provider-error">{{ state.actionMessage }}</p>
+      <p v-else-if="state.actionState === PageLoadState.Success" class="provider-success">{{ state.actionMessage }}</p>
     </section>
-  </main>
+  </ProviderShell>
 </template>
-
-<style scoped>
-.page {
-  min-height: 100vh;
-  padding: 20px;
-  color: #eaf6fb;
-  background:
-    radial-gradient(circle at top left, rgba(31, 109, 141, 0.2), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(21, 59, 93, 0.22), transparent 32%),
-    #06111b;
-}
-.top-nav {
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.top-nav a {
-  color: #8bd7ff;
-}
-.top-nav button {
-  border: 1px solid rgba(148, 217, 255, 0.24);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #eaf6fb;
-  padding: 8px 12px;
-}
-h1 {
-  margin: 0 0 12px;
-}
-.card {
-  border: 1px solid rgba(148, 217, 255, 0.12);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.045);
-  padding: 14px;
-}
-.card-head {
-  margin-bottom: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.card p {
-  margin: 10px 0 0;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-}
-.card p span {
-  color: rgba(234, 246, 251, 0.62);
-}
-.tag {
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 12px;
-}
-.tag.default {
-  background: rgba(255, 255, 255, 0.12);
-  color: #dceaf2;
-}
-.tag.warn {
-  background: rgba(255, 189, 89, 0.16);
-  color: #ffd278;
-}
-.tag.info {
-  background: rgba(115, 213, 255, 0.16);
-  color: #8bd7ff;
-}
-.tag.success {
-  background: rgba(91, 212, 154, 0.16);
-  color: #7df0bc;
-}
-.error {
-  color: #ffd278;
-}
-.success {
-  color: #7df0bc;
-}
-.action-block {
-  margin-top: 16px;
-  border-top: 1px solid rgba(148, 217, 255, 0.14);
-  padding-top: 12px;
-}
-.action-btn {
-  border: 1px solid rgba(115, 213, 255, 0.4);
-  border-radius: 14px;
-  background: rgba(115, 213, 255, 0.16);
-  color: #eaf6fb;
-  padding: 10px 14px;
-}
-.action-tip {
-  color: rgba(234, 246, 251, 0.62);
-}
-</style>

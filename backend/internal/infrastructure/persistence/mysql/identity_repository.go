@@ -18,14 +18,36 @@ func NewIdentityRepository(db *sql.DB) IdentityRepository {
 }
 
 func (r IdentityRepository) GetByID(ctx context.Context, userID string) (domain.UserAccount, bool, error) {
-	const query = `
+	userID = strings.TrimSpace(userID)
+	if userID == "" {
+		return domain.UserAccount{}, false, nil
+	}
+
+	const queryByUserID = `
 SELECT user_id, phone, wechat_open_id, register_source, status, display_name, avatar_url,
        age_range, city, bio, gender, profile_completed, mbti, interest_tags_json,
        personality_skipped, personality_completed
 FROM identity_user_accounts
 WHERE user_id = ? LIMIT 1`
 
-	account, found, err := r.queryOne(ctx, query, userID)
+	account, found, err := r.queryOne(ctx, queryByUserID, userID)
+	if err != nil {
+		return domain.UserAccount{}, false, err
+	}
+	if found {
+		return account, true, nil
+	}
+
+	// Backward-compatible fallback for environments that pass username (display_name)
+	// such as "user_1722" instead of canonical user_id.
+	const queryByDisplayName = `
+SELECT user_id, phone, wechat_open_id, register_source, status, display_name, avatar_url,
+       age_range, city, bio, gender, profile_completed, mbti, interest_tags_json,
+       personality_skipped, personality_completed
+FROM identity_user_accounts
+WHERE display_name = ? LIMIT 1`
+
+	account, found, err = r.queryOne(ctx, queryByDisplayName, userID)
 	if err != nil {
 		return domain.UserAccount{}, false, err
 	}

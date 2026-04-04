@@ -30,7 +30,7 @@ const emit = defineEmits<{
         >
           <td>{{ item.displayName }}</td>
           <td>{{ item.cityCode }}</td>
-          <td>{{ item.reviewStatus }}</td>
+          <td><span class="pill-soft">{{ item.reviewStatus }}</span></td>
         </tr>
       </tbody>
     </table>
@@ -39,8 +39,6 @@ const emit = defineEmits<{
 
 <style scoped>
 .table-wrap {
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
   overflow: hidden;
 }
 
@@ -52,9 +50,14 @@ table {
 th,
 td {
   text-align: left;
-  padding: 10px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 14px;
+}
+
+th {
+  color: rgba(237, 247, 251, 0.5);
+  font-weight: 500;
 }
 
 tr {
@@ -62,6 +65,6 @@ tr {
 }
 
 tr.active {
-  background: #eff6ff;
+  background: rgba(115, 213, 255, 0.08);
 }
 </style>
