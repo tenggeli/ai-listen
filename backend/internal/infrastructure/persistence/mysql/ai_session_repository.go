@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"time"
 
 	domain "listen/backend/internal/domain/ai"
@@ -43,7 +44,7 @@ func (r SessionRepository) GetByID(ctx context.Context, id string) (domain.Sessi
 		session.LastMessageAt = last.Time
 	}
 
-	const msgQuery = `SELECT sender_type, content, created_at FROM ai_messages WHERE session_uid = ? ORDER BY created_at ASC`
+	const msgQuery = `SELECT sender_type, content, intent_json, safety_level, created_at FROM ai_messages WHERE session_uid = ? ORDER BY created_at ASC, id ASC`
 	rows, err := r.db.QueryContext(ctx, msgQuery, id)
 	if err != nil {
 		return domain.Session{}, err
@@ -53,8 +54,19 @@ func (r SessionRepository) GetByID(ctx context.Context, id string) (domain.Sessi
 	session.Messages = make([]domain.Message, 0)
 	for rows.Next() {
 		var m domain.Message
-		if err := rows.Scan(&m.SenderType, &m.Content, &m.CreatedAt); err != nil {
+		var intent sql.NullString
+		var safety sql.NullString
+		if err := rows.Scan(&m.SenderType, &m.Content, &intent, &safety, &m.CreatedAt); err != nil {
 			return domain.Session{}, err
+		}
+		if safety.Valid && safety.String != "" {
+			m.SafetyLevel = safety.String
+		}
+		if intent.Valid && intent.String != "" {
+			var payload aiMessageIntentPayload
+			if err := json.Unmarshal([]byte(intent.String), &payload); err == nil {
+				m.ActionCard = payload.ActionCard
+			}
 		}
 		session.Messages = append(session.Messages, m)
 	}
@@ -89,13 +101,36 @@ func (r SessionRepository) Save(ctx context.Context, session domain.Session) err
 		return err
 	}
 
-	const insertMsg = `INSERT INTO ai_messages(session_uid, sender_type, message_type, content, intent_json, safety_level, created_at, updated_at) VALUES(?, ?, 'text', ?, NULL, 'normal', ?, NOW())`
+	const insertMsg = `INSERT INTO ai_messages(session_uid, sender_type, message_type, content, intent_json, safety_level, created_at, updated_at) VALUES(?, ?, 'text', ?, ?, ?, ?, NOW())`
 	for _, m := range session.Messages {
-		if _, err = tx.ExecContext(ctx, insertMsg, session.ID, m.SenderType, m.Content, m.CreatedAt); err != nil {
+		intentPayload, marshalErr := buildIntentPayload(m)
+		if marshalErr != nil {
+			return marshalErr
+		}
+		safetyLevel := m.SafetyLevel
+		if safetyLevel == "" {
+			safetyLevel = "normal"
+		}
+		if _, err = tx.ExecContext(ctx, insertMsg, session.ID, m.SenderType, m.Content, intentPayload, safetyLevel, m.CreatedAt); err != nil {
 			return err
 		}
 	}
 
 	err = tx.Commit()
 	return err
+}
+
+type aiMessageIntentPayload struct {
+	ActionCard *domain.ActionCard `json:"action_card,omitempty"`
+}
+
+func buildIntentPayload(message domain.Message) (any, error) {
+	if message.ActionCard == nil {
+		return nil, nil
+	}
+	raw, err := json.Marshal(aiMessageIntentPayload{ActionCard: message.ActionCard})
+	if err != nil {
+		return nil, err
+	}
+	return string(raw), nil
 }

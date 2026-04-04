@@ -216,6 +216,12 @@ type replyConfig struct {
 	maxRetries int
 }
 
+type assistantReply struct {
+	Content     string
+	ActionCard  *domain.ActionCard
+	SafetyLevel string
+}
+
 func NewAppendAiMessageUseCase(sessionRepo domain.SessionRepository, replySvc domain.ReplyService, clock Clock) AppendAiMessageUseCase {
 	return AppendAiMessageUseCase{
 		sessionRepo: sessionRepo,
@@ -242,11 +248,8 @@ func (u AppendAiMessageUseCase) Execute(ctx context.Context, input AppendMessage
 	}
 
 	if input.SenderType == "user" {
-		reply, err := u.generateReplyWithRetry(ctx, session, input.ContentText)
-		if err != nil {
-			reply = buildFallbackReply(input.ContentText)
-		}
-		if err := session.AppendMessage("assistant", reply, u.clock.Now()); err != nil {
+		reply := u.buildAssistantReply(ctx, session, input.ContentText)
+		if err := session.AppendMessageWithMeta("assistant", reply.Content, u.clock.Now(), reply.ActionCard, reply.SafetyLevel); err != nil {
 			return AppendMessageOutput{}, err
 		}
 	}
@@ -281,6 +284,126 @@ func (u AppendAiMessageUseCase) generateReplyWithRetry(ctx context.Context, sess
 		lastErr = domain.ErrInvalidInput
 	}
 	return "", lastErr
+}
+
+func (u AppendAiMessageUseCase) buildAssistantReply(ctx context.Context, session domain.Session, userMessage string) assistantReply {
+	content := strings.TrimSpace(userMessage)
+	if isSensitiveMessage(content) {
+		return assistantReply{
+			Content: "你提到的内容可能和自我伤害风险有关，这很重要。请先保证你身边环境安全，并尽快联系身边可信任的人；如果风险正在发生，请立即联系当地紧急援助电话。",
+			ActionCard: &domain.ActionCard{
+				Action:      "go_sound",
+				Title:       "先做 3 分钟稳定情绪",
+				Description: "进入声音页，先让呼吸慢下来，再决定下一步。",
+				Route:       "/sound",
+				ButtonText:  "去声音",
+			},
+			SafetyLevel: "high",
+		}
+	}
+
+	replyText, err := u.generateReplyWithRetry(ctx, session, userMessage)
+	if err != nil {
+		replyText = buildFallbackReply(userMessage)
+	}
+
+	return assistantReply{
+		Content:     replyText,
+		ActionCard:  pickActionCard(content),
+		SafetyLevel: "normal",
+	}
+}
+
+func isSensitiveMessage(content string) bool {
+	if content == "" {
+		return false
+	}
+
+	sensitiveKeywords := []string{
+		"自杀",
+		"轻生",
+		"不想活",
+		"活不下去",
+		"结束生命",
+		"伤害自己",
+		"自残",
+	}
+	negations := []string{"不", "没", "不会", "不是", "并非", "没有", "不想"}
+
+	for _, keyword := range sensitiveKeywords {
+		index := strings.Index(content, keyword)
+		if index < 0 {
+			continue
+		}
+		prefix := content[:index]
+		prefixRunes := []rune(prefix)
+		windowStart := len(prefixRunes) - 6
+		if windowStart < 0 {
+			windowStart = 0
+		}
+		nearbyPrefix := string(prefixRunes[windowStart:])
+		negated := false
+		for _, neg := range negations {
+			if strings.Contains(nearbyPrefix, neg) {
+				negated = true
+				break
+			}
+		}
+		if !negated {
+			return true
+		}
+	}
+	return false
+}
+
+func pickActionCard(content string) *domain.ActionCard {
+	type actionRule struct {
+		keywords []string
+		card     domain.ActionCard
+	}
+
+	rules := []actionRule{
+		{
+			keywords: []string{"睡不着", "失眠", "放松", "白噪音", "冥想", "声音"},
+			card: domain.ActionCard{
+				Action:      "go_sound",
+				Title:       "试试声音放松",
+				Description: "白噪音和呼吸引导可以先帮你稳住状态。",
+				Route:       "/sound",
+				ButtonText:  "去声音",
+			},
+		},
+		{
+			keywords: []string{"下单", "服务", "咨询", "陪伴服务"},
+			card: domain.ActionCard{
+				Action:      "go_service",
+				Title:       "看看可选服务",
+				Description: "可以先浏览服务方，再决定是否发起邀约。",
+				Route:       "/services",
+				ButtonText:  "去服务",
+			},
+		},
+		{
+			keywords: []string{"找人", "匹配", "推荐", "搭子", "陪聊", "孤单"},
+			card: domain.ActionCard{
+				Action:      "go_match",
+				Title:       "为你匹配陪伴对象",
+				Description: "回到首页快速匹配，先看最适合你的 3 位推荐。",
+				Route:       "/home",
+				ButtonText:  "去匹配",
+			},
+		},
+	}
+
+	for _, rule := range rules {
+		for _, keyword := range rule.keywords {
+			if strings.Contains(content, keyword) {
+				card := rule.card
+				return &card
+			}
+		}
+	}
+	return nil
 }
 
 type sessionLockPool struct {

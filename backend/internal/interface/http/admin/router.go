@@ -22,6 +22,14 @@ func RegisterServiceItemRoutes(mux *http.ServeMux, controller ServiceItemControl
 	mux.HandleFunc("POST /api/v1/admin/service-items/{id}/deactivate", requireAdminAuth(controller.HandleDeactivate))
 }
 
+func RegisterSoundRoutes(mux *http.ServeMux, controller SoundController) {
+	mux.HandleFunc("GET /api/v1/admin/sounds", requireAdminAuth(controller.HandleList))
+	mux.HandleFunc("POST /api/v1/admin/sounds", requireAdminAuth(controller.HandleCreate))
+	mux.HandleFunc("PUT /api/v1/admin/sounds/{id}", requireAdminAuth(controller.HandleUpdate))
+	mux.HandleFunc("POST /api/v1/admin/sounds/{id}/activate", requireAdminAuth(controller.HandleActivate))
+	mux.HandleFunc("POST /api/v1/admin/sounds/{id}/deactivate", requireAdminAuth(controller.HandleDeactivate))
+}
+
 func RegisterOrderRoutes(mux *http.ServeMux, controller OrderController) {
 	mux.HandleFunc("GET /api/v1/admin/orders", requireAdminAuth(controller.HandleListOrders))
 	mux.HandleFunc("GET /api/v1/admin/orders/{id}", requireAdminAuth(controller.HandleGetOrderDetail))

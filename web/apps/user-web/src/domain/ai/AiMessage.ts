@@ -1,8 +1,12 @@
+import { AiActionCard } from './AiActionCard'
+
 export class AiMessage {
   constructor(
     public readonly senderType: string,
     public readonly content: string,
-    public readonly createdAt: string
+    public readonly createdAt: string,
+    public readonly actionCard: AiActionCard | null = null,
+    public readonly safetyLevel: string = 'normal'
   ) {}
 
   isUser(): boolean {

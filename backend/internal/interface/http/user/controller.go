@@ -141,11 +141,24 @@ func (c AIController) HandleSessionDetail(w http.ResponseWriter, r *http.Request
 
 	messages := make([]map[string]any, 0, len(output.Session.Messages))
 	for _, message := range output.Session.Messages {
-		messages = append(messages, map[string]any{
+		item := map[string]any{
 			"sender_type": message.SenderType,
 			"content":     message.Content,
 			"created_at":  message.CreatedAt.Format(time.RFC3339),
-		})
+		}
+		if message.SafetyLevel != "" {
+			item["safety_level"] = message.SafetyLevel
+		}
+		if message.ActionCard != nil {
+			item["action_card"] = map[string]any{
+				"action":      message.ActionCard.Action,
+				"title":       message.ActionCard.Title,
+				"description": message.ActionCard.Description,
+				"route":       message.ActionCard.Route,
+				"button_text": message.ActionCard.ButtonText,
+			}
+		}
+		messages = append(messages, item)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{

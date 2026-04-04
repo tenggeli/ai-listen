@@ -3,6 +3,7 @@ package user
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	app "listen/backend/internal/application/audio"
 	domain "listen/backend/internal/domain/audio"
@@ -17,9 +18,15 @@ func NewSoundController(getSoundPageUC app.GetSoundPageUseCase) SoundController 
 }
 
 func (c SoundController) HandleGetSounds(w http.ResponseWriter, r *http.Request) {
+	pageNo, _ := strconv.Atoi(r.URL.Query().Get("page_no"))
+	pageSize, _ := strconv.Atoi(r.URL.Query().Get("page_size"))
+
 	output, err := c.getSoundPageUC.Execute(r.Context(), app.GetSoundPageInput{
-		Page:   r.URL.Query().Get("page"),
-		UserID: r.URL.Query().Get("user_id"),
+		Page:        r.URL.Query().Get("page"),
+		UserID:      r.URL.Query().Get("user_id"),
+		CategoryKey: r.URL.Query().Get("category_key"),
+		PageNo:      pageNo,
+		PageSize:    pageSize,
 	})
 	if err != nil {
 		writeSoundError(w, err)
@@ -62,6 +69,8 @@ func (c SoundController) HandleGetSounds(w http.ResponseWriter, r *http.Request)
 func writeSoundError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, domain.ErrInvalidPage):
+		writeJSONError(w, http.StatusBadRequest, err.Error())
+	case errors.Is(err, domain.ErrInvalidCategory):
 		writeJSONError(w, http.StatusBadRequest, err.Error())
 	default:
 		writeJSONError(w, http.StatusInternalServerError, "internal error")

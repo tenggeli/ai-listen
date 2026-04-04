@@ -91,10 +91,20 @@ type Session struct {
 	Messages      []Message
 }
 
+type ActionCard struct {
+	Action      string
+	Title       string
+	Description string
+	Route       string
+	ButtonText  string
+}
+
 type Message struct {
-	SenderType string
-	Content    string
-	CreatedAt  time.Time
+	SenderType  string
+	Content     string
+	CreatedAt   time.Time
+	ActionCard  *ActionCard
+	SafetyLevel string
 }
 
 func NewSession(id string, userID string, sceneType string) (Session, error) {
@@ -111,11 +121,31 @@ func NewSession(id string, userID string, sceneType string) (Session, error) {
 }
 
 func (s *Session) AppendMessage(senderType string, content string, now time.Time) error {
+	return s.AppendMessageWithMeta(senderType, content, now, nil, "")
+}
+
+func (s *Session) AppendMessageWithMeta(
+	senderType string,
+	content string,
+	now time.Time,
+	actionCard *ActionCard,
+	safetyLevel string,
+) error {
 	trimmed := strings.TrimSpace(content)
 	if senderType == "" || trimmed == "" {
 		return ErrInvalidInput
 	}
-	message := Message{SenderType: senderType, Content: trimmed, CreatedAt: now}
+	level := strings.TrimSpace(safetyLevel)
+	if level == "" {
+		level = "normal"
+	}
+	message := Message{
+		SenderType:  senderType,
+		Content:     trimmed,
+		CreatedAt:   now,
+		ActionCard:  actionCard,
+		SafetyLevel: level,
+	}
 	s.Messages = append(s.Messages, message)
 	s.LastMessageAt = now
 	return nil

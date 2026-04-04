@@ -3,6 +3,7 @@ package ai
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -225,6 +226,87 @@ func TestAppendAiMessageUseCase_ConcurrentSend(t *testing.T) {
 		if sessionOutput.Session.Messages[i+1].SenderType != "assistant" {
 			t.Fatalf("message %d should be assistant, got: %s", i+1, sessionOutput.Session.Messages[i+1].SenderType)
 		}
+	}
+}
+
+func TestAppendAiMessageUseCase_SafetyTrigger(t *testing.T) {
+	repo := memory.NewSessionRepository()
+	create := NewCreateAiSessionUseCase(repo, fixedIDGenerator{})
+	appendMsg := NewAppendAiMessageUseCase(repo, NewMockReplyService(), fixedClock{})
+
+	created, err := create.Execute(context.Background(), CreateSessionInput{UserID: "u1", SceneType: "listen"})
+	if err != nil {
+		t.Fatalf("create session failed: %v", err)
+	}
+
+	output, err := appendMsg.Execute(context.Background(), AppendMessageInput{
+		SessionID:   created.SessionID,
+		SenderType:  "user",
+		ContentText: "我有点想自杀",
+	})
+	if err != nil {
+		t.Fatalf("append failed: %v", err)
+	}
+	assistant := output.Session.Messages[1]
+	if assistant.SafetyLevel != "high" {
+		t.Fatalf("expected high safety level, got: %s", assistant.SafetyLevel)
+	}
+	if assistant.ActionCard == nil {
+		t.Fatalf("expected action card for safety trigger")
+	}
+	if assistant.ActionCard.Action != "go_sound" || assistant.ActionCard.Route != "/sound" {
+		t.Fatalf("unexpected action card: %+v", assistant.ActionCard)
+	}
+}
+
+func TestAppendAiMessageUseCase_FalsePositiveFallback(t *testing.T) {
+	repo := memory.NewSessionRepository()
+	create := NewCreateAiSessionUseCase(repo, fixedIDGenerator{})
+	appendMsg := NewAppendAiMessageUseCase(repo, NewMockReplyService(), fixedClock{})
+
+	created, err := create.Execute(context.Background(), CreateSessionInput{UserID: "u1", SceneType: "listen"})
+	if err != nil {
+		t.Fatalf("create session failed: %v", err)
+	}
+
+	output, err := appendMsg.Execute(context.Background(), AppendMessageInput{
+		SessionID:   created.SessionID,
+		SenderType:  "user",
+		ContentText: "我不是想自杀，只是最近压力太大",
+	})
+	if err != nil {
+		t.Fatalf("append failed: %v", err)
+	}
+	assistant := output.Session.Messages[1]
+	if assistant.SafetyLevel != "normal" {
+		t.Fatalf("expected normal safety level, got: %s", assistant.SafetyLevel)
+	}
+	if strings.Contains(assistant.Content, "紧急援助电话") {
+		t.Fatalf("false positive: should not return safety emergency reply")
+	}
+}
+
+func TestAppendAiMessageUseCase_NoActionCardForNeutralMessage(t *testing.T) {
+	repo := memory.NewSessionRepository()
+	create := NewCreateAiSessionUseCase(repo, fixedIDGenerator{})
+	appendMsg := NewAppendAiMessageUseCase(repo, NewMockReplyService(), fixedClock{})
+
+	created, err := create.Execute(context.Background(), CreateSessionInput{UserID: "u1", SceneType: "listen"})
+	if err != nil {
+		t.Fatalf("create session failed: %v", err)
+	}
+
+	output, err := appendMsg.Execute(context.Background(), AppendMessageInput{
+		SessionID:   created.SessionID,
+		SenderType:  "user",
+		ContentText: "今天天气不错",
+	})
+	if err != nil {
+		t.Fatalf("append failed: %v", err)
+	}
+	assistant := output.Session.Messages[1]
+	if assistant.ActionCard != nil {
+		t.Fatalf("expected no action card, got: %+v", assistant.ActionCard)
 	}
 }
 

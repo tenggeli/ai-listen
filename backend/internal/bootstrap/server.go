@@ -23,7 +23,6 @@ import (
 	serviceItemDomain "listen/backend/internal/domain/service_item_admin"
 	userSettingsDomain "listen/backend/internal/domain/user_settings"
 	infraAi "listen/backend/internal/infrastructure/ai"
-	infraAudio "listen/backend/internal/infrastructure/audio"
 	"listen/backend/internal/infrastructure/config"
 	infraIdentity "listen/backend/internal/infrastructure/identity"
 	memory "listen/backend/internal/infrastructure/persistence/memory"
@@ -46,7 +45,7 @@ func NewServer() Server {
 	homeOverviewService := infraAi.NewMockHomeOverviewService()
 	matchService := infraAi.NewMockMatchService()
 	replyService := aiApp.NewMockReplyService()
-	soundPageService := infraAudio.NewMockSoundPageService()
+	soundRepo := memory.NewSoundContentRepository()
 	quotaRepo := memory.NewMatchQuotaRepository()
 	sessionRepo := memory.NewSessionRepository()
 	providerRepo := memory.NewProviderRepository()
@@ -107,6 +106,7 @@ func NewServer() Server {
 			mysqlSessionRepo := mysqlInfra.NewSessionRepository(db)
 			mysqlProviderRepo := mysqlInfra.NewProviderRepository(db)
 			mysqlServiceDiscoveryRepo := mysqlInfra.NewServiceDiscoveryRepository(db)
+			mysqlSoundRepo := mysqlInfra.NewSoundContentRepository(db)
 			mysqlIdentityRepo := mysqlInfra.NewIdentityRepository(db)
 			mysqlUserSettingsRepo := mysqlInfra.NewUserSettingsRepository(db)
 			mysqlOrderRepo := mysqlInfra.NewOrderRepository(db)
@@ -138,7 +138,7 @@ func NewServer() Server {
 				serviceDiscoveryApp.NewListProviderServiceItemsUseCase(mysqlServiceDiscoveryRepo),
 			)
 			soundController := user.NewSoundController(
-				audioApp.NewGetSoundPageUseCase(soundPageService),
+				audioApp.NewGetSoundPageUseCase(mysqlSoundRepo),
 			)
 			identityController := user.NewIdentityController(
 				identityApp.NewLoginBySMSUseCase(mysqlIdentityRepo, authService, clock, idGenerator),
@@ -166,6 +166,12 @@ func NewServer() Server {
 				adminServiceItemApp.NewListServiceItemsUseCase(mysqlServiceItemRepo),
 				adminServiceItemApp.NewGetServiceItemDetailUseCase(mysqlServiceItemRepo),
 				adminServiceItemApp.NewUpdateServiceItemStatusUseCase(mysqlServiceItemRepo),
+			)
+			soundAdminController := adminHTTP.NewSoundController(
+				audioApp.NewListAdminSoundsUseCase(mysqlSoundRepo),
+				audioApp.NewCreateAdminSoundUseCase(mysqlSoundRepo, idGenerator),
+				audioApp.NewUpdateAdminSoundUseCase(mysqlSoundRepo),
+				audioApp.NewUpdateAdminSoundStatusUseCase(mysqlSoundRepo),
 			)
 			orderAdminController := adminHTTP.NewOrderController(
 				adminOrderApp.NewUseCase(mysqlOrderRepo, mysqlFeedbackRepo, mysqlOrderActionRepo, idGenerator, clock),
@@ -195,6 +201,7 @@ func NewServer() Server {
 			adminHTTP.RegisterAuthRoutes(mux, adminAuthController)
 			adminHTTP.RegisterProviderRoutes(mux, adminController)
 			adminHTTP.RegisterServiceItemRoutes(mux, serviceItemController)
+			adminHTTP.RegisterSoundRoutes(mux, soundAdminController)
 			adminHTTP.RegisterOrderRoutes(mux, orderAdminController)
 			adminHTTP.RegisterComplaintRoutes(mux, orderAdminController)
 			providerHTTP.RegisterAuthRoutes(mux, providerAuthController)
@@ -238,7 +245,7 @@ func NewServer() Server {
 		serviceDiscoveryApp.NewListProviderServiceItemsUseCase(serviceDiscoveryRepo),
 	)
 	soundController := user.NewSoundController(
-		audioApp.NewGetSoundPageUseCase(soundPageService),
+		audioApp.NewGetSoundPageUseCase(soundRepo),
 	)
 	identityController := user.NewIdentityController(
 		identityApp.NewLoginBySMSUseCase(identityRepo, authService, clock, idGenerator),
@@ -266,6 +273,12 @@ func NewServer() Server {
 		adminServiceItemApp.NewListServiceItemsUseCase(serviceItemRepo),
 		adminServiceItemApp.NewGetServiceItemDetailUseCase(serviceItemRepo),
 		adminServiceItemApp.NewUpdateServiceItemStatusUseCase(serviceItemRepo),
+	)
+	soundAdminController := adminHTTP.NewSoundController(
+		audioApp.NewListAdminSoundsUseCase(soundRepo),
+		audioApp.NewCreateAdminSoundUseCase(soundRepo, idGenerator),
+		audioApp.NewUpdateAdminSoundUseCase(soundRepo),
+		audioApp.NewUpdateAdminSoundStatusUseCase(soundRepo),
 	)
 	orderActionRepo := memory.NewOrderAdminActionRepository()
 	orderAdminController := adminHTTP.NewOrderController(
@@ -296,6 +309,7 @@ func NewServer() Server {
 	adminHTTP.RegisterAuthRoutes(mux, adminAuthController)
 	adminHTTP.RegisterProviderRoutes(mux, adminController)
 	adminHTTP.RegisterServiceItemRoutes(mux, serviceItemController)
+	adminHTTP.RegisterSoundRoutes(mux, soundAdminController)
 	adminHTTP.RegisterOrderRoutes(mux, orderAdminController)
 	adminHTTP.RegisterComplaintRoutes(mux, orderAdminController)
 	providerHTTP.RegisterAuthRoutes(mux, providerAuthController)

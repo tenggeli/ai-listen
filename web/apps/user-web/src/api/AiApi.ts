@@ -1,6 +1,7 @@
 import { AiHomeDashboard } from '../domain/ai/AiHomeDashboard'
 import { AiHomeAggregate } from '../domain/ai/AiHomeAggregate'
 import { AiHomeQuickAction } from '../domain/ai/AiHomeQuickAction'
+import { AiActionCard } from '../domain/ai/AiActionCard'
 import { AiMessage } from '../domain/ai/AiMessage'
 import { AiSession } from '../domain/ai/AiSession'
 import { MatchCandidate } from '../domain/ai/MatchCandidate'
@@ -177,7 +178,13 @@ export class MockAiApi implements AiApi {
     const nextMessages = [
       ...session.messages,
       new AiMessage(senderType, content, userTime),
-      new AiMessage('assistant', buildAssistantReply(content), replyTime)
+      new AiMessage(
+        'assistant',
+        buildAssistantReply(content),
+        replyTime,
+        buildActionCard(content),
+        buildSafetyLevel(content)
+      )
     ]
     this.sessions.set(
       sessionId,
@@ -187,9 +194,19 @@ export class MockAiApi implements AiApi {
 }
 
 function buildSession(payload: any): AiSession {
-  const messages = (payload.messages as any[]).map(
-    (item) => new AiMessage(item.sender_type, item.content, item.created_at)
-  )
+  const messages = (payload.messages as any[]).map((item) => {
+    const cardPayload = item.action_card
+    const actionCard = cardPayload
+      ? new AiActionCard(
+          cardPayload.action ?? '',
+          cardPayload.title ?? '',
+          cardPayload.description ?? '',
+          cardPayload.route ?? '',
+          cardPayload.button_text ?? ''
+        )
+      : null
+    return new AiMessage(item.sender_type, item.content, item.created_at, actionCard, item.safety_level ?? 'normal')
+  })
   return new AiSession(payload.id, payload.user_id, payload.scene_type, payload.status, payload.last_message_at, messages)
 }
 
@@ -223,6 +240,9 @@ function buildQuickActions(): AiHomeQuickAction[] {
 }
 
 function buildAssistantReply(content: string): string {
+  if (isSensitiveContent(content)) {
+    return '你提到的内容可能和自我伤害风险有关，这很重要。请先保证你身边环境安全，并尽快联系身边可信任的人；如果风险正在发生，请立即联系当地紧急援助电话。'
+  }
   if (content.includes('压力') || content.includes('累')) {
     return '听起来你已经撑了很久。\n\n现在不用急着把事情想清楚，我们先把那股压着你的劲慢慢放下来，好吗？'
   }
@@ -233,6 +253,32 @@ function buildAssistantReply(content: string): string {
     return '那种突然很想找个人说话的时刻，往往不是脆弱，而是你已经很努力了。\n\n我在，你可以慢慢说。'
   }
   return '我听见你了。\n\n不用急着组织语言，想到哪儿说到哪儿就好，我会一直接着你。'
+}
+
+function buildActionCard(content: string): AiActionCard | null {
+  if (isSensitiveContent(content)) {
+    return new AiActionCard('go_sound', '先做 3 分钟稳定情绪', '进入声音页，先让呼吸慢下来，再决定下一步。', '/sound', '去声音')
+  }
+  if (content.includes('睡不着') || content.includes('失眠') || content.includes('放松') || content.includes('声音')) {
+    return new AiActionCard('go_sound', '试试声音放松', '白噪音和呼吸引导可以先帮你稳住状态。', '/sound', '去声音')
+  }
+  if (content.includes('下单') || content.includes('服务') || content.includes('咨询')) {
+    return new AiActionCard('go_service', '看看可选服务', '可以先浏览服务方，再决定是否发起邀约。', '/services', '去服务')
+  }
+  if (content.includes('找人') || content.includes('匹配') || content.includes('推荐') || content.includes('搭子') || content.includes('陪聊') || content.includes('孤单')) {
+    return new AiActionCard('go_match', '为你匹配陪伴对象', '回到首页快速匹配，先看最适合你的 3 位推荐。', '/home', '去匹配')
+  }
+  return null
+}
+
+function buildSafetyLevel(content: string): string {
+  return isSensitiveContent(content) ? 'high' : 'normal'
+}
+
+function isSensitiveContent(content: string): boolean {
+  return ['自杀', '轻生', '不想活', '活不下去', '结束生命', '伤害自己', '自残'].some((item) =>
+    content.includes(item)
+  )
 }
 
 function sleep(ms: number): Promise<void> {

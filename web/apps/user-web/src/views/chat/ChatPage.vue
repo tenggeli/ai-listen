@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { ChatPageViewModel } from '../../application/ai/ChatPageViewModel'
 import { currentUserIdOrDemo } from '../../application/identity/AuthSession'
 import { HttpAiApi, MockAiApi } from '../../api/AiApi'
@@ -11,6 +11,7 @@ import { PageLoadState } from '../../domain/ai/PageLoadState'
 const useMock = import.meta.env.VITE_USE_MOCK !== 'false'
 const api = useMock ? new MockAiApi() : new HttpAiApi('/api/v1')
 const vm = new ChatPageViewModel(api, currentUserIdOrDemo())
+const router = useRouter()
 const headerTime = computed(() =>
   new Intl.DateTimeFormat('zh-CN', {
     hour: '2-digit',
@@ -29,6 +30,13 @@ function onSubmit() {
 
 function onUseQuickReply(reply: string) {
   vm.useQuickReply(reply)
+}
+
+function onActionCardClick(route: string) {
+  if (!route) {
+    return
+  }
+  void router.push(route)
 }
 </script>
 
@@ -87,11 +95,16 @@ function onUseQuickReply(reply: string) {
       <ChatTypingIndicator v-else-if="vm.state.sendState === PageLoadState.Loading" />
 
       <div v-if="vm.state.sessionState === PageLoadState.Success" class="message-list">
-        <ChatMessageBubble
-          v-for="(item, index) in vm.state.session?.messages"
-          :key="`${item.createdAt}-${index}`"
-          :message="item"
-        />
+        <div v-for="(item, index) in vm.state.session?.messages" :key="`${item.createdAt}-${index}`" class="message-group">
+          <ChatMessageBubble :message="item" />
+          <div v-if="item.actionCard && item.senderType !== 'user'" class="action-card">
+            <p class="action-card-title">{{ item.actionCard.title }}</p>
+            <p class="action-card-desc">{{ item.actionCard.description }}</p>
+            <button type="button" class="action-card-btn" @click="onActionCardClick(item.actionCard.route)">
+              {{ item.actionCard.buttonText || '立即前往' }}
+            </button>
+          </div>
+        </div>
 
         <div class="quick-replies" v-if="vm.state.quickReplies.length">
           <button
@@ -273,6 +286,43 @@ function onUseQuickReply(reply: string) {
 .message-list {
   display: grid;
   gap: 16px;
+}
+
+.message-group {
+  display: grid;
+  gap: 8px;
+}
+
+.action-card {
+  max-width: min(78%, 540px);
+  margin-left: 40px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(115, 213, 255, 0.24);
+  background: rgba(115, 213, 255, 0.08);
+}
+
+.action-card-title {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(230, 247, 255, 0.95);
+}
+
+.action-card-desc {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgba(214, 237, 247, 0.76);
+}
+
+.action-card-btn {
+  margin-top: 10px;
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: rgba(115, 213, 255, 0.24);
+  color: #dff6ff;
+  cursor: pointer;
 }
 
 .state-card {
