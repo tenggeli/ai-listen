@@ -31,7 +31,7 @@ func (r ProviderRepository) List(ctx context.Context, query domain.Query) ([]dom
 	}
 
 	listSQL := fmt.Sprintf(`
-SELECT p.id, pp.display_name, COALESCE(pp.city_code, ''), COALESCE(pp.bio, ''), p.review_status
+SELECT p.id, COALESCE(pp.display_name, ''), COALESCE(pp.city_code, ''), COALESCE(pp.bio, ''), p.review_status
 FROM providers p
 LEFT JOIN provider_profiles pp ON pp.provider_id = p.id
 %s
@@ -62,7 +62,7 @@ LIMIT ? OFFSET ?`, where)
 
 func (r ProviderRepository) GetByID(ctx context.Context, providerID string) (domain.Provider, error) {
 	const query = `
-SELECT p.id, pp.display_name, COALESCE(pp.city_code, ''), COALESCE(pp.bio, ''), p.review_status
+SELECT p.id, COALESCE(pp.display_name, ''), COALESCE(pp.city_code, ''), COALESCE(pp.bio, ''), p.review_status
 FROM providers p
 LEFT JOIN provider_profiles pp ON pp.provider_id = p.id
 WHERE p.id = ? LIMIT 1`
